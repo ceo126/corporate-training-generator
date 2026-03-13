@@ -6,6 +6,12 @@ const multer = require('multer');
 const app = express();
 const PORT = 8220;
 
+// 외부 소스 폴더 설정 (여러 경로 등록 가능)
+let sourceDirs = [
+  path.join(__dirname, 'input'),
+  'D:/0000.유벤치/기업교육 자료'
+];
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
@@ -22,26 +28,69 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// input 폴더 파일 목록
-app.get('/api/files', (req, res) => {
-  const inputDir = path.join(__dirname, 'input');
-  if (!fs.existsSync(inputDir)) {
-    return res.json({ files: [] });
+// 외부 소스 폴더 추가
+app.post('/api/source', (req, res) => {
+  const { dirPath } = req.body;
+  if (!dirPath) return res.status(400).json({ error: '경로를 입력해주세요' });
+  const resolved = path.resolve(dirPath);
+  if (!fs.existsSync(resolved)) return res.status(404).json({ error: '폴더를 찾을 수 없습니다: ' + resolved });
+  if (!sourceDirs.includes(resolved)) {
+    sourceDirs.push(resolved);
   }
-  const files = fs.readdirSync(inputDir)
-    .filter(f => !f.startsWith('.'))
-    .map(f => {
-      const stat = fs.statSync(path.join(inputDir, f));
-      const ext = path.extname(f).toLowerCase();
-      return {
-        name: f,
-        size: stat.size,
-        type: ext,
-        modified: stat.mtime
-      };
-    });
+  res.json({ success: true, sources: sourceDirs });
+});
+
+// 소스 폴더 목록
+app.get('/api/sources', (req, res) => {
+  res.json({ sources: sourceDirs });
+});
+
+// 소스 폴더 제거
+app.delete('/api/source', (req, res) => {
+  const { dirPath } = req.body;
+  const resolved = path.resolve(dirPath);
+  sourceDirs = sourceDirs.filter(d => d !== resolved);
+  res.json({ success: true, sources: sourceDirs });
+});
+
+// 지원 파일 확장자
+const SUPPORTED_EXT = ['.pdf', '.docx', '.txt', '.md', '.pptx', '.hwp'];
+
+// 모든 소스 폴더에서 파일 목록 (하위 폴더 포함)
+app.get('/api/files', (req, res) => {
+  const files = [];
+  for (const dir of sourceDirs) {
+    if (!fs.existsSync(dir)) continue;
+    scanDir(dir, dir, files);
+  }
   res.json({ files });
 });
+
+function scanDir(baseDir, currentDir, files) {
+  const entries = fs.readdirSync(currentDir);
+  for (const entry of entries) {
+    if (entry.startsWith('.')) continue;
+    const fullPath = path.join(currentDir, entry);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      scanDir(baseDir, fullPath, files);
+    } else {
+      const ext = path.extname(entry).toLowerCase();
+      if (SUPPORTED_EXT.includes(ext)) {
+        const relativePath = path.relative(baseDir, fullPath);
+        files.push({
+          name: entry,
+          path: fullPath,
+          relativePath,
+          sourceDir: baseDir,
+          size: stat.size,
+          type: ext,
+          modified: stat.mtime
+        });
+      }
+    }
+  }
+}
 
 // 파일 업로드
 app.post('/api/upload', upload.array('files'), (req, res) => {

@@ -303,16 +303,24 @@
       <!-- 입력 파일 -->
       <div class="panel">
         <div class="panel-header">
-          <h2>📂 교육자료 (input 폴더)</h2>
+          <h2>📂 교육자료</h2>
           <span id="fileCount" style="font-size:0.8rem;color:#64748b;">0개 파일</span>
         </div>
         <div class="panel-body">
+          <!-- 외부 폴더 추가 -->
+          <div style="margin-bottom:15px;">
+            <div id="sourceList" style="margin-bottom:10px;"></div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="sourcePath" placeholder="외부 폴더 경로 (예: D:\교육자료)" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:0.85rem;font-family:'Noto Sans KR',sans-serif;">
+              <button class="action-btn primary" onclick="addSource()" style="font-size:0.8rem;white-space:nowrap;">폴더 추가</button>
+            </div>
+          </div>
           <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
             <div class="icon">📄</div>
-            <p>파일을 드래그하거나 클릭하여 업로드</p>
-            <div class="formats">PDF, DOCX, TXT 지원</div>
+            <p>파일을 드래그하거나 클릭하여 업로드 (input 폴더)</p>
+            <div class="formats">PDF, DOCX, TXT, PPTX 지원</div>
           </div>
-          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md">
+          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md,.pptx">
           <ul class="file-list" id="fileList"></ul>
         </div>
       </div>
@@ -347,6 +355,47 @@
   </div>
 
   <script>
+    async function loadSources() {
+      try {
+        const res = await fetch('/api/sources');
+        const data = await res.json();
+        const container = document.getElementById('sourceList');
+        container.innerHTML = data.sources.map(s => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(96,165,250,0.08);margin-bottom:4px;font-size:0.8rem;">
+            <span style="color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s}">📁 ${s}</span>
+            <button class="delete-btn" onclick="removeSource('${s.replace(/\\/g,'\\\\')}')" style="font-size:0.75rem;">✕</button>
+          </div>`).join('');
+      } catch(e) {}
+    }
+
+    async function addSource() {
+      const input = document.getElementById('sourcePath');
+      const dirPath = input.value.trim();
+      if (!dirPath) return;
+      try {
+        const res = await fetch('/api/source', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dirPath })
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        input.value = '';
+        loadSources();
+        loadFiles();
+      } catch(e) { alert('오류: ' + e.message); }
+    }
+
+    async function removeSource(dirPath) {
+      await fetch('/api/source', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dirPath })
+      });
+      loadSources();
+      loadFiles();
+    }
+
     async function loadFiles() {
       try {
         const res = await fetch('/api/files');
@@ -357,7 +406,7 @@
         count.textContent = data.files.length + '개 파일';
 
         if (data.files.length === 0) {
-          list.innerHTML = '<div class="empty-state"><p style="font-size:0.85rem;">input/ 폴더가 비어있습니다</p></div>';
+          list.innerHTML = '<div class="empty-state"><p style="font-size:0.85rem;">등록된 폴더에 지원 파일이 없습니다</p></div>';
           return;
         }
 
@@ -365,16 +414,16 @@
           const ext = f.type.replace('.', '');
           const iconClass = ['pdf','docx','txt'].includes(ext) ? ext : 'other';
           const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(1)+'KB';
+          const dirLabel = f.sourceDir ? f.sourceDir.split('\\').pop().split('/').pop() : '';
           return `
             <li class="file-item">
               <div class="file-info">
                 <div class="file-icon ${iconClass}">${ext.toUpperCase()}</div>
                 <div>
                   <div class="file-name">${f.name}</div>
-                  <div class="file-size">${size}</div>
+                  <div class="file-size">${size} · ${dirLabel}</div>
                 </div>
               </div>
-              <button class="delete-btn" onclick="deleteFile('${f.name}')" title="삭제">✕</button>
             </li>`;
         }).join('');
       } catch(e) {
@@ -450,8 +499,14 @@
       loadFiles();
     });
 
+    loadSources();
     loadFiles();
     loadOutputs();
+
+    // Enter키로 폴더 추가
+    document.getElementById('sourcePath').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addSource();
+    });
 
     // 30초마다 자동 새로고침
     setInterval(() => { loadFiles(); loadOutputs(); }, 30000);
