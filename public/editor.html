@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>슬라이드 에디터</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 상단 툴바 */
+  .toolbar {
+    height: 52px;
+    background: #2d2d2d;
+    border-bottom: 1px solid #3e3e3e;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .toolbar .logo {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    margin-right: 20px;
+    white-space: nowrap;
+  }
+
+  .toolbar select, .toolbar button {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .toolbar select {
+    padding: 6px 10px;
+    background: #3e3e3e;
+    color: #d4d4d4;
+    border: 1px solid #555;
+  }
+
+  .tb-btn {
+    padding: 7px 14px;
+    background: #3e3e3e;
+    color: #d4d4d4;
+    border: 1px solid #555;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .tb-btn:hover { background: #4e4e4e; }
+
+  .tb-btn.primary {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+
+  .tb-btn.primary:hover { background: #1d4ed8; }
+
+  .tb-btn.success {
+    background: #16a34a;
+    color: #fff;
+    border-color: #16a34a;
+  }
+
+  .tb-btn.success:hover { background: #15803d; }
+
+  .tb-btn.danger {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+  }
+
+  .tb-btn.danger:hover { background: #b91c1c; }
+
+  .tb-spacer { flex: 1; }
+
+  /* 메인 레이아웃 */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* 좌측 사이드바 - 썸네일 */
+  .sidebar {
+    width: 220px;
+    background: #252526;
+    border-right: 1px solid #3e3e3e;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid #3e3e3e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #999;
+  }
+
+  .sidebar-header button {
+    background: #3e3e3e;
+    border: none;
+    color: #d4d4d4;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+
+  .sidebar-header button:hover { background: #4e4e4e; }
+
+  .thumb-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  .thumb-list::-webkit-scrollbar { width: 6px; }
+  .thumb-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+  .thumb-item {
+    position: relative;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+  }
+
+  .thumb-item:hover { border-color: #555; }
+  .thumb-item.active { border-color: #2563eb; }
+
+  .thumb-preview {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    font-size: 0.55rem;
+    color: #888;
+    text-align: center;
+    line-height: 1.3;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .thumb-preview .thumb-type {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(37,99,235,0.8);
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.5rem;
+    font-weight: 600;
+  }
+
+  .thumb-preview .thumb-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #ccc;
+    max-height: 80%;
+    overflow: hidden;
+  }
+
+  .thumb-num {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    font-size: 0.6rem;
+    color: #666;
+  }
+
+  .thumb-delete {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: rgba(220,38,38,0.8);
+    border: none;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.6rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .thumb-item:hover .thumb-delete { display: flex; }
+
+  /* 가운데 프리뷰 */
+  .preview-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1e1e1e;
+    padding: 30px;
+    overflow: hidden;
+  }
+
+  .slide-preview {
+    width: 100%;
+    max-width: 960px;
+    aspect-ratio: 16/9;
+    background: #1e293b;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 50px;
+  }
+
+  .slide-preview.cover {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    align-items: flex-start;
+  }
+
+  .slide-preview.section {
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    align-items: flex-start;
+  }
+
+  .slide-preview.ending {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    align-items: center;
+    text-align: center;
+  }
+
+  .slide-preview h1 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .slide-preview .sub {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+    margin-top: 8px;
+  }
+
+  .slide-preview h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #60a5fa;
+    margin-bottom: 6px;
+  }
+
+  .slide-preview .section-h2 {
+    font-size: 1.8rem;
+    color: #fff;
+  }
+
+  .slide-preview .preview-line {
+    width: 40px;
+    height: 3px;
+    background: #3b82f6;
+    margin-bottom: 16px;
+  }
+
+  .slide-preview .preview-bullet {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+  }
+
+  .slide-preview .preview-bullet .dot {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    border-radius: 50%;
+    background: #3b82f6;
+    margin-top: 5px;
+  }
+
+  .slide-preview .preview-cards {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    margin-top: 8px;
+  }
+
+  .slide-preview .pcard {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 12px;
+    border-top: 3px solid #3b82f6;
+  }
+
+  .slide-preview .pcard h4 {
+    font-size: 0.7rem;
+    color: #60a5fa;
+    margin-bottom: 6px;
+  }
+
+  .slide-preview .pcard p {
+    font-size: 0.6rem;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+
+  .slide-preview .preview-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .slide-preview .pstep {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .slide-preview .pstep .num {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    background: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+  }
+
+  .slide-preview .pstep .step-text h5 {
+    font-size: 0.7rem;
+    color: #e2e8f0;
+  }
+
+  .slide-preview .pstep .step-text p {
+    font-size: 0.55rem;
+    color: #94a3b8;
+  }
+
+  .slide-preview .stat-grid {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .slide-preview .stat-item {
+    text-align: center;
+  }
+
+  .slide-preview .stat-item .stat-val {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #60a5fa;
+  }
+
+  .slide-preview .stat-item .stat-lbl {
+    font-size: 0.55rem;
+    color: #94a3b8;
+  }
+
+  .slide-preview .two-col-preview {
+    display: flex;
+    gap: 20px;
+    margin-top: 8px;
+  }
+
+  .slide-preview .two-col-preview .col {
+    flex: 1;
+  }
+
+  .slide-preview .two-col-preview .col h4 {
+    font-size: 0.7rem;
+    color: #60a5fa;
+    margin-bottom: 6px;
+  }
+
+  .slide-preview .section-num-bg {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 3rem;
+    font-weight: 900;
+    opacity: 0.15;
+    color: #fff;
+  }
+
+  .slide-preview .ending-h2 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #fff;
+  }
+
+  /* 우측 편집 패널 */
+  .edit-panel {
+    width: 340px;
+    background: #252526;
+    border-left: 1px solid #3e3e3e;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .edit-panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #3e3e3e;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .edit-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .edit-panel-body::-webkit-scrollbar { width: 6px; }
+  .edit-panel-body::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 8px 10px;
+    background: #1e1e1e;
+    border: 1px solid #3e3e3e;
+    border-radius: 6px;
+    color: #d4d4d4;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: #2563eb;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  .list-item-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: flex-start;
+  }
+
+  .list-item-row input,
+  .list-item-row textarea {
+    flex: 1;
+    padding: 6px 8px;
+    background: #1e1e1e;
+    border: 1px solid #3e3e3e;
+    border-radius: 4px;
+    color: #d4d4d4;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.8rem;
+    outline: none;
+  }
+
+  .list-item-row textarea {
+    resize: vertical;
+    min-height: 36px;
+  }
+
+  .list-item-row button {
+    background: #dc2626;
+    border: none;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .add-btn {
+    width: 100%;
+    padding: 6px;
+    background: rgba(37,99,235,0.15);
+    border: 1px dashed rgba(37,99,235,0.4);
+    color: #60a5fa;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .add-btn:hover {
+    background: rgba(37,99,235,0.25);
+    border-color: #2563eb;
+  }
+
+  .form-divider {
+    height: 1px;
+    background: #3e3e3e;
+    margin: 16px 0;
+  }
+
+  .no-slide-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  /* 슬라이드 추가 모달 */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: #2d2d2d;
+    border-radius: 12px;
+    border: 1px solid #3e3e3e;
+    padding: 24px;
+    width: 400px;
+    max-width: 90vw;
+  }
+
+  .modal h3 {
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+
+  .type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .type-option {
+    padding: 12px;
+    background: #1e1e1e;
+    border: 1px solid #3e3e3e;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+
+  .type-option:hover {
+    border-color: #2563eb;
+    background: rgba(37,99,235,0.1);
+  }
+
+  .type-option .type-icon { font-size: 1.3rem; margin-bottom: 4px; }
+  .type-option .type-name { font-size: 0.8rem; color: #d4d4d4; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #16a34a;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    z-index: 2000;
+    transition: transform 0.3s;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #dc2626; }
+</style>
+</head>
+<body>
+
+<!-- 상단 툴바 -->
+<div class="toolbar">
+  <span class="logo">Slide Editor</span>
+  <label style="font-size:0.8rem;color:#999;">Theme</label>
+  <select id="themeSelect">
+    <option value="modern">Modern Blue</option>
+    <option value="dark">Dark Mode</option>
+    <option value="corporate">Corporate</option>
+    <option value="warm">Warm Orange</option>
+  </select>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" onclick="saveToLocal()">저장</button>
+  <button class="tb-btn" onclick="loadFromLocal()">불러오기</button>
+  <button class="tb-btn" onclick="exportJSON()">JSON 내보내기</button>
+  <button class="tb-btn" onclick="importJSON()">JSON 가져오기</button>
+  <button class="tb-btn primary" onclick="generateWeb()">웹 발표자료</button>
+  <button class="tb-btn success" onclick="generatePPTX()">PPT 다운로드</button>
+</div>
+
+<!-- 메인 영역 -->
+<div class="main">
+  <!-- 좌측 사이드바 -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span>슬라이드</span>
+      <button onclick="showAddModal()">+ 추가</button>
+    </div>
+    <div class="thumb-list" id="thumbList"></div>
+  </div>
+
+  <!-- 가운데 프리뷰 -->
+  <div class="preview-area">
+    <div class="slide-preview" id="slidePreview">
+      <div class="no-slide-msg">슬라이드를 선택하세요</div>
+    </div>
+  </div>
+
+  <!-- 우측 편집 패널 -->
+  <div class="edit-panel">
+    <div class="edit-panel-header" id="editHeader">속성</div>
+    <div class="edit-panel-body" id="editBody">
+      <div class="no-slide-msg">슬라이드를 선택하면 편집할 수 있습니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 추가 모달 -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>슬라이드 추가</h3>
+    <div class="type-grid">
+      <div class="type-option" onclick="addSlide('cover')">
+        <div class="type-icon">🎬</div>
+        <div class="type-name">표지</div>
+      </div>
+      <div class="type-option" onclick="addSlide('section')">
+        <div class="type-icon">📑</div>
+        <div class="type-name">섹션 구분</div>
+      </div>
+      <div class="type-option" onclick="addSlide('bullets')">
+        <div class="type-icon">📝</div>
+        <div class="type-name">불릿 포인트</div>
+      </div>
+      <div class="type-option" onclick="addSlide('cards')">
+        <div class="type-icon">🃏</div>
+        <div class="type-name">카드</div>
+      </div>
+      <div class="type-option" onclick="addSlide('steps')">
+        <div class="type-icon">🔢</div>
+        <div class="type-name">스텝</div>
+      </div>
+      <div class="type-option" onclick="addSlide('two-column')">
+        <div class="type-icon">📊</div>
+        <div class="type-name">2컬럼</div>
+      </div>
+      <div class="type-option" onclick="addSlide('stats')">
+        <div class="type-icon">📈</div>
+        <div class="type-name">통계 숫자</div>
+      </div>
+      <div class="type-option" onclick="addSlide('ending')">
+        <div class="type-icon">🎯</div>
+        <div class="type-name">마무리</div>
+      </div>
+    </div>
+    <button class="tb-btn" style="width:100%;margin-top:14px;" onclick="hideAddModal()">취소</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file input for JSON import -->
+<input type="file" id="jsonFileInput" accept=".json" style="display:none">
+
+<script>
+// ============ 데이터 ============
+let slides = [];
+let selectedIndex = -1;
+
+const SLIDE_TEMPLATES = {
+  cover: () => ({ _type: 'cover', title: '발표 제목', subtitle: '부제목을 입력하세요', presenter: '발표자' }),
+  section: () => ({ _type: 'section', isSection: true, sectionNumber: '01', title: '섹션 제목', description: '섹션 설명' }),
+  bullets: () => ({ _type: 'bullets', type: 'bullets', title: '슬라이드 제목', items: ['첫 번째 항목', '두 번째 항목', '세 번째 항목'] }),
+  cards: () => ({ _type: 'cards', type: 'cards', title: '슬라이드 제목', cards: [{ title: '카드 1', body: '카드 내용' }, { title: '카드 2', body: '카드 내용' }] }),
+  steps: () => ({ _type: 'steps', type: 'steps', title: '슬라이드 제목', steps: [{ title: '단계 1', desc: '설명' }, { title: '단계 2', desc: '설명' }] }),
+  'two-column': () => ({ _type: 'two-column', type: 'two-column', title: '슬라이드 제목', leftTitle: '왼쪽', rightTitle: '오른쪽', leftItems: ['항목 1'], rightItems: ['항목 1'] }),
+  stats: () => ({ _type: 'stats', type: 'stats', title: '슬라이드 제목', stats: [{ value: 100, suffix: '%', label: '라벨' }] }),
+  ending: () => ({ _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' })
+};
+
+// ============ 초기화 ============
+function init() {
+  // localStorage에서 불러오기
+  const saved = localStorage.getItem('slideEditorData');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      slides = data.slides || [];
+      if (data.theme) document.getElementById('themeSelect').value = data.theme;
+    } catch(e) {}
+  }
+
+  // 슬라이드가 없으면 기본 세트
+  if (slides.length === 0) {
+    slides = [
+      { _type: 'cover', title: '기업교육 발표자료', subtitle: 'AI 시대의 디지털 전환', presenter: '발표자명' },
+      { _type: 'section', isSection: true, sectionNumber: '01', title: '첫 번째 섹션', description: '핵심 내용을 다룹니다' },
+      { _type: 'bullets', type: 'bullets', title: '주요 포인트', items: ['핵심 내용 1: 중요한 사항을 설명합니다', '핵심 내용 2: 구체적인 예시를 들어봅니다', '핵심 내용 3: 실행 방안을 제시합니다'] },
+      { _type: 'cards', type: 'cards', title: '핵심 전략', cards: [{ title: '전략 1', body: '구체적인 전략 내용을 작성합니다' }, { title: '전략 2', body: '두 번째 전략 내용입니다' }, { title: '전략 3', body: '세 번째 전략 내용입니다' }] },
+      { _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' }
+    ];
+  }
+
+  renderThumbs();
+  if (slides.length > 0) selectSlide(0);
+}
+
+// ============ 렌더링 ============
+function renderThumbs() {
+  const list = document.getElementById('thumbList');
+  list.innerHTML = slides.map((s, i) => {
+    const type = s._type || 'content';
+    const title = s.title || '(제목 없음)';
+    const typeLabel = { cover: '표지', section: '섹션', bullets: '불릿', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계', ending: '마무리' }[type] || type;
+
+    return `
+    <div class="thumb-item ${i === selectedIndex ? 'active' : ''}" onclick="selectSlide(${i})" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="dropSlide(event,${i})">
+      <div class="thumb-preview">
+        <span class="thumb-type">${typeLabel}</span>
+        <span class="thumb-title">${escHtml(title)}</span>
+        <span class="thumb-num">${i + 1}</span>
+      </div>
+      <button class="thumb-delete" onclick="event.stopPropagation();deleteSlide(${i})">X</button>
+    </div>`;
+  }).join('');
+}
+
+function renderPreview() {
+  const el = document.getElementById('slidePreview');
+  if (selectedIndex < 0 || selectedIndex >= slides.length) {
+    el.className = 'slide-preview';
+    el.innerHTML = '<div class="no-slide-msg">슬라이드를 선택하세요</div>';
+    return;
+  }
+
+  const s = slides[selectedIndex];
+  const type = s._type || 'content';
+
+  el.className = 'slide-preview';
+  if (type === 'cover') el.classList.add('cover');
+  else if (type === 'section') el.classList.add('section');
+  else if (type === 'ending') el.classList.add('ending');
+
+  let html = '';
+
+  if (type === 'cover') {
+    html = `<h1>${escHtml(s.title)}</h1>
+      <div style="width:60px;height:3px;background:rgba(255,255,255,0.5);margin:12px 0;"></div>
+      <div class="sub">${escHtml(s.subtitle || '')}</div>
+      <div class="sub" style="margin-top:20px;opacity:0.5;font-size:0.8rem;">${escHtml(s.presenter || '')}</div>`;
+  } else if (type === 'section') {
+    html = `<span class="section-num-bg">${escHtml(s.sectionNumber || '')}</span>
+      <h2 class="section-h2">${escHtml(s.title)}</h2>
+      <div class="sub">${escHtml(s.description || '')}</div>`;
+  } else if (type === 'ending') {
+    html = `<h2 class="ending-h2">${escHtml(s.title || '감사합니다')}</h2>
+      <div class="sub">${escHtml(s.subtitle || '')}</div>`;
+  } else {
+    html = `<h2>${escHtml(s.title)}</h2><div class="preview-line"></div>`;
+
+    if (s.type === 'bullets') {
+      html += (s.items || []).map(it => `<div class="preview-bullet"><span class="dot"></span><span>${escHtml(it)}</span></div>`).join('');
+    } else if (s.type === 'cards') {
+      html += `<div class="preview-cards">${(s.cards || []).map(c => `<div class="pcard"><h4>${escHtml(c.title)}</h4><p>${escHtml(c.body || '')}</p></div>`).join('')}</div>`;
+    } else if (s.type === 'steps') {
+      html += `<div class="preview-steps">${(s.steps || []).map((st, i) => `<div class="pstep"><div class="num">${i+1}</div><div class="step-text"><h5>${escHtml(typeof st === 'string' ? st : st.title)}</h5>${st.desc ? `<p>${escHtml(st.desc)}</p>` : ''}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'two-column') {
+      html += `<div class="two-col-preview"><div class="col"><h4>${escHtml(s.leftTitle || '')}</h4>${(s.leftItems || []).map(it => `<div class="preview-bullet"><span class="dot"></span><span>${escHtml(it)}</span></div>`).join('')}</div><div class="col"><h4>${escHtml(s.rightTitle || '')}</h4>${(s.rightItems || []).map(it => `<div class="preview-bullet"><span class="dot"></span><span>${escHtml(it)}</span></div>`).join('')}</div></div>`;
+    } else if (s.type === 'stats') {
+      html += `<div class="stat-grid">${(s.stats || []).map(st => `<div class="stat-item"><div class="stat-val">${st.value}${escHtml(st.suffix || '')}</div><div class="stat-lbl">${escHtml(st.label)}</div></div>`).join('')}</div>`;
+    } else {
+      html += `<div style="font-size:0.75rem;color:#94a3b8;">${escHtml(s.body || '')}</div>`;
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function renderEditPanel() {
+  const header = document.getElementById('editHeader');
+  const body = document.getElementById('editBody');
+
+  if (selectedIndex < 0 || selectedIndex >= slides.length) {
+    header.textContent = '속성';
+    body.innerHTML = '<div class="no-slide-msg">슬라이드를 선택하면 편집할 수 있습니다</div>';
+    return;
+  }
+
+  const s = slides[selectedIndex];
+  const type = s._type || 'content';
+  const typeLabel = { cover: '표지', section: '섹션 구분', bullets: '불릿 포인트', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계 숫자', ending: '마무리' }[type] || type;
+  header.textContent = `#${selectedIndex + 1} ${typeLabel}`;
+
+  let html = '';
+
+  if (type === 'cover') {
+    html = `
+      <div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-group"><label>부제목</label><input value="${escAttr(s.subtitle || '')}" onchange="updateField('subtitle',this.value)"></div>
+      <div class="form-group"><label>발표자</label><input value="${escAttr(s.presenter || '')}" onchange="updateField('presenter',this.value)"></div>`;
+  } else if (type === 'section') {
+    html = `
+      <div class="form-group"><label>섹션 번호</label><input value="${escAttr(s.sectionNumber || '')}" onchange="updateField('sectionNumber',this.value)"></div>
+      <div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-group"><label>설명</label><textarea rows="2" onchange="updateField('description',this.value)">${escHtml(s.description || '')}</textarea></div>`;
+  } else if (type === 'ending') {
+    html = `
+      <div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title || '감사합니다')}</textarea></div>
+      <div class="form-group"><label>부제목</label><input value="${escAttr(s.subtitle || '')}" onchange="updateField('subtitle',this.value)"></div>`;
+  } else if (s.type === 'bullets') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">불릿 항목</label>
+      <div id="bulletItems">${(s.items || []).map((it, i) => `<div class="list-item-row"><textarea rows="1" onchange="updateListItem('items',${i},this.value)">${escHtml(it)}</textarea><button onclick="removeListItem('items',${i})">X</button></div>`).join('')}</div>
+      <button class="add-btn" onclick="addListItem('items','새 항목')">+ 항목 추가</button>`;
+  } else if (s.type === 'cards') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">카드</label>
+      <div id="cardItems">${(s.cards || []).map((c, i) => `
+        <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+          <div class="list-item-row"><input placeholder="카드 제목" value="${escAttr(c.title)}" onchange="updateCardField(${i},'title',this.value)"><button onclick="removeCard(${i})">X</button></div>
+          <textarea rows="2" style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;" onchange="updateCardField(${i},'body',this.value)">${escHtml(c.body || '')}</textarea>
+        </div>`).join('')}</div>
+      <button class="add-btn" onclick="addCard()">+ 카드 추가</button>`;
+  } else if (s.type === 'steps') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">스텝</label>
+      <div id="stepItems">${(s.steps || []).map((st, i) => {
+        const stepObj = typeof st === 'string' ? { title: st, desc: '' } : st;
+        return `
+        <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+          <div class="list-item-row"><input placeholder="스텝 제목" value="${escAttr(stepObj.title)}" onchange="updateStepField(${i},'title',this.value)"><button onclick="removeStep(${i})">X</button></div>
+          <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;" placeholder="설명 (선택)" value="${escAttr(stepObj.desc || '')}" onchange="updateStepField(${i},'desc',this.value)">
+        </div>`;
+      }).join('')}</div>
+      <button class="add-btn" onclick="addStep()">+ 스텝 추가</button>`;
+  } else if (s.type === 'two-column') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <div class="form-group"><label>왼쪽 제목</label><input value="${escAttr(s.leftTitle || '')}" onchange="updateField('leftTitle',this.value)"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:6px;display:block;">왼쪽 항목</label>
+      <div id="leftItems">${(s.leftItems || []).map((it, i) => `<div class="list-item-row"><textarea rows="1" onchange="updateListItem('leftItems',${i},this.value)">${escHtml(it)}</textarea><button onclick="removeListItem('leftItems',${i})">X</button></div>`).join('')}</div>
+      <button class="add-btn" onclick="addListItem('leftItems','새 항목')" style="margin-bottom:14px;">+ 왼쪽 항목 추가</button>
+      <div class="form-divider"></div>
+      <div class="form-group"><label>오른쪽 제목</label><input value="${escAttr(s.rightTitle || '')}" onchange="updateField('rightTitle',this.value)"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:6px;display:block;">오른쪽 항목</label>
+      <div id="rightItems">${(s.rightItems || []).map((it, i) => `<div class="list-item-row"><textarea rows="1" onchange="updateListItem('rightItems',${i},this.value)">${escHtml(it)}</textarea><button onclick="removeListItem('rightItems',${i})">X</button></div>`).join('')}</div>
+      <button class="add-btn" onclick="addListItem('rightItems','새 항목')">+ 오른쪽 항목 추가</button>`;
+  } else if (s.type === 'stats') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">통계 항목</label>
+      <div id="statItems">${(s.stats || []).map((st, i) => `
+        <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+          <div class="list-item-row">
+            <input type="number" placeholder="숫자" value="${st.value}" onchange="updateStatField(${i},'value',Number(this.value))" style="width:70px;">
+            <input placeholder="접미사 (%,+등)" value="${escAttr(st.suffix || '')}" onchange="updateStatField(${i},'suffix',this.value)" style="width:60px;">
+            <button onclick="removeStat(${i})">X</button>
+          </div>
+          <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;" placeholder="라벨" value="${escAttr(st.label || '')}" onchange="updateStatField(${i},'label',this.value)">
+        </div>`).join('')}</div>
+      <button class="add-btn" onclick="addStat()">+ 통계 추가</button>`;
+  } else {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title || '')}</textarea></div>
+      <div class="form-group"><label>내용</label><textarea rows="6" onchange="updateField('body',this.value)">${escHtml(s.body || '')}</textarea></div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+// ============ 선택/조작 ============
+function selectSlide(i) {
+  selectedIndex = i;
+  renderThumbs();
+  renderPreview();
+  renderEditPanel();
+}
+
+function deleteSlide(i) {
+  if (slides.length <= 1) { showToast('최소 1개 슬라이드 필요', true); return; }
+  slides.splice(i, 1);
+  if (selectedIndex >= slides.length) selectedIndex = slides.length - 1;
+  if (selectedIndex === i) {
+    selectSlide(Math.min(i, slides.length - 1));
+  } else {
+    if (i < selectedIndex) selectedIndex--;
+    renderThumbs();
+    renderPreview();
+    renderEditPanel();
+  }
+  autoSave();
+}
+
+function showAddModal() { document.getElementById('addModal').classList.add('show'); }
+function hideAddModal() { document.getElementById('addModal').classList.remove('show'); }
+
+function addSlide(type) {
+  hideAddModal();
+  const template = SLIDE_TEMPLATES[type];
+  if (!template) return;
+  const newSlide = template();
+  const insertAt = selectedIndex >= 0 ? selectedIndex + 1 : slides.length;
+  slides.splice(insertAt, 0, newSlide);
+  selectSlide(insertAt);
+  autoSave();
+}
+
+// ============ 필드 업데이트 ============
+function updateField(field, value) {
+  if (selectedIndex < 0) return;
+  slides[selectedIndex][field] = value;
+  renderPreview();
+  renderThumbs();
+  autoSave();
+}
+
+function updateListItem(field, index, value) {
+  if (selectedIndex < 0) return;
+  slides[selectedIndex][field][index] = value;
+  renderPreview();
+  autoSave();
+}
+
+function removeListItem(field, index) {
+  if (selectedIndex < 0) return;
+  slides[selectedIndex][field].splice(index, 1);
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+function addListItem(field, defaultVal) {
+  if (selectedIndex < 0) return;
+  if (!slides[selectedIndex][field]) slides[selectedIndex][field] = [];
+  slides[selectedIndex][field].push(defaultVal);
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+function updateCardField(cardIndex, field, value) {
+  if (selectedIndex < 0) return;
+  slides[selectedIndex].cards[cardIndex][field] = value;
+  renderPreview();
+  autoSave();
+}
+
+function removeCard(i) {
+  slides[selectedIndex].cards.splice(i, 1);
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+function addCard() {
+  if (!slides[selectedIndex].cards) slides[selectedIndex].cards = [];
+  slides[selectedIndex].cards.push({ title: '새 카드', body: '카드 내용' });
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+function updateStepField(stepIndex, field, value) {
+  if (selectedIndex < 0) return;
+  const st = slides[selectedIndex].steps[stepIndex];
+  if (typeof st === 'string') {
+    slides[selectedIndex].steps[stepIndex] = { title: st, desc: '' };
+  }
+  slides[selectedIndex].steps[stepIndex][field] = value;
+  renderPreview();
+  autoSave();
+}
+
+function removeStep(i) {
+  slides[selectedIndex].steps.splice(i, 1);
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+function addStep() {
+  if (!slides[selectedIndex].steps) slides[selectedIndex].steps = [];
+  slides[selectedIndex].steps.push({ title: '새 단계', desc: '' });
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+function updateStatField(statIndex, field, value) {
+  if (selectedIndex < 0) return;
+  slides[selectedIndex].stats[statIndex][field] = value;
+  renderPreview();
+  autoSave();
+}
+
+function removeStat(i) {
+  slides[selectedIndex].stats.splice(i, 1);
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+function addStat() {
+  if (!slides[selectedIndex].stats) slides[selectedIndex].stats = [];
+  slides[selectedIndex].stats.push({ value: 0, suffix: '', label: '라벨' });
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+// ============ 드래그 앤 드롭 ============
+let dragIndex = -1;
+
+function dragStart(e, i) {
+  dragIndex = i;
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function dropSlide(e, targetIndex) {
+  e.preventDefault();
+  if (dragIndex < 0 || dragIndex === targetIndex) return;
+  const [moved] = slides.splice(dragIndex, 1);
+  slides.splice(targetIndex, 0, moved);
+  if (selectedIndex === dragIndex) selectedIndex = targetIndex;
+  else if (dragIndex < selectedIndex && targetIndex >= selectedIndex) selectedIndex--;
+  else if (dragIndex > selectedIndex && targetIndex <= selectedIndex) selectedIndex++;
+  dragIndex = -1;
+  renderThumbs();
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+// ============ 저장/로드 ============
+function autoSave() {
+  const theme = document.getElementById('themeSelect').value;
+  localStorage.setItem('slideEditorData', JSON.stringify({ slides, theme }));
+}
+
+function saveToLocal() {
+  autoSave();
+  showToast('저장되었습니다');
+}
+
+function loadFromLocal() {
+  const saved = localStorage.getItem('slideEditorData');
+  if (!saved) { showToast('저장된 데이터가 없습니다', true); return; }
+  try {
+    const data = JSON.parse(saved);
+    slides = data.slides || [];
+    if (data.theme) document.getElementById('themeSelect').value = data.theme;
+    selectedIndex = slides.length > 0 ? 0 : -1;
+    renderThumbs();
+    renderPreview();
+    renderEditPanel();
+    showToast('불러왔습니다');
+  } catch(e) { showToast('데이터 오류', true); }
+}
+
+function exportJSON() {
+  const jsonData = buildSlideJSON();
+  const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'slides.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('JSON 내보내기 완료');
+}
+
+function importJSON() {
+  document.getElementById('jsonFileInput').click();
+}
+
+document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      loadFromJSON(data);
+      showToast('JSON 가져오기 완료');
+    } catch(err) { showToast('JSON 파싱 오류', true); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+function loadFromJSON(data) {
+  slides = [];
+
+  if (data.cover) {
+    slides.push({ _type: 'cover', ...data.cover });
+  }
+
+  if (data.content) {
+    for (const section of data.content) {
+      if (section.isSection) {
+        slides.push({ _type: 'section', ...section });
+      } else {
+        slides.push({ _type: section.type || 'bullets', ...section });
+      }
+    }
+  }
+
+  if (data.ending) {
+    slides.push({ _type: 'ending', ...data.ending });
+  }
+
+  // flat array format
+  if (Array.isArray(data)) {
+    slides = data;
+  }
+
+  if (data.slides && Array.isArray(data.slides)) {
+    slides = data.slides;
+  }
+
+  selectedIndex = slides.length > 0 ? 0 : -1;
+  renderThumbs();
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+// ============ 빌드 JSON ============
+function buildSlideJSON() {
+  const result = { cover: null, toc: [], content: [], ending: null };
+
+  for (const s of slides) {
+    const clean = { ...s };
+    delete clean._type;
+
+    if (s._type === 'cover') {
+      result.cover = clean;
+    } else if (s._type === 'ending') {
+      result.ending = clean;
+    } else if (s._type === 'section') {
+      result.content.push(clean);
+    } else {
+      result.content.push(clean);
+    }
+  }
+
+  return result;
+}
+
+// ============ 생성 ============
+async function generateWeb() {
+  const theme = document.getElementById('themeSelect').value;
+  const jsonData = buildSlideJSON();
+  const coverTitle = jsonData.cover?.title || 'presentation';
+  const filename = coverTitle.replace(/[^a-zA-Z0-9가-힣]/g, '-').substring(0, 50) + '.html';
+
+  try {
+    const res = await fetch('/api/generate/web-from-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, slides: jsonData, theme })
+    });
+    const data = await res.json();
+    if (data.error) { showToast('오류: ' + data.error, true); return; }
+    showToast('웹 발표자료 생성 완료!');
+    window.open(data.path, '_blank');
+  } catch(e) { showToast('생성 실패: ' + e.message, true); }
+}
+
+async function generatePPTX() {
+  const theme = document.getElementById('themeSelect').value;
+  const jsonData = buildSlideJSON();
+  const coverTitle = jsonData.cover?.title || 'presentation';
+  const filename = coverTitle.replace(/[^a-zA-Z0-9가-힣]/g, '-').substring(0, 50) + '.pptx';
+
+  try {
+    const res = await fetch('/api/generate/pptx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, slides: jsonData, theme })
+    });
+    const data = await res.json();
+    if (data.error) { showToast('오류: ' + data.error, true); return; }
+    showToast('PPT 생성 완료!');
+    const a = document.createElement('a');
+    a.href = '/' + data.path;
+    a.download = filename;
+    a.click();
+  } catch(e) { showToast('생성 실패: ' + e.message, true); }
+}
+
+// ============ 유틸 ============
+function escHtml(t) {
+  if (!t) return '';
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(t) {
+  return escHtml(t);
+}
+
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isError ? ' error' : '');
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// 테마 변경 시 자동저장
+document.getElementById('themeSelect').addEventListener('change', autoSave);
+
+// Ctrl+S 저장
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault();
+    saveToLocal();
+  }
+});
+
+// 초기화
+init();
+</script>
+</body>
+</html>

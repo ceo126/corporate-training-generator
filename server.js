@@ -134,6 +134,26 @@ app.get('/api/outputs', (req, res) => {
   res.json({ outputs: [...pptxFiles, ...webFiles] });
 });
 
+// 에디터 페이지
+app.get('/editor', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/editor.html'));
+});
+
+// JSON 데이터로 웹 발표자료 생성
+app.post('/api/generate/web-from-data', (req, res) => {
+  try {
+    const { filename, slides, theme } = req.body;
+    const webGenerator = require('./lib/webGenerator');
+    const html = webGenerator.generateHTML(slides, { theme, title: slides.cover?.title || 'Presentation' });
+    const outputPath = path.join(__dirname, 'output/web', filename);
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, html, 'utf8');
+    res.json({ success: true, path: `/output/web/${filename}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 웹 발표자료 데이터 저장 (Claude Code에서 호출)
 app.post('/api/generate/web', (req, res) => {
   const { filename, html } = req.body;
