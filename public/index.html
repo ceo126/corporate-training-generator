@@ -361,11 +361,14 @@
         const res = await fetch('/api/sources');
         const data = await res.json();
         const container = document.getElementById('sourceList');
-        container.innerHTML = data.sources.map(s => `
+        container.innerHTML = data.sources.map(s => {
+          const escaped = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+          return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(96,165,250,0.08);margin-bottom:4px;font-size:0.8rem;">
-            <span style="color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s}">📁 ${s}</span>
-            <button class="delete-btn" onclick="removeSource('${s.replace(/\\/g,'\\\\')}')" style="font-size:0.75rem;">✕</button>
-          </div>`).join('');
+            <span style="color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escaped}">📁 ${escaped}</span>
+            <button class="delete-btn" onclick="removeSource('${escaped.replace(/\\/g,'\\\\')}')" style="font-size:0.75rem;">✕</button>
+          </div>`;
+        }).join('');
       } catch(e) {}
     }
 

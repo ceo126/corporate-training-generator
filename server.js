@@ -10,7 +10,7 @@ const PORT = 8220;
 let sourceDirs = [
   path.join(__dirname, 'input'),
   'D:/0000.유벤치/기업교육 자료'
-];
+].filter(d => fs.existsSync(d));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -99,7 +99,12 @@ app.post('/api/upload', upload.array('files'), (req, res) => {
 
 // 파일 삭제
 app.delete('/api/files/:name', (req, res) => {
-  const filePath = path.join(__dirname, 'input', req.params.name);
+  const inputDir = path.join(__dirname, 'input');
+  const filePath = path.join(inputDir, req.params.name);
+  // Path Traversal 방지
+  if (!filePath.startsWith(inputDir + path.sep)) {
+    return res.status(400).json({ error: '잘못된 파일 경로입니다' });
+  }
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
     res.json({ success: true });
@@ -156,10 +161,15 @@ app.post('/api/generate/web-from-data', (req, res) => {
 
 // 웹 발표자료 데이터 저장 (Claude Code에서 호출)
 app.post('/api/generate/web', (req, res) => {
-  const { filename, html } = req.body;
-  const outputPath = path.join(__dirname, 'output/web', filename);
-  fs.writeFileSync(outputPath, html, 'utf8');
-  res.json({ success: true, path: `/output/web/${filename}` });
+  try {
+    const { filename, html } = req.body;
+    const outputPath = path.join(__dirname, 'output/web', filename);
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, html, 'utf8');
+    res.json({ success: true, path: `/output/web/${filename}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // PPT 데이터 저장 (Claude Code에서 호출)
