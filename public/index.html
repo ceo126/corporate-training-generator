@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기업교육 발표자료 생성기</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 25px 40px;
+  }
+
+  .header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header p {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 5px;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 40px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+
+  .panel {
+    background: #1e293b;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .panel-body {
+    padding: 20px 24px;
+  }
+
+  /* 파일 업로드 */
+  .upload-zone {
+    border: 2px dashed rgba(96,165,250,0.3);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 15px;
+  }
+
+  .upload-zone:hover {
+    border-color: #60a5fa;
+    background: rgba(96,165,250,0.05);
+  }
+
+  .upload-zone .icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  .upload-zone p {
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+
+  .upload-zone .formats {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 8px;
+  }
+
+  /* 파일 목록 */
+  .file-list {
+    list-style: none;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+
+  .file-item:hover {
+    background: rgba(255,255,255,0.06);
+  }
+
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .file-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .file-icon.pdf { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .file-icon.docx { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .file-icon.txt { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .file-icon.other { background: rgba(168,85,247,0.15); color: #a855f7; }
+
+  .file-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .file-size {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.2s;
+    font-size: 1rem;
+  }
+
+  .delete-btn:hover {
+    color: #ef4444;
+    background: rgba(239,68,68,0.1);
+  }
+
+  /* 결과물 목록 */
+  .output-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 8px;
+  }
+
+  .output-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .output-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .output-badge.pptx {
+    background: rgba(249,115,22,0.15);
+    color: #f97316;
+  }
+
+  .output-badge.web {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .action-btn.primary {
+    background: #2563eb;
+    color: white;
+  }
+
+  .action-btn.primary:hover {
+    background: #1d4ed8;
+  }
+
+  .action-btn.secondary {
+    background: rgba(255,255,255,0.08);
+    color: #e2e8f0;
+  }
+
+  .action-btn.secondary:hover {
+    background: rgba(255,255,255,0.12);
+  }
+
+  /* 안내 */
+  .guide-box {
+    background: rgba(96,165,250,0.08);
+    border: 1px solid rgba(96,165,250,0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .guide-box h3 {
+    font-size: 0.95rem;
+    color: #60a5fa;
+    margin-bottom: 12px;
+  }
+
+  .guide-box ol {
+    padding-left: 20px;
+  }
+
+  .guide-box li {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    line-height: 1.6;
+  }
+
+  .guide-box code {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #a78bfa;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #64748b;
+  }
+
+  .empty-state .icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+
+  #fileInput { display: none; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>기업교육 발표자료 생성기</h1>
+    <p>교육자료를 넣고 Claude Code에게 요청하면 PPT + 동적 웹 발표자료를 자동 생성합니다</p>
+  </div>
+
+  <div class="container">
+    <div class="grid">
+      <!-- 입력 파일 -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>📂 교육자료 (input 폴더)</h2>
+          <span id="fileCount" style="font-size:0.8rem;color:#64748b;">0개 파일</span>
+        </div>
+        <div class="panel-body">
+          <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+            <div class="icon">📄</div>
+            <p>파일을 드래그하거나 클릭하여 업로드</p>
+            <div class="formats">PDF, DOCX, TXT 지원</div>
+          </div>
+          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md">
+          <ul class="file-list" id="fileList"></ul>
+        </div>
+      </div>
+
+      <!-- 생성된 결과물 -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>📊 생성된 발표자료</h2>
+          <button class="action-btn secondary" onclick="loadOutputs()" style="font-size:0.75rem;">새로고침</button>
+        </div>
+        <div class="panel-body">
+          <div id="outputList">
+            <div class="empty-state">
+              <div class="icon">✨</div>
+              <p>아직 생성된 발표자료가 없습니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 사용 안내 -->
+    <div class="guide-box">
+      <h3>사용 방법</h3>
+      <ol>
+        <li><strong>교육자료 넣기</strong> — 위에서 업로드하거나 <code>input/</code> 폴더에 직접 넣기</li>
+        <li><strong>Claude Code에 요청</strong> — "발표자료 만들어줘" 또는 "AI 교육 PPT 만들어줘"</li>
+        <li><strong>결과물 확인</strong> — PPT 다운로드 또는 웹 발표자료 미리보기</li>
+        <li><strong>웹 발표자료</strong> — 키보드 ←→, 스페이스, F(전체화면) 으로 조작</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    async function loadFiles() {
+      try {
+        const res = await fetch('/api/files');
+        const data = await res.json();
+        const list = document.getElementById('fileList');
+        const count = document.getElementById('fileCount');
+
+        count.textContent = data.files.length + '개 파일';
+
+        if (data.files.length === 0) {
+          list.innerHTML = '<div class="empty-state"><p style="font-size:0.85rem;">input/ 폴더가 비어있습니다</p></div>';
+          return;
+        }
+
+        list.innerHTML = data.files.map(f => {
+          const ext = f.type.replace('.', '');
+          const iconClass = ['pdf','docx','txt'].includes(ext) ? ext : 'other';
+          const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(1)+'KB';
+          return `
+            <li class="file-item">
+              <div class="file-info">
+                <div class="file-icon ${iconClass}">${ext.toUpperCase()}</div>
+                <div>
+                  <div class="file-name">${f.name}</div>
+                  <div class="file-size">${size}</div>
+                </div>
+              </div>
+              <button class="delete-btn" onclick="deleteFile('${f.name}')" title="삭제">✕</button>
+            </li>`;
+        }).join('');
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    async function loadOutputs() {
+      try {
+        const res = await fetch('/api/outputs');
+        const data = await res.json();
+        const container = document.getElementById('outputList');
+
+        if (data.outputs.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="icon">✨</div><p>아직 생성된 발표자료가 없습니다</p></div>';
+          return;
+        }
+
+        container.innerHTML = data.outputs.map(o => `
+          <div class="output-item">
+            <div class="output-info">
+              <span class="output-badge ${o.type}">${o.type}</span>
+              <span style="font-size:0.9rem;">${o.name}</span>
+            </div>
+            <div class="output-actions">
+              ${o.type === 'web'
+                ? `<a href="${o.path}" target="_blank" class="action-btn primary">발표 시작</a>`
+                : `<a href="${o.path}" download class="action-btn primary">다운로드</a>`}
+            </div>
+          </div>`).join('');
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    async function deleteFile(name) {
+      if (!confirm(name + ' 파일을 삭제하시겠습니까?')) return;
+      await fetch('/api/files/' + encodeURIComponent(name), { method: 'DELETE' });
+      loadFiles();
+    }
+
+    // 파일 업로드
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const formData = new FormData();
+      for (const file of e.target.files) {
+        formData.append('files', file);
+      }
+      await fetch('/api/upload', { method: 'POST', body: formData });
+      e.target.value = '';
+      loadFiles();
+    });
+
+    // 드래그 앤 드롭
+    const uploadZone = document.querySelector('.upload-zone');
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = '#60a5fa';
+      uploadZone.style.background = 'rgba(96,165,250,0.1)';
+    });
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.style.borderColor = '';
+      uploadZone.style.background = '';
+    });
+    uploadZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = '';
+      uploadZone.style.background = '';
+      const formData = new FormData();
+      for (const file of e.dataTransfer.files) {
+        formData.append('files', file);
+      }
+      await fetch('/api/upload', { method: 'POST', body: formData });
+      loadFiles();
+    });
+
+    loadFiles();
+    loadOutputs();
+
+    // 30초마다 자동 새로고침
+    setInterval(() => { loadFiles(); loadOutputs(); }, 30000);
+  </script>
+</body>
+</html>
