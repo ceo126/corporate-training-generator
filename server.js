@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const webGenerator = require('./lib/webGenerator');
+const pptGenerator = require('./lib/pptGenerator');
 
 const app = express();
 const PORT = 8220;
@@ -16,7 +18,9 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
 app.use('/output', express.static('output'));
-app.use('/reveal', express.static(path.join(__dirname, 'node_modules/reveal.js')));
+
+// 지원 파일 확장자
+const SUPPORTED_EXT = ['.pdf', '.docx', '.txt', '.md', '.pptx', '.hwp'];
 
 // 파일 업로드 설정
 const storage = multer.diskStorage({
@@ -26,9 +30,25 @@ const storage = multer.diskStorage({
     cb(null, originalName);
   }
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (SUPPORTED_EXT.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`지원하지 않는 파일 형식: ${ext}`));
+    }
+  }
+});
 
-// 외부 소스 폴더 추가
+// ============ 소스 폴더 관리 ============
+
+app.get('/api/sources', (req, res) => {
+  res.json({ sources: sourceDirs });
+});
+
 app.post('/api/source', (req, res) => {
   const { dirPath } = req.body;
   if (!dirPath) return res.status(400).json({ error: '경로를 입력해주세요' });
@@ -40,12 +60,6 @@ app.post('/api/source', (req, res) => {
   res.json({ success: true, sources: sourceDirs });
 });
 
-// 소스 폴더 목록
-app.get('/api/sources', (req, res) => {
-  res.json({ sources: sourceDirs });
-});
-
-// 소스 폴더 제거
 app.delete('/api/source', (req, res) => {
   const { dirPath } = req.body;
   const resolved = path.resolve(dirPath);
@@ -53,10 +67,8 @@ app.delete('/api/source', (req, res) => {
   res.json({ success: true, sources: sourceDirs });
 });
 
-// 지원 파일 확장자
-const SUPPORTED_EXT = ['.pdf', '.docx', '.txt', '.md', '.pptx', '.hwp'];
+// ============ 파일 관리 ============
 
-// 모든 소스 폴더에서 파일 목록 (하위 폴더 포함)
 app.get('/api/files', (req, res) => {
   const files = [];
   for (const dir of sourceDirs) {
@@ -67,21 +79,29 @@ app.get('/api/files', (req, res) => {
 });
 
 function scanDir(baseDir, currentDir, files) {
-  const entries = fs.readdirSync(currentDir);
+  let entries;
+  try {
+    entries = fs.readdirSync(currentDir);
+  } catch (err) {
+    return; // 권한 없는 폴더 등은 건너뜀
+  }
   for (const entry of entries) {
     if (entry.startsWith('.')) continue;
     const fullPath = path.join(currentDir, entry);
-    const stat = fs.statSync(fullPath);
+    let stat;
+    try {
+      stat = fs.statSync(fullPath);
+    } catch (err) {
+      continue; // 접근 불가 파일 건너뜀
+    }
     if (stat.isDirectory()) {
       scanDir(baseDir, fullPath, files);
     } else {
       const ext = path.extname(entry).toLowerCase();
       if (SUPPORTED_EXT.includes(ext)) {
-        const relativePath = path.relative(baseDir, fullPath);
         files.push({
           name: entry,
-          path: fullPath,
-          relativePath,
+          relativePath: path.relative(baseDir, fullPath),
           sourceDir: baseDir,
           size: stat.size,
           type: ext,
@@ -92,12 +112,10 @@ function scanDir(baseDir, currentDir, files) {
   }
 }
 
-// 파일 업로드
 app.post('/api/upload', upload.array('files'), (req, res) => {
   res.json({ success: true, count: req.files.length });
 });
 
-// 파일 삭제
 app.delete('/api/files/:name', (req, res) => {
   const inputDir = path.join(__dirname, 'input');
   const filePath = path.join(inputDir, req.params.name);
@@ -113,7 +131,8 @@ app.delete('/api/files/:name', (req, res) => {
   }
 });
 
-// 생성된 결과물 목록
+// ============ 결과물 관리 ============
+
 app.get('/api/outputs', (req, res) => {
   const pptxDir = path.join(__dirname, 'output/pptx');
   const webDir = path.join(__dirname, 'output/web');
@@ -139,16 +158,32 @@ app.get('/api/outputs', (req, res) => {
   res.json({ outputs: [...pptxFiles, ...webFiles] });
 });
 
-// 에디터 페이지
+app.delete('/api/outputs/:type/:name', (req, res) => {
+  const { type, name } = req.params;
+  const dir = type === 'pptx' ? 'output/pptx' : 'output/web';
+  const outputDir = path.join(__dirname, dir);
+  const filePath = path.join(outputDir, name);
+  // Path Traversal 방지
+  if (!filePath.startsWith(outputDir + path.sep)) {
+    return res.status(400).json({ error: '잘못된 경로입니다' });
+  }
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+  }
+});
+
+// ============ 생성 ============
+
 app.get('/editor', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/editor.html'));
 });
 
-// JSON 데이터로 웹 발표자료 생성
 app.post('/api/generate/web-from-data', (req, res) => {
   try {
     const { filename, slides, theme } = req.body;
-    const webGenerator = require('./lib/webGenerator');
     const html = webGenerator.generateHTML(slides, { theme, title: slides.cover?.title || 'Presentation' });
     const outputPath = path.join(__dirname, 'output/web', filename);
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
@@ -159,7 +194,6 @@ app.post('/api/generate/web-from-data', (req, res) => {
   }
 });
 
-// 웹 발표자료 데이터 저장 (Claude Code에서 호출)
 app.post('/api/generate/web', (req, res) => {
   try {
     const { filename, html } = req.body;
@@ -172,16 +206,21 @@ app.post('/api/generate/web', (req, res) => {
   }
 });
 
-// PPT 데이터 저장 (Claude Code에서 호출)
 app.post('/api/generate/pptx', async (req, res) => {
   try {
     const { filename, slides, theme } = req.body;
-    const pptGenerator = require('./lib/pptGenerator');
     const outputPath = await pptGenerator.generate(slides, theme, filename);
     res.json({ success: true, path: outputPath });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ============ 시작 ============
+
+// 필요한 디렉토리 자동 생성
+['input', 'output/pptx', 'output/web'].forEach(dir => {
+  fs.mkdirSync(path.join(__dirname, dir), { recursive: true });
 });
 
 app.listen(PORT, () => {

@@ -356,6 +356,11 @@
   </div>
 
   <script>
+    function escHtml(t) {
+      if (!t) return '';
+      return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
     async function loadSources() {
       try {
         const res = await fetch('/api/sources');
@@ -422,10 +427,10 @@
           return `
             <li class="file-item">
               <div class="file-info">
-                <div class="file-icon ${iconClass}">${ext.toUpperCase()}</div>
+                <div class="file-icon ${iconClass}">${escHtml(ext.toUpperCase())}</div>
                 <div>
-                  <div class="file-name">${f.name}</div>
-                  <div class="file-size">${size} · ${dirLabel}</div>
+                  <div class="file-name">${escHtml(f.name)}</div>
+                  <div class="file-size">${size} · ${escHtml(dirLabel)}</div>
                 </div>
               </div>
             </li>`;
@@ -449,13 +454,14 @@
         container.innerHTML = data.outputs.map(o => `
           <div class="output-item">
             <div class="output-info">
-              <span class="output-badge ${o.type}">${o.type}</span>
-              <span style="font-size:0.9rem;">${o.name}</span>
+              <span class="output-badge ${escHtml(o.type)}">${escHtml(o.type)}</span>
+              <span style="font-size:0.9rem;">${escHtml(o.name)}</span>
             </div>
             <div class="output-actions">
               ${o.type === 'web'
-                ? `<a href="${o.path}" target="_blank" class="action-btn primary">발표 시작</a>`
-                : `<a href="${o.path}" download class="action-btn primary">다운로드</a>`}
+                ? `<a href="${escHtml(o.path)}" target="_blank" class="action-btn primary">발표 시작</a>`
+                : `<a href="${escHtml(o.path)}" download class="action-btn primary">다운로드</a>`}
+              <button class="action-btn secondary" onclick="deleteOutput('${escHtml(o.type)}','${escHtml(o.name).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:0.75rem;color:#ef4444;">삭제</button>
             </div>
           </div>`).join('');
       } catch(e) {
@@ -467,6 +473,12 @@
       if (!confirm(name + ' 파일을 삭제하시겠습니까?')) return;
       await fetch('/api/files/' + encodeURIComponent(name), { method: 'DELETE' });
       loadFiles();
+    }
+
+    async function deleteOutput(type, name) {
+      if (!confirm(name + ' 결과물을 삭제하시겠습니까?')) return;
+      await fetch('/api/outputs/' + encodeURIComponent(type) + '/' + encodeURIComponent(name), { method: 'DELETE' });
+      loadOutputs();
     }
 
     // 파일 업로드

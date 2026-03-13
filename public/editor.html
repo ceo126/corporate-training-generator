@@ -647,6 +647,7 @@
   <label style="font-size:0.8rem;color:#999;">Theme</label>
   <select id="themeSelect">
     <option value="modern">Modern Blue</option>
+    <option value="light">Light</option>
     <option value="dark">Dark Mode</option>
     <option value="corporate">Corporate</option>
     <option value="warm">Warm Orange</option>
@@ -1171,31 +1172,33 @@ document.getElementById('jsonFileInput').addEventListener('change', function(e) 
 function loadFromJSON(data) {
   slides = [];
 
-  if (data.cover) {
-    slides.push({ _type: 'cover', ...data.cover });
-  }
-
-  if (data.content) {
-    for (const section of data.content) {
-      if (section.isSection) {
-        slides.push({ _type: 'section', ...section });
-      } else {
-        slides.push({ _type: section.type || 'bullets', ...section });
-      }
-    }
-  }
-
-  if (data.ending) {
-    slides.push({ _type: 'ending', ...data.ending });
-  }
-
-  // flat array format
+  // flat array format (직접 슬라이드 배열)
   if (Array.isArray(data)) {
     slides = data;
   }
-
-  if (data.slides && Array.isArray(data.slides)) {
+  // { slides: [...] } 형식 (에디터 내보내기)
+  else if (data.slides && Array.isArray(data.slides)) {
     slides = data.slides;
+  }
+  // { cover, content, ending } 형식 (생성기 JSON)
+  else {
+    if (data.cover) {
+      slides.push({ _type: 'cover', ...data.cover });
+    }
+
+    if (data.content) {
+      for (const section of data.content) {
+        if (section.isSection) {
+          slides.push({ _type: 'section', ...section });
+        } else {
+          slides.push({ _type: section.type || 'bullets', ...section });
+        }
+      }
+    }
+
+    if (data.ending) {
+      slides.push({ _type: 'ending', ...data.ending });
+    }
   }
 
   selectedIndex = slides.length > 0 ? 0 : -1;
