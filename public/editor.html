@@ -220,6 +220,33 @@
 
   .thumb-item:hover .thumb-delete { display: flex; }
 
+  .thumb-actions {
+    position: absolute;
+    bottom: 3px;
+    left: 3px;
+    display: none;
+    gap: 2px;
+  }
+
+  .thumb-item:hover .thumb-actions { display: flex; }
+
+  .thumb-action-btn {
+    background: rgba(37,99,235,0.85);
+    border: none;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .thumb-action-btn:hover { background: #2563eb; }
+
   /* 가운데 프리뷰 */
   .preview-area {
     flex: 1;
@@ -689,7 +716,7 @@
 </div>
 
 <!-- 슬라이드 추가 모달 -->
-<div class="modal-overlay" id="addModal">
+<div class="modal-overlay" id="addModal" onclick="if(event.target===this)hideAddModal()">
   <div class="modal">
     <h3>슬라이드 추가</h3>
     <div class="type-grid">
@@ -721,6 +748,10 @@
         <div class="type-icon">📈</div>
         <div class="type-name">통계 숫자</div>
       </div>
+      <div class="type-option" onclick="addSlide('text')">
+        <div class="type-icon">📄</div>
+        <div class="type-name">텍스트</div>
+      </div>
       <div class="type-option" onclick="addSlide('ending')">
         <div class="type-icon">🎯</div>
         <div class="type-name">마무리</div>
@@ -749,6 +780,7 @@ const SLIDE_TEMPLATES = {
   steps: () => ({ _type: 'steps', type: 'steps', title: '슬라이드 제목', steps: [{ title: '단계 1', desc: '설명' }, { title: '단계 2', desc: '설명' }] }),
   'two-column': () => ({ _type: 'two-column', type: 'two-column', title: '슬라이드 제목', leftTitle: '왼쪽', rightTitle: '오른쪽', leftItems: ['항목 1'], rightItems: ['항목 1'] }),
   stats: () => ({ _type: 'stats', type: 'stats', title: '슬라이드 제목', stats: [{ value: 100, suffix: '%', label: '라벨' }] }),
+  text: () => ({ _type: 'text', type: 'text', title: '슬라이드 제목', body: '여기에 내용을 입력하세요' }),
   ending: () => ({ _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' })
 };
 
@@ -785,7 +817,7 @@ function renderThumbs() {
   list.innerHTML = slides.map((s, i) => {
     const type = s._type || 'content';
     const title = s.title || '(제목 없음)';
-    const typeLabel = { cover: '표지', section: '섹션', bullets: '불릿', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계', ending: '마무리' }[type] || type;
+    const typeLabel = { cover: '표지', section: '섹션', bullets: '불릿', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계', text: '텍스트', ending: '마무리' }[type] || type;
 
     return `
     <div class="thumb-item ${i === selectedIndex ? 'active' : ''}" onclick="selectSlide(${i})" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="dropSlide(event,${i})">
@@ -795,6 +827,11 @@ function renderThumbs() {
         <span class="thumb-num">${i + 1}</span>
       </div>
       <button class="thumb-delete" onclick="event.stopPropagation();deleteSlide(${i})">X</button>
+      <div class="thumb-actions">
+        ${i > 0 ? `<button class="thumb-action-btn" onclick="event.stopPropagation();moveSlide(${i},-1)" title="위로">▲</button>` : ''}
+        ${i < slides.length - 1 ? `<button class="thumb-action-btn" onclick="event.stopPropagation();moveSlide(${i},1)" title="아래로">▼</button>` : ''}
+        <button class="thumb-action-btn" onclick="event.stopPropagation();duplicateSlide(${i})" title="복제">⧉</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -862,7 +899,7 @@ function renderEditPanel() {
 
   const s = slides[selectedIndex];
   const type = s._type || 'content';
-  const typeLabel = { cover: '표지', section: '섹션 구분', bullets: '불릿 포인트', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계 숫자', ending: '마무리' }[type] || type;
+  const typeLabel = { cover: '표지', section: '섹션 구분', bullets: '불릿 포인트', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계 숫자', text: '텍스트', ending: '마무리' }[type] || type;
   header.textContent = `#${selectedIndex + 1} ${typeLabel}`;
 
   let html = '';
@@ -1084,6 +1121,29 @@ function addStat() {
   autoSave();
 }
 
+// ============ 복제/이동 ============
+function duplicateSlide(i) {
+  const clone = JSON.parse(JSON.stringify(slides[i]));
+  slides.splice(i + 1, 0, clone);
+  selectSlide(i + 1);
+  autoSave();
+  showToast('슬라이드 복제됨');
+}
+
+function moveSlide(i, dir) {
+  const target = i + dir;
+  if (target < 0 || target >= slides.length) return;
+  const [moved] = slides.splice(i, 1);
+  slides.splice(target, 0, moved);
+  if (selectedIndex === i) selectedIndex = target;
+  else if (i < selectedIndex && target >= selectedIndex) selectedIndex--;
+  else if (i > selectedIndex && target <= selectedIndex) selectedIndex++;
+  renderThumbs();
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
 // ============ 드래그 앤 드롭 ============
 let dragIndex = -1;
 
@@ -1293,11 +1353,30 @@ function showToast(msg, isError) {
 // 테마 변경 시 자동저장
 document.getElementById('themeSelect').addEventListener('change', autoSave);
 
-// Ctrl+S 저장
+// 키보드 단축키
 document.addEventListener('keydown', (e) => {
+  // 입력 중일 때는 단축키 무시
+  const tag = e.target.tagName;
+  const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
   if (e.ctrlKey && e.key === 's') {
     e.preventDefault();
     saveToLocal();
+  }
+  if (e.ctrlKey && e.key === 'd' && selectedIndex >= 0) {
+    e.preventDefault();
+    duplicateSlide(selectedIndex);
+  }
+  if (e.key === 'Escape') {
+    hideAddModal();
+  }
+  if (!isTyping && e.key === 'ArrowUp' && selectedIndex > 0) {
+    e.preventDefault();
+    selectSlide(selectedIndex - 1);
+  }
+  if (!isTyping && e.key === 'ArrowDown' && selectedIndex < slides.length - 1) {
+    e.preventDefault();
+    selectSlide(selectedIndex + 1);
   }
 });
 

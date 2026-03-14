@@ -155,7 +155,8 @@ app.get('/api/outputs', (req, res) => {
       }))
     : [];
 
-  res.json({ outputs: [...pptxFiles, ...webFiles] });
+  const all = [...pptxFiles, ...webFiles].sort((a, b) => new Date(b.modified) - new Date(a.modified));
+  res.json({ outputs: all });
 });
 
 app.delete('/api/outputs/:type/:name', (req, res) => {
