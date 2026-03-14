@@ -748,6 +748,30 @@
         <div class="type-icon">📈</div>
         <div class="type-name">통계 숫자</div>
       </div>
+      <div class="type-option" onclick="addSlide('timeline')">
+        <div class="type-icon">📅</div>
+        <div class="type-name">타임라인</div>
+      </div>
+      <div class="type-option" onclick="addSlide('checklist')">
+        <div class="type-icon">✅</div>
+        <div class="type-name">체크리스트</div>
+      </div>
+      <div class="type-option" onclick="addSlide('quote')">
+        <div class="type-icon">💬</div>
+        <div class="type-name">인용구</div>
+      </div>
+      <div class="type-option" onclick="addSlide('progress')">
+        <div class="type-icon">📊</div>
+        <div class="type-name">프로그레스</div>
+      </div>
+      <div class="type-option" onclick="addSlide('pyramid')">
+        <div class="type-icon">🔺</div>
+        <div class="type-name">피라미드</div>
+      </div>
+      <div class="type-option" onclick="addSlide('icon-grid')">
+        <div class="type-icon">🔲</div>
+        <div class="type-name">아이콘 그리드</div>
+      </div>
       <div class="type-option" onclick="addSlide('text')">
         <div class="type-icon">📄</div>
         <div class="type-name">텍스트</div>
@@ -781,6 +805,12 @@ const SLIDE_TEMPLATES = {
   'two-column': () => ({ _type: 'two-column', type: 'two-column', title: '슬라이드 제목', leftTitle: '왼쪽', rightTitle: '오른쪽', leftItems: ['항목 1'], rightItems: ['항목 1'] }),
   stats: () => ({ _type: 'stats', type: 'stats', title: '슬라이드 제목', stats: [{ value: 100, suffix: '%', label: '라벨' }] }),
   text: () => ({ _type: 'text', type: 'text', title: '슬라이드 제목', body: '여기에 내용을 입력하세요' }),
+  timeline: () => ({ _type: 'timeline', type: 'timeline', title: '타임라인', events: [{ year: '2020', desc: '시작' }, { year: '2022', desc: '성장' }, { year: '2024', desc: '확장' }] }),
+  checklist: () => ({ _type: 'checklist', type: 'checklist', title: '체크리스트', items: [{ text: '완료된 항목', done: true }, { text: '미완료 항목', done: false }] }),
+  quote: () => ({ _type: 'quote', type: 'quote', title: '인용구', quote: '변화의 시작은 작은 한 걸음입니다.', author: '발표자' }),
+  progress: () => ({ _type: 'progress', type: 'progress', title: '진행률', items: [{ label: '목표 달성률', value: 85, suffix: '%' }, { label: '고객 만족도', value: 92, suffix: '%' }] }),
+  pyramid: () => ({ _type: 'pyramid', type: 'pyramid', title: '피라미드', levels: [{ title: '비전', desc: '최상위 목표' }, { title: '전략', desc: '실행 방안' }, { title: '실행', desc: '구체적 행동' }] }),
+  'icon-grid': () => ({ _type: 'icon-grid', type: 'icon-grid', title: '핵심 요소', items: [{ title: '혁신', desc: '새로운 가치 창출' }, { title: '협업', desc: '팀워크 강화' }, { title: '성장', desc: '지속적 발전' }] }),
   ending: () => ({ _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' })
 };
 
@@ -817,7 +847,7 @@ function renderThumbs() {
   list.innerHTML = slides.map((s, i) => {
     const type = s._type || 'content';
     const title = s.title || '(제목 없음)';
-    const typeLabel = { cover: '표지', section: '섹션', bullets: '불릿', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계', text: '텍스트', ending: '마무리' }[type] || type;
+    const typeLabel = { cover: '표지', section: '섹션', bullets: '불릿', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계', text: '텍스트', timeline: '타임라인', checklist: '체크', quote: '인용구', progress: '진행률', pyramid: '피라미드', 'icon-grid': '그리드', ending: '마무리' }[type] || type;
 
     return `
     <div class="thumb-item ${i === selectedIndex ? 'active' : ''}" onclick="selectSlide(${i})" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="dropSlide(event,${i})">
@@ -879,6 +909,18 @@ function renderPreview() {
       html += `<div class="two-col-preview"><div class="col"><h4>${escHtml(s.leftTitle || '')}</h4>${(s.leftItems || []).map(it => `<div class="preview-bullet"><span class="dot"></span><span>${escHtml(it)}</span></div>`).join('')}</div><div class="col"><h4>${escHtml(s.rightTitle || '')}</h4>${(s.rightItems || []).map(it => `<div class="preview-bullet"><span class="dot"></span><span>${escHtml(it)}</span></div>`).join('')}</div></div>`;
     } else if (s.type === 'stats') {
       html += `<div class="stat-grid">${(s.stats || []).map(st => `<div class="stat-item"><div class="stat-val">${st.value}${escHtml(st.suffix || '')}</div><div class="stat-lbl">${escHtml(st.label)}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'timeline') {
+      html += `<div style="display:flex;gap:8px;margin-top:8px">${(s.events || []).map(ev => `<div style="flex:1;text-align:center"><div style="width:8px;height:8px;border-radius:50%;background:#3b82f6;margin:0 auto 6px"></div><div style="font-size:0.6rem;font-weight:700;color:#60a5fa">${escHtml(ev.year||ev.label||'')}</div><div style="font-size:0.5rem;color:#94a3b8;margin-top:3px">${escHtml(ev.desc||ev.text||'')}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'checklist') {
+      html += (s.items || []).map(it => { const isObj = typeof it === 'object'; const text = isObj ? it.text : it; const done = isObj ? it.done !== false : true; return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.65rem;color:#cbd5e1"><span style="width:14px;height:14px;border-radius:50%;background:${done?'#22c55e':'#555'};display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:#fff">${done?'✓':''}</span>${escHtml(text)}</div>`; }).join('');
+    } else if (s.type === 'quote') {
+      html += `<div style="text-align:center;padding:8px"><div style="font-size:2rem;color:#60a5fa;line-height:1">"</div><div style="font-size:0.7rem;font-style:italic;color:#cbd5e1;margin:4px 0">${escHtml(s.quote||s.body||'')}</div><div style="font-size:0.55rem;color:#64748b">— ${escHtml(s.author||'')}</div></div>`;
+    } else if (s.type === 'progress') {
+      html += (s.items || []).map(it => `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:0.55rem;color:#cbd5e1;margin-bottom:2px"><span>${escHtml(it.label)}</span><span style="color:#60a5fa">${it.value}${escHtml(it.suffix||'%')}</span></div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.1)"><div style="height:100%;border-radius:3px;background:#3b82f6;width:${Math.min(it.value,100)}%"></div></div></div>`).join('');
+    } else if (s.type === 'pyramid') {
+      html += `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:6px">${(s.levels || []).map((lv, i, arr) => { const w = 30 + ((arr.length-1-i)/Math.max(arr.length-1,1))*70; return `<div style="width:${w}%;background:rgba(37,99,235,${0.7-i*0.12});border-radius:4px;padding:4px 8px;text-align:center"><div style="font-size:0.6rem;font-weight:700;color:#fff">${escHtml(typeof lv==='string'?lv:lv.title)}</div>${lv.desc?`<div style="font-size:0.45rem;color:rgba(255,255,255,0.6)">${escHtml(lv.desc)}</div>`:''}</div>`; }).join('')}</div>`;
+    } else if (s.type === 'icon-grid') {
+      html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">${(s.items || []).map(it => `<div style="text-align:center;padding:6px;background:rgba(255,255,255,0.05);border-radius:6px"><div style="font-size:0.55rem;font-weight:700;color:#60a5fa">${escHtml(it.title)}</div><div style="font-size:0.45rem;color:#94a3b8">${escHtml(it.desc||'')}</div></div>`).join('')}</div>`;
     } else {
       html += `<div style="font-size:0.75rem;color:#94a3b8;">${escHtml(s.body || '')}</div>`;
     }
@@ -899,7 +941,7 @@ function renderEditPanel() {
 
   const s = slides[selectedIndex];
   const type = s._type || 'content';
-  const typeLabel = { cover: '표지', section: '섹션 구분', bullets: '불릿 포인트', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계 숫자', text: '텍스트', ending: '마무리' }[type] || type;
+  const typeLabel = { cover: '표지', section: '섹션 구분', bullets: '불릿 포인트', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계 숫자', text: '텍스트', timeline: '타임라인', checklist: '체크리스트', quote: '인용구', progress: '프로그레스', pyramid: '피라미드', 'icon-grid': '아이콘 그리드', ending: '마무리' }[type] || type;
   header.textContent = `#${selectedIndex + 1} ${typeLabel}`;
 
   let html = '';
@@ -973,6 +1015,57 @@ function renderEditPanel() {
           <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;" placeholder="라벨" value="${escAttr(st.label || '')}" onchange="updateStatField(${i},'label',this.value)">
         </div>`).join('')}</div>
       <button class="add-btn" onclick="addStat()">+ 통계 추가</button>`;
+  } else if (s.type === 'timeline') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">이벤트</label>
+      <div id="timelineItems">${(s.events || []).map((ev, i) => `
+        <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+          <div class="list-item-row"><input placeholder="연도/라벨" value="${escAttr(ev.year||ev.label||'')}" onchange="updateEventField(${i},'year',this.value)"><button onclick="removeEvent(${i})">X</button></div>
+          <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" placeholder="설명" value="${escAttr(ev.desc||ev.text||'')}" onchange="updateEventField(${i},'desc',this.value)">
+        </div>`).join('')}</div>
+      <button class="add-btn" onclick="addEvent()">+ 이벤트 추가</button>`;
+  } else if (s.type === 'checklist') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">항목 (클릭으로 토글)</label>
+      <div id="checkItems">${(s.items || []).map((it, i) => { const isObj = typeof it === 'object'; const text = isObj ? it.text : it; const done = isObj ? it.done !== false : true; return `
+        <div class="list-item-row"><input type="checkbox" ${done?'checked':''} onchange="toggleCheckItem(${i},this.checked)" style="width:auto;min-width:16px"><textarea rows="1" onchange="updateCheckText(${i},this.value)">${escHtml(text)}</textarea><button onclick="removeCheckItem(${i})">X</button></div>`; }).join('')}</div>
+      <button class="add-btn" onclick="addCheckItem()">+ 항목 추가</button>`;
+  } else if (s.type === 'quote') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-group"><label>인용문</label><textarea rows="4" onchange="updateField('quote',this.value)">${escHtml(s.quote || '')}</textarea></div>
+      <div class="form-group"><label>출처/저자</label><input value="${escAttr(s.author || '')}" onchange="updateField('author',this.value)"></div>`;
+  } else if (s.type === 'progress') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">진행 항목</label>
+      <div id="progressItems">${(s.items || []).map((it, i) => `
+        <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+          <div class="list-item-row"><input placeholder="라벨" value="${escAttr(it.label)}" onchange="updateProgressField(${i},'label',this.value)"><button onclick="removeProgressItem(${i})">X</button></div>
+          <div class="list-item-row"><input type="number" placeholder="값" value="${it.value}" onchange="updateProgressField(${i},'value',Number(this.value))" style="width:70px"><input placeholder="단위 (%)" value="${escAttr(it.suffix||'%')}" onchange="updateProgressField(${i},'suffix',this.value)" style="width:60px"></div>
+        </div>`).join('')}</div>
+      <button class="add-btn" onclick="addProgressItem()">+ 항목 추가</button>`;
+  } else if (s.type === 'pyramid') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">단계 (위→아래)</label>
+      <div id="pyramidItems">${(s.levels || []).map((lv, i) => { const obj = typeof lv === 'string' ? { title: lv } : lv; return `
+        <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+          <div class="list-item-row"><input placeholder="제목" value="${escAttr(obj.title)}" onchange="updatePyramidField(${i},'title',this.value)"><button onclick="removePyramidLevel(${i})">X</button></div>
+          <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" placeholder="설명 (선택)" value="${escAttr(obj.desc||'')}" onchange="updatePyramidField(${i},'desc',this.value)">
+        </div>`; }).join('')}</div>
+      <button class="add-btn" onclick="addPyramidLevel()">+ 단계 추가</button>`;
+  } else if (s.type === 'icon-grid') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-divider"></div>
+      <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">항목</label>
+      <div id="iconGridItems">${(s.items || []).map((it, i) => `
+        <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+          <div class="list-item-row"><input placeholder="제목" value="${escAttr(it.title)}" onchange="updateIconGridField(${i},'title',this.value)"><button onclick="removeIconGridItem(${i})">X</button></div>
+          <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" placeholder="설명" value="${escAttr(it.desc||'')}" onchange="updateIconGridField(${i},'desc',this.value)">
+        </div>`).join('')}</div>
+      <button class="add-btn" onclick="addIconGridItem()">+ 항목 추가</button>`;
   } else {
     html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title || '')}</textarea></div>
       <div class="form-group"><label>내용</label><textarea rows="6" onchange="updateField('body',this.value)">${escHtml(s.body || '')}</textarea></div>`;
@@ -1120,6 +1213,32 @@ function addStat() {
   renderEditPanel();
   autoSave();
 }
+
+// ============ 타임라인 ============
+function updateEventField(i, field, value) { if (selectedIndex < 0) return; slides[selectedIndex].events[i][field] = value; renderPreview(); autoSave(); }
+function removeEvent(i) { slides[selectedIndex].events.splice(i, 1); renderPreview(); renderEditPanel(); autoSave(); }
+function addEvent() { if (!slides[selectedIndex].events) slides[selectedIndex].events = []; slides[selectedIndex].events.push({ year: '', desc: '' }); renderPreview(); renderEditPanel(); autoSave(); }
+
+// ============ 체크리스트 ============
+function toggleCheckItem(i, checked) { if (selectedIndex < 0) return; const it = slides[selectedIndex].items[i]; if (typeof it === 'string') slides[selectedIndex].items[i] = { text: it, done: checked }; else it.done = checked; renderPreview(); autoSave(); }
+function updateCheckText(i, value) { if (selectedIndex < 0) return; const it = slides[selectedIndex].items[i]; if (typeof it === 'string') slides[selectedIndex].items[i] = { text: value, done: true }; else it.text = value; renderPreview(); autoSave(); }
+function removeCheckItem(i) { slides[selectedIndex].items.splice(i, 1); renderPreview(); renderEditPanel(); autoSave(); }
+function addCheckItem() { if (!slides[selectedIndex].items) slides[selectedIndex].items = []; slides[selectedIndex].items.push({ text: '새 항목', done: false }); renderPreview(); renderEditPanel(); autoSave(); }
+
+// ============ 프로그레스 ============
+function updateProgressField(i, field, value) { if (selectedIndex < 0) return; slides[selectedIndex].items[i][field] = value; renderPreview(); autoSave(); }
+function removeProgressItem(i) { slides[selectedIndex].items.splice(i, 1); renderPreview(); renderEditPanel(); autoSave(); }
+function addProgressItem() { if (!slides[selectedIndex].items) slides[selectedIndex].items = []; slides[selectedIndex].items.push({ label: '항목', value: 50, suffix: '%' }); renderPreview(); renderEditPanel(); autoSave(); }
+
+// ============ 피라미드 ============
+function updatePyramidField(i, field, value) { if (selectedIndex < 0) return; const lv = slides[selectedIndex].levels[i]; if (typeof lv === 'string') slides[selectedIndex].levels[i] = { title: lv, desc: '' }; slides[selectedIndex].levels[i][field] = value; renderPreview(); autoSave(); }
+function removePyramidLevel(i) { slides[selectedIndex].levels.splice(i, 1); renderPreview(); renderEditPanel(); autoSave(); }
+function addPyramidLevel() { if (!slides[selectedIndex].levels) slides[selectedIndex].levels = []; slides[selectedIndex].levels.push({ title: '새 단계', desc: '' }); renderPreview(); renderEditPanel(); autoSave(); }
+
+// ============ 아이콘 그리드 ============
+function updateIconGridField(i, field, value) { if (selectedIndex < 0) return; slides[selectedIndex].items[i][field] = value; renderPreview(); autoSave(); }
+function removeIconGridItem(i) { slides[selectedIndex].items.splice(i, 1); renderPreview(); renderEditPanel(); autoSave(); }
+function addIconGridItem() { if (!slides[selectedIndex].items) slides[selectedIndex].items = []; slides[selectedIndex].items.push({ title: '새 항목', desc: '' }); renderPreview(); renderEditPanel(); autoSave(); }
 
 // ============ 복제/이동 ============
 function duplicateSlide(i) {
