@@ -772,6 +772,38 @@
         <div class="type-icon">🔲</div>
         <div class="type-name">아이콘 그리드</div>
       </div>
+      <div class="type-option" onclick="addSlide('donut')">
+        <div class="type-icon">🍩</div>
+        <div class="type-name">도넛 차트</div>
+      </div>
+      <div class="type-option" onclick="addSlide('matrix')">
+        <div class="type-icon">🔳</div>
+        <div class="type-name">매트릭스</div>
+      </div>
+      <div class="type-option" onclick="addSlide('cycle')">
+        <div class="type-icon">🔄</div>
+        <div class="type-name">순환도</div>
+      </div>
+      <div class="type-option" onclick="addSlide('process-arrow')">
+        <div class="type-icon">➡️</div>
+        <div class="type-name">쉐브론</div>
+      </div>
+      <div class="type-option" onclick="addSlide('bar-chart')">
+        <div class="type-icon">📶</div>
+        <div class="type-name">막대 차트</div>
+      </div>
+      <div class="type-option" onclick="addSlide('highlight')">
+        <div class="type-icon">💡</div>
+        <div class="type-name">강조</div>
+      </div>
+      <div class="type-option" onclick="addSlide('swot')">
+        <div class="type-icon">🧭</div>
+        <div class="type-name">SWOT</div>
+      </div>
+      <div class="type-option" onclick="addSlide('roadmap')">
+        <div class="type-icon">🗺️</div>
+        <div class="type-name">로드맵</div>
+      </div>
       <div class="type-option" onclick="addSlide('text')">
         <div class="type-icon">📄</div>
         <div class="type-name">텍스트</div>
@@ -811,6 +843,14 @@ const SLIDE_TEMPLATES = {
   progress: () => ({ _type: 'progress', type: 'progress', title: '진행률', items: [{ label: '목표 달성률', value: 85, suffix: '%' }, { label: '고객 만족도', value: 92, suffix: '%' }] }),
   pyramid: () => ({ _type: 'pyramid', type: 'pyramid', title: '피라미드', levels: [{ title: '비전', desc: '최상위 목표' }, { title: '전략', desc: '실행 방안' }, { title: '실행', desc: '구체적 행동' }] }),
   'icon-grid': () => ({ _type: 'icon-grid', type: 'icon-grid', title: '핵심 요소', items: [{ title: '혁신', desc: '새로운 가치 창출' }, { title: '협업', desc: '팀워크 강화' }, { title: '성장', desc: '지속적 발전' }] }),
+  donut: () => ({ _type: 'donut', type: 'donut', title: '도넛 차트', items: [{ value: 85, suffix: '%', label: '완료율' }, { value: 92, suffix: '%', label: '만족도' }] }),
+  matrix: () => ({ _type: 'matrix', type: 'matrix', title: '매트릭스', cells: [{ title: '높은 영향 / 높은 긴급', body: '즉시 실행' }, { title: '높은 영향 / 낮은 긴급', body: '계획 수립' }, { title: '낮은 영향 / 높은 긴급', body: '위임' }, { title: '낮은 영향 / 낮은 긴급', body: '보류' }] }),
+  cycle: () => ({ _type: 'cycle', type: 'cycle', title: '순환 프로세스', nodes: [{ title: 'Plan', desc: '계획' }, { title: 'Do', desc: '실행' }, { title: 'Check', desc: '확인' }, { title: 'Act', desc: '개선' }] }),
+  'process-arrow': () => ({ _type: 'process-arrow', type: 'process-arrow', title: '프로세스', steps: [{ title: '분석', desc: '현황 파악' }, { title: '설계', desc: '방안 수립' }, { title: '실행', desc: '적용' }, { title: '평가', desc: '결과 확인' }] }),
+  'bar-chart': () => ({ _type: 'bar-chart', type: 'bar-chart', title: '막대 차트', items: [{ label: '1분기', value: 45 }, { label: '2분기', value: 72 }, { label: '3분기', value: 88 }, { label: '4분기', value: 95 }] }),
+  highlight: () => ({ _type: 'highlight', type: 'highlight', title: '핵심 메시지', body: '가장 중요한 메시지를 여기에', sub: '부가 설명', icon: '!' }),
+  swot: () => ({ _type: 'swot', type: 'swot', title: 'SWOT 분석', strengths: ['강점 1'], weaknesses: ['약점 1'], opportunities: ['기회 1'], threats: ['위협 1'] }),
+  roadmap: () => ({ _type: 'roadmap', type: 'roadmap', title: '로드맵', phases: [{ title: 'Phase 1', desc: '기반 구축', label: 'Q1' }, { title: 'Phase 2', desc: '확장', label: 'Q2' }, { title: 'Phase 3', desc: '안정화', label: 'Q3' }] }),
   ending: () => ({ _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' })
 };
 
@@ -847,7 +887,7 @@ function renderThumbs() {
   list.innerHTML = slides.map((s, i) => {
     const type = s._type || 'content';
     const title = s.title || '(제목 없음)';
-    const typeLabel = { cover: '표지', section: '섹션', bullets: '불릿', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계', text: '텍스트', timeline: '타임라인', checklist: '체크', quote: '인용구', progress: '진행률', pyramid: '피라미드', 'icon-grid': '그리드', ending: '마무리' }[type] || type;
+    const typeLabel = { cover:'표지',section:'섹션',bullets:'불릿',cards:'카드',steps:'스텝','two-column':'2컬럼',stats:'통계',text:'텍스트',timeline:'타임라인',checklist:'체크',quote:'인용구',progress:'진행률',pyramid:'피라미드','icon-grid':'그리드',donut:'도넛',matrix:'매트릭스',cycle:'순환도','process-arrow':'쉐브론','bar-chart':'막대',highlight:'강조',swot:'SWOT',roadmap:'로드맵',ending:'마무리' }[type] || type;
 
     return `
     <div class="thumb-item ${i === selectedIndex ? 'active' : ''}" onclick="selectSlide(${i})" draggable="true" ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="dropSlide(event,${i})">
@@ -921,6 +961,24 @@ function renderPreview() {
       html += `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:6px">${(s.levels || []).map((lv, i, arr) => { const w = 30 + ((arr.length-1-i)/Math.max(arr.length-1,1))*70; return `<div style="width:${w}%;background:rgba(37,99,235,${0.7-i*0.12});border-radius:4px;padding:4px 8px;text-align:center"><div style="font-size:0.6rem;font-weight:700;color:#fff">${escHtml(typeof lv==='string'?lv:lv.title)}</div>${lv.desc?`<div style="font-size:0.45rem;color:rgba(255,255,255,0.6)">${escHtml(lv.desc)}</div>`:''}</div>`; }).join('')}</div>`;
     } else if (s.type === 'icon-grid') {
       html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">${(s.items || []).map(it => `<div style="text-align:center;padding:6px;background:rgba(255,255,255,0.05);border-radius:6px"><div style="font-size:0.55rem;font-weight:700;color:#60a5fa">${escHtml(it.title)}</div><div style="font-size:0.45rem;color:#94a3b8">${escHtml(it.desc||'')}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'donut') {
+      html += `<div style="display:flex;gap:16px;justify-content:center;margin-top:10px">${(s.items||[]).map(it=>`<div style="text-align:center"><div style="width:50px;height:50px;border-radius:50%;border:4px solid #3b82f6;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#60a5fa;margin:0 auto 4px">${it.value}${escHtml(it.suffix||'%')}</div><div style="font-size:0.45rem;color:#94a3b8">${escHtml(it.label)}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'matrix') {
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px">${(s.cells||[]).slice(0,4).map(c=>`<div style="padding:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="font-size:0.5rem;font-weight:700;color:#60a5fa">${escHtml(c.title)}</div><div style="font-size:0.4rem;color:#94a3b8">${escHtml(c.body||'')}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'cycle') {
+      html += `<div style="display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px">${(s.nodes||[]).map((nd,i,arr)=>`<span style="font-size:0.55rem;padding:4px 8px;background:rgba(37,99,235,0.2);border-radius:4px;color:#60a5fa;font-weight:600">${escHtml(typeof nd==='string'?nd:nd.title)}</span>${i<arr.length-1?'<span style="font-size:0.6rem;color:#555">→</span>':''}`).join('')}</div>`;
+    } else if (s.type === 'process-arrow') {
+      html += `<div style="display:flex;gap:2px;margin-top:8px">${(s.steps||[]).map(st=>`<div style="flex:1;padding:6px;background:rgba(37,99,235,0.15);text-align:center;font-size:0.5rem;color:#cbd5e1;border-radius:3px"><strong style="color:#60a5fa">${escHtml(typeof st==='string'?st:st.title)}</strong></div>`).join('')}</div>`;
+    } else if (s.type === 'bar-chart') {
+      const items=s.items||[];const mx=Math.max(...items.map(i=>i.value),1);
+      html += `<div style="display:flex;gap:6px;align-items:flex-end;height:60px;margin-top:8px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.1);position:relative">${items.map(it=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="font-size:0.45rem;color:#60a5fa">${it.value}</div><div style="width:80%;background:#3b82f6;border-radius:2px 2px 0 0;height:${Math.max((it.value/mx)*40,3)}px"></div><div style="font-size:0.4rem;color:#94a3b8;position:absolute;bottom:0">${escHtml(it.label)}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'highlight') {
+      html += `<div style="text-align:center;padding:12px"><div style="font-size:1.5rem;margin-bottom:6px">${escHtml(s.icon||'!')}</div><div style="font-size:0.8rem;font-weight:700;color:#fff;line-height:1.4">${escHtml(s.body||s.message||'')}</div><div style="font-size:0.55rem;color:#94a3b8;margin-top:4px">${escHtml(s.sub||'')}</div></div>`;
+    } else if (s.type === 'swot') {
+      const colors=['#22c55e','#eab308','#ef4444','#3b82f6'];const labels=['S','W','O','T'];const keys=['strengths','weaknesses','opportunities','threats'];
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:6px">${keys.map((k,i)=>`<div style="padding:5px;border-radius:3px;border:1px solid ${colors[i]}30;background:${colors[i]}10"><div style="font-size:0.55rem;font-weight:800;color:${colors[i]}">${labels[i]}</div><div style="font-size:0.4rem;color:#94a3b8">${(s[k]||[]).join(', ')}</div></div>`).join('')}</div>`;
+    } else if (s.type === 'roadmap') {
+      html += `<div style="display:flex;gap:4px;margin-top:10px;position:relative"><div style="position:absolute;top:6px;left:10px;right:10px;height:2px;background:#3b82f640"></div>${(s.phases||[]).map(ph=>`<div style="flex:1;text-align:center"><div style="width:8px;height:8px;border-radius:50%;background:#3b82f6;margin:0 auto 6px;position:relative;z-index:1"></div><div style="font-size:0.5rem;font-weight:700;color:#60a5fa">${escHtml(ph.title)}</div><div style="font-size:0.4rem;color:#94a3b8">${escHtml(ph.desc||'')}</div></div>`).join('')}</div>`;
     } else {
       html += `<div style="font-size:0.75rem;color:#94a3b8;">${escHtml(s.body || '')}</div>`;
     }
@@ -941,7 +999,7 @@ function renderEditPanel() {
 
   const s = slides[selectedIndex];
   const type = s._type || 'content';
-  const typeLabel = { cover: '표지', section: '섹션 구분', bullets: '불릿 포인트', cards: '카드', steps: '스텝', 'two-column': '2컬럼', stats: '통계 숫자', text: '텍스트', timeline: '타임라인', checklist: '체크리스트', quote: '인용구', progress: '프로그레스', pyramid: '피라미드', 'icon-grid': '아이콘 그리드', ending: '마무리' }[type] || type;
+  const typeLabel = { cover:'표지',section:'섹션 구분',bullets:'불릿 포인트',cards:'카드',steps:'스텝','two-column':'2컬럼',stats:'통계 숫자',text:'텍스트',timeline:'타임라인',checklist:'체크리스트',quote:'인용구',progress:'프로그레스',pyramid:'피라미드','icon-grid':'아이콘 그리드',donut:'도넛 차트',matrix:'매트릭스',cycle:'순환도','process-arrow':'쉐브론','bar-chart':'막대 차트',highlight:'강조',swot:'SWOT 분석',roadmap:'로드맵',ending:'마무리' }[type] || type;
   header.textContent = `#${selectedIndex + 1} ${typeLabel}`;
 
   let html = '';
@@ -1066,6 +1124,56 @@ function renderEditPanel() {
           <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" placeholder="설명" value="${escAttr(it.desc||'')}" onchange="updateIconGridField(${i},'desc',this.value)">
         </div>`).join('')}</div>
       <button class="add-btn" onclick="addIconGridItem()">+ 항목 추가</button>`;
+  } else if (s.type === 'donut') {
+    html = genericListEditor(s, 'items', '도넛 항목', (it, i) => `
+      <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div class="list-item-row"><input placeholder="라벨" value="${escAttr(it.label||'')}" onchange="updateGenericField('items',${i},'label',this.value)"><button onclick="removeGenericItem('items',${i})">X</button></div>
+        <div class="list-item-row"><input type="number" placeholder="값" value="${it.value||0}" onchange="updateGenericField('items',${i},'value',Number(this.value))" style="width:70px"><input placeholder="단위" value="${escAttr(it.suffix||'%')}" onchange="updateGenericField('items',${i},'suffix',this.value)" style="width:60px"></div>
+      </div>`, () => "addGenericItem('items',{value:50,suffix:'%',label:'항목'})");
+  } else if (s.type === 'matrix') {
+    html = genericListEditor(s, 'cells', '셀 (4개)', (c, i) => `
+      <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div class="list-item-row"><input placeholder="제목" value="${escAttr(c.title||'')}" onchange="updateGenericField('cells',${i},'title',this.value)"><button onclick="removeGenericItem('cells',${i})">X</button></div>
+        <textarea rows="2" style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" onchange="updateGenericField('cells',${i},'body',this.value)">${escHtml(c.body||'')}</textarea>
+      </div>`, () => "addGenericItem('cells',{title:'제목',body:'내용'})");
+  } else if (s.type === 'cycle') {
+    html = genericListEditor(s, 'nodes', '노드', (nd, i) => { const obj = typeof nd==='string'?{title:nd}:nd; return `
+      <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div class="list-item-row"><input placeholder="제목" value="${escAttr(obj.title||'')}" onchange="updateGenericObjField('nodes',${i},'title',this.value)"><button onclick="removeGenericItem('nodes',${i})">X</button></div>
+        <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" placeholder="설명" value="${escAttr(obj.desc||'')}" onchange="updateGenericObjField('nodes',${i},'desc',this.value)">
+      </div>`; }, () => "addGenericItem('nodes',{title:'노드',desc:''})");
+  } else if (s.type === 'process-arrow') {
+    html = genericListEditor(s, 'steps', '단계', (st, i) => { const obj = typeof st==='string'?{title:st}:st; return `
+      <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div class="list-item-row"><input placeholder="제목" value="${escAttr(obj.title||'')}" onchange="updateGenericObjField('steps',${i},'title',this.value)"><button onclick="removeGenericItem('steps',${i})">X</button></div>
+        <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" placeholder="설명" value="${escAttr(obj.desc||'')}" onchange="updateGenericObjField('steps',${i},'desc',this.value)">
+      </div>`; }, () => "addGenericItem('steps',{title:'단계',desc:''})");
+  } else if (s.type === 'bar-chart') {
+    html = genericListEditor(s, 'items', '막대 항목', (it, i) => `
+      <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div class="list-item-row"><input placeholder="라벨" value="${escAttr(it.label||'')}" onchange="updateGenericField('items',${i},'label',this.value)"><button onclick="removeGenericItem('items',${i})">X</button></div>
+        <div class="list-item-row"><input type="number" placeholder="값" value="${it.value||0}" onchange="updateGenericField('items',${i},'value',Number(this.value))" style="width:80px"><input placeholder="단위" value="${escAttr(it.suffix||'')}" onchange="updateGenericField('items',${i},'suffix',this.value)" style="width:60px"></div>
+      </div>`, () => "addGenericItem('items',{label:'항목',value:50,suffix:''})");
+  } else if (s.type === 'highlight') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>
+      <div class="form-group"><label>아이콘</label><input value="${escAttr(s.icon||'!')}" onchange="updateField('icon',this.value)"></div>
+      <div class="form-group"><label>핵심 메시지</label><textarea rows="4" onchange="updateField('body',this.value)">${escHtml(s.body||'')}</textarea></div>
+      <div class="form-group"><label>부가 설명</label><input value="${escAttr(s.sub||'')}" onchange="updateField('sub',this.value)"></div>`;
+  } else if (s.type === 'swot') {
+    html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div>`;
+    ['strengths','weaknesses','opportunities','threats'].forEach(key => {
+      const labels = {strengths:'강점 (S)',weaknesses:'약점 (W)',opportunities:'기회 (O)',threats:'위협 (T)'};
+      html += `<div class="form-divider"></div><label style="font-size:0.75rem;color:#999;margin-bottom:6px;display:block;">${labels[key]}</label>
+        <div>${(s[key]||[]).map((it,i)=>`<div class="list-item-row"><textarea rows="1" onchange="updateSwotItem('${key}',${i},this.value)">${escHtml(it)}</textarea><button onclick="removeSwotItem('${key}',${i})">X</button></div>`).join('')}</div>
+        <button class="add-btn" onclick="addSwotItem('${key}')" style="margin-bottom:8px">+ 추가</button>`;
+    });
+  } else if (s.type === 'roadmap') {
+    html = genericListEditor(s, 'phases', '페이즈', (ph, i) => `
+      <div style="background:#1e1e1e;border:1px solid #3e3e3e;border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div class="list-item-row"><input placeholder="제목" value="${escAttr(ph.title||'')}" onchange="updateGenericField('phases',${i},'title',this.value)"><button onclick="removeGenericItem('phases',${i})">X</button></div>
+        <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;margin-bottom:4px" placeholder="설명" value="${escAttr(ph.desc||'')}" onchange="updateGenericField('phases',${i},'desc',this.value)">
+        <input style="width:100%;padding:6px 8px;background:#252526;border:1px solid #3e3e3e;border-radius:4px;color:#d4d4d4;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;" placeholder="라벨 (Q1 등)" value="${escAttr(ph.label||'')}" onchange="updateGenericField('phases',${i},'label',this.value)">
+      </div>`, () => "addGenericItem('phases',{title:'Phase',desc:'',label:''})");
   } else {
     html = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title || '')}</textarea></div>
       <div class="form-group"><label>내용</label><textarea rows="6" onchange="updateField('body',this.value)">${escHtml(s.body || '')}</textarea></div>`;
@@ -1213,6 +1321,24 @@ function addStat() {
   renderEditPanel();
   autoSave();
 }
+
+// ============ 공통 리스트 에디터 ============
+function genericListEditor(s, field, label, renderItem, addFn) {
+  let h = `<div class="form-group"><label>제목</label><textarea rows="2" onchange="updateField('title',this.value)">${escHtml(s.title)}</textarea></div><div class="form-divider"></div>
+    <label style="font-size:0.75rem;color:#999;margin-bottom:8px;display:block;">${label}</label><div>`;
+  (s[field] || []).forEach((it, i) => { h += renderItem(it, i); });
+  h += `</div><button class="add-btn" onclick="${addFn()}">+ 추가</button>`;
+  return h;
+}
+function updateGenericField(field, i, key, value) { if (selectedIndex<0)return; slides[selectedIndex][field][i][key]=value; renderPreview(); autoSave(); }
+function updateGenericObjField(field, i, key, value) { if (selectedIndex<0)return; const it=slides[selectedIndex][field][i]; if(typeof it==='string')slides[selectedIndex][field][i]={title:it}; slides[selectedIndex][field][i][key]=value; renderPreview(); autoSave(); }
+function removeGenericItem(field, i) { slides[selectedIndex][field].splice(i,1); renderPreview(); renderEditPanel(); autoSave(); }
+function addGenericItem(field, template) { if(!slides[selectedIndex][field])slides[selectedIndex][field]=[]; slides[selectedIndex][field].push(template); renderPreview(); renderEditPanel(); autoSave(); }
+
+// ============ SWOT ============
+function updateSwotItem(key, i, value) { if(selectedIndex<0)return; slides[selectedIndex][key][i]=value; renderPreview(); autoSave(); }
+function removeSwotItem(key, i) { slides[selectedIndex][key].splice(i,1); renderPreview(); renderEditPanel(); autoSave(); }
+function addSwotItem(key) { if(!slides[selectedIndex][key])slides[selectedIndex][key]=[]; slides[selectedIndex][key].push('새 항목'); renderPreview(); renderEditPanel(); autoSave(); }
 
 // ============ 타임라인 ============
 function updateEventField(i, field, value) { if (selectedIndex < 0) return; slides[selectedIndex].events[i][field] = value; renderPreview(); autoSave(); }
