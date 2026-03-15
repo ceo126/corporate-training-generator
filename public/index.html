@@ -290,13 +290,264 @@
   }
 
   #fileInput { display: none; }
+
+  /* 새 발표자료 버튼 */
+  .create-section {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .create-btn.gradient {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.3);
+  }
+
+  .create-btn.gradient:hover {
+    box-shadow: 0 6px 30px rgba(37,99,235,0.5);
+    transform: translateY(-1px);
+  }
+
+  .create-btn.outline {
+    background: transparent;
+    color: #60a5fa;
+    border: 1px solid rgba(96,165,250,0.3);
+  }
+
+  .create-btn.outline:hover {
+    background: rgba(96,165,250,0.08);
+    border-color: #60a5fa;
+  }
+
+  /* 생성 모달 */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: #1e293b;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 30px;
+    width: 520px;
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .modal h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  .modal .form-group {
+    margin-bottom: 16px;
+  }
+
+  .modal .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .modal input, .modal select, .modal textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .modal input:focus, .modal select:focus, .modal textarea:focus {
+    border-color: #2563eb;
+  }
+
+  .modal textarea { resize: vertical; min-height: 80px; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .modal-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .modal-actions .btn-primary {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+  }
+
+  .modal-actions .btn-primary:hover { opacity: 0.9; }
+
+  .modal-actions .btn-cancel {
+    background: rgba(255,255,255,0.08);
+    color: #94a3b8;
+  }
+
+  .modal-actions .btn-cancel:hover { background: rgba(255,255,255,0.12); }
+
+  .format-select {
+    display: flex;
+    gap: 10px;
+  }
+
+  .format-option {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .format-option:hover { border-color: rgba(96,165,250,0.3); }
+  .format-option.selected { border-color: #2563eb; background: rgba(37,99,235,0.1); }
+  .format-option .fmt-icon { font-size: 1.5rem; margin-bottom: 4px; }
+  .format-option .fmt-name { font-size: 0.8rem; color: #e2e8f0; font-weight: 600; }
+  .format-option .fmt-desc { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+  .generating-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .generating-overlay.show { display: flex; }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.15);
+    border-top-color: #60a5fa;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
   <div class="header">
     <h1>기업교육 발표자료 생성기</h1>
     <p>교육자료를 넣고 Claude Code에게 요청하면 PPT + 동적 웹 발표자료를 자동 생성합니다</p>
-    <a href="/editor" style="display:inline-block;margin-top:12px;padding:8px 20px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border-radius:8px;text-decoration:none;font-size:0.9rem;font-weight:600;transition:all 0.2s;">슬라이드 에디터 열기</a>
+    <div class="create-section">
+      <button class="create-btn gradient" onclick="showCreateModal()">+ 새 발표자료 만들기</button>
+      <a href="/editor" class="create-btn outline">슬라이드 에디터 열기</a>
+    </div>
+  </div>
+
+  <!-- 새 발표자료 생성 모달 -->
+  <div class="modal-overlay" id="createModal" onclick="if(event.target===this)hideCreateModal()">
+    <div class="modal">
+      <h3>새 발표자료 만들기</h3>
+      <div class="form-group">
+        <label>발표 제목</label>
+        <input type="text" id="newTitle" placeholder="예: AI 시대의 디지털 전환 전략" value="">
+      </div>
+      <div class="form-group">
+        <label>부제목 (선택)</label>
+        <input type="text" id="newSubtitle" placeholder="예: 2024년 기업교육 가이드">
+      </div>
+      <div class="form-group">
+        <label>발표자 (선택)</label>
+        <input type="text" id="newPresenter" placeholder="예: 홍길동">
+      </div>
+      <div class="form-group">
+        <label>주요 내용 (줄바꿈으로 구분)</label>
+        <textarea id="newTopics" placeholder="예:&#10;AI 트렌드 분석&#10;디지털 전환 사례&#10;실행 전략 수립&#10;Q&A"></textarea>
+      </div>
+      <div class="form-group">
+        <label>테마</label>
+        <select id="newTheme">
+          <option value="modern">Modern Blue</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark Mode</option>
+          <option value="corporate">Corporate</option>
+          <option value="warm">Warm Orange</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>출력 형식</label>
+        <div class="format-select">
+          <div class="format-option selected" onclick="selectFormat(this,'both')">
+            <div class="fmt-icon">📦</div>
+            <div class="fmt-name">둘 다</div>
+            <div class="fmt-desc">웹 + PPT</div>
+          </div>
+          <div class="format-option" onclick="selectFormat(this,'web')">
+            <div class="fmt-icon">🌐</div>
+            <div class="fmt-name">웹</div>
+            <div class="fmt-desc">동적 발표</div>
+          </div>
+          <div class="format-option" onclick="selectFormat(this,'pptx')">
+            <div class="fmt-icon">📑</div>
+            <div class="fmt-name">PPT</div>
+            <div class="fmt-desc">다운로드</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="hideCreateModal()">취소</button>
+        <button class="btn-primary" onclick="generatePresentation()">생성하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 생성 중 오버레이 -->
+  <div class="generating-overlay" id="generatingOverlay">
+    <div class="spinner"></div>
+    <div style="color:#e2e8f0;font-size:0.95rem;">발표자료 생성 중...</div>
   </div>
 
   <div class="container">
@@ -513,6 +764,138 @@
       }
       await fetch('/api/upload', { method: 'POST', body: formData });
       loadFiles();
+    });
+
+    // ============ 새 발표자료 생성 ============
+    let selectedFormat = 'both';
+
+    function showCreateModal() { document.getElementById('createModal').classList.add('show'); document.getElementById('newTitle').focus(); }
+    function hideCreateModal() { document.getElementById('createModal').classList.remove('show'); }
+
+    function selectFormat(el, format) {
+      document.querySelectorAll('.format-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedFormat = format;
+    }
+
+    async function generatePresentation() {
+      const title = document.getElementById('newTitle').value.trim();
+      if (!title) { alert('발표 제목을 입력해주세요'); return; }
+
+      const subtitle = document.getElementById('newSubtitle').value.trim();
+      const presenter = document.getElementById('newPresenter').value.trim();
+      const topicsRaw = document.getElementById('newTopics').value.trim();
+      const theme = document.getElementById('newTheme').value;
+      const topics = topicsRaw ? topicsRaw.split('\n').map(t => t.trim()).filter(t => t) : [];
+
+      // 슬라이드 데이터 자동 구성
+      const slides = {
+        cover: { title, subtitle: subtitle || null, presenter: presenter || null },
+        toc: topics.length > 0 ? topics : null,
+        content: [],
+        ending: { title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' }
+      };
+
+      // 주제별 슬라이드 자동 생성
+      const slideTypes = ['bullets', 'cards', 'steps', 'progress', 'timeline', 'checklist', 'icon-grid', 'stats'];
+      topics.forEach((topic, i) => {
+        // 섹션 구분
+        slides.content.push({
+          isSection: true,
+          sectionNumber: String(i + 1).padStart(2, '0'),
+          title: topic,
+          description: ''
+        });
+
+        // 내용 슬라이드 (타입 순환)
+        const type = slideTypes[i % slideTypes.length];
+        if (type === 'bullets') {
+          slides.content.push({ type: 'bullets', title: topic, items: ['핵심 포인트 1을 입력하세요', '핵심 포인트 2를 입력하세요', '핵심 포인트 3을 입력하세요'] });
+        } else if (type === 'cards') {
+          slides.content.push({ type: 'cards', title: topic, cards: [{ title: '핵심 1', body: '내용을 입력하세요' }, { title: '핵심 2', body: '내용을 입력하세요' }, { title: '핵심 3', body: '내용을 입력하세요' }] });
+        } else if (type === 'steps') {
+          slides.content.push({ type: 'steps', title: topic, steps: [{ title: '1단계', desc: '내용 입력' }, { title: '2단계', desc: '내용 입력' }, { title: '3단계', desc: '내용 입력' }] });
+        } else if (type === 'progress') {
+          slides.content.push({ type: 'progress', title: topic, items: [{ label: '항목 1', value: 85, suffix: '%' }, { label: '항목 2', value: 72, suffix: '%' }, { label: '항목 3', value: 93, suffix: '%' }] });
+        } else if (type === 'timeline') {
+          slides.content.push({ type: 'timeline', title: topic, events: [{ year: '단계 1', desc: '내용 입력' }, { year: '단계 2', desc: '내용 입력' }, { year: '단계 3', desc: '내용 입력' }] });
+        } else if (type === 'checklist') {
+          slides.content.push({ type: 'checklist', title: topic, items: [{ text: '확인 항목 1', done: true }, { text: '확인 항목 2', done: true }, { text: '확인 항목 3', done: false }] });
+        } else if (type === 'icon-grid') {
+          slides.content.push({ type: 'icon-grid', title: topic, items: [{ title: '요소 1', desc: '설명 입력' }, { title: '요소 2', desc: '설명 입력' }, { title: '요소 3', desc: '설명 입력' }] });
+        } else if (type === 'stats') {
+          slides.content.push({ type: 'stats', title: topic, stats: [{ value: 95, suffix: '%', label: '지표 1' }, { value: 1200, suffix: '+', label: '지표 2' }, { value: 4.8, suffix: '/5', label: '지표 3' }] });
+        }
+      });
+
+      // 주제가 없으면 기본 슬라이드
+      if (topics.length === 0) {
+        slides.content.push({ type: 'bullets', title: '주요 내용', items: ['내용을 입력하세요', '내용을 입력하세요', '내용을 입력하세요'] });
+      }
+
+      hideCreateModal();
+      const overlay = document.getElementById('generatingOverlay');
+      overlay.classList.add('show');
+
+      const safeTitle = title.replace(/[^a-zA-Z0-9가-힣]/g, '-').substring(0, 50);
+
+      try {
+        const results = [];
+
+        if (selectedFormat === 'web' || selectedFormat === 'both') {
+          const res = await fetch('/api/generate/web-from-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: safeTitle + '.html', slides, theme })
+          });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+          results.push({ type: 'web', path: data.path });
+        }
+
+        if (selectedFormat === 'pptx' || selectedFormat === 'both') {
+          const res = await fetch('/api/generate/pptx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: safeTitle + '.pptx', slides, theme })
+          });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+          results.push({ type: 'pptx', path: data.path });
+        }
+
+        overlay.classList.remove('show');
+        loadOutputs();
+
+        // 웹 발표자료 자동 열기
+        const webResult = results.find(r => r.type === 'web');
+        if (webResult) {
+          window.open(webResult.path, '_blank');
+        }
+
+        // PPT 자동 다운로드
+        const pptResult = results.find(r => r.type === 'pptx');
+        if (pptResult) {
+          const a = document.createElement('a');
+          a.href = '/' + pptResult.path;
+          a.download = safeTitle + '.pptx';
+          a.click();
+        }
+
+      } catch(e) {
+        overlay.classList.remove('show');
+        alert('생성 실패: ' + e.message);
+      }
+    }
+
+    // Enter키로 생성
+    document.getElementById('newTitle').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generatePresentation(); }
+    });
+
+    // ESC로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hideCreateModal();
     });
 
     loadSources();
