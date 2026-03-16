@@ -1179,6 +1179,19 @@ function renderEditPanel() {
       <div class="form-group"><label>내용</label><textarea rows="6" onchange="updateField('body',this.value)">${escHtml(s.body || '')}</textarea></div>`;
   }
 
+  // 내용 슬라이드에 이미지 옵션 추가
+  if (type !== 'cover' && type !== 'ending' && type !== 'section') {
+    html += `<div class="form-divider"></div>
+      <div class="form-group"><label>이미지</label>
+        <select onchange="updateField('image',this.value)" style="margin-bottom:6px">
+          <option value="" ${!s.image?'selected':''}>없음</option>
+          <option value="illust" ${s.image==='illust'?'selected':''}>자동 일러스트 (SVG)</option>
+          <option value="custom" ${s.image&&s.image!=='illust'?'selected':''}>직접 URL 입력</option>
+        </select>
+        ${s.image && s.image !== 'illust' ? `<input placeholder="이미지 URL (https://...)" value="${escAttr(s.image==='custom'?'':s.image)}" onchange="updateField('image',this.value||'custom')">` : ''}
+      </div>`;
+  }
+
   body.innerHTML = html;
 }
 

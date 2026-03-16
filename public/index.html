@@ -507,15 +507,25 @@
         <label>주요 내용 (줄바꿈으로 구분)</label>
         <textarea id="newTopics" placeholder="예:&#10;AI 트렌드 분석&#10;디지털 전환 사례&#10;실행 전략 수립&#10;Q&A"></textarea>
       </div>
-      <div class="form-group">
-        <label>테마</label>
-        <select id="newTheme">
-          <option value="modern">Modern Blue</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark Mode</option>
-          <option value="corporate">Corporate</option>
-          <option value="warm">Warm Orange</option>
-        </select>
+      <div style="display:flex;gap:12px;">
+        <div class="form-group" style="flex:1">
+          <label>테마</label>
+          <select id="newTheme">
+            <option value="modern">Modern Blue</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark Mode</option>
+            <option value="corporate">Corporate</option>
+            <option value="warm">Warm Orange</option>
+          </select>
+        </div>
+        <div class="form-group" style="width:140px">
+          <label>주제당 슬라이드</label>
+          <select id="newSlidesPerTopic">
+            <option value="1">1장 (간결)</option>
+            <option value="2" selected>2장 (기본)</option>
+            <option value="3">3장 (상세)</option>
+          </select>
+        </div>
       </div>
       <div class="form-group">
         <label>출력 형식</label>
@@ -778,6 +788,28 @@
       selectedFormat = format;
     }
 
+    // 슬라이드 템플릿 풀 (다양한 인포그래픽 타입)
+    const SLIDE_POOL = [
+      t => ({ type:'bullets', title:t, image:'illust', items:['핵심 포인트 1','핵심 포인트 2','핵심 포인트 3'] }),
+      t => ({ type:'cards', title:t, cards:[{title:'핵심 1',body:'내용을 입력하세요'},{title:'핵심 2',body:'내용을 입력하세요'},{title:'핵심 3',body:'내용을 입력하세요'}] }),
+      t => ({ type:'steps', title:t, image:'illust', steps:[{title:'1단계',desc:'내용 입력'},{title:'2단계',desc:'내용 입력'},{title:'3단계',desc:'내용 입력'}] }),
+      t => ({ type:'progress', title:t, items:[{label:'항목 1',value:85,suffix:'%'},{label:'항목 2',value:72,suffix:'%'},{label:'항목 3',value:93,suffix:'%'}] }),
+      t => ({ type:'timeline', title:t, events:[{year:'Phase 1',desc:'내용'},{year:'Phase 2',desc:'내용'},{year:'Phase 3',desc:'내용'}] }),
+      t => ({ type:'checklist', title:t, image:'illust', items:[{text:'확인 항목 1',done:true},{text:'확인 항목 2',done:true},{text:'확인 항목 3',done:false}] }),
+      t => ({ type:'icon-grid', title:t, items:[{title:'요소 1',desc:'설명'},{title:'요소 2',desc:'설명'},{title:'요소 3',desc:'설명'}] }),
+      t => ({ type:'stats', title:t, stats:[{value:95,suffix:'%',label:'지표 1'},{value:1200,suffix:'+',label:'지표 2'},{value:4.8,suffix:'/5',label:'지표 3'}] }),
+      t => ({ type:'donut', title:t, items:[{value:85,suffix:'%',label:'완료율'},{value:92,suffix:'%',label:'만족도'},{value:78,suffix:'%',label:'참여율'}] }),
+      t => ({ type:'process-arrow', title:t, steps:[{title:'분석',desc:'현황 파악'},{title:'설계',desc:'방안 수립'},{title:'실행',desc:'적용'},{title:'평가',desc:'결과 확인'}] }),
+      t => ({ type:'bar-chart', title:t, items:[{label:'항목A',value:65},{label:'항목B',value:82},{label:'항목C',value:45},{label:'항목D',value:93}] }),
+      t => ({ type:'pyramid', title:t, image:'illust', levels:[{title:'비전',desc:'최상위 목표'},{title:'전략',desc:'실행 방안'},{title:'실행',desc:'구체적 행동'}] }),
+      t => ({ type:'highlight', title:t, body:'핵심 메시지를 입력하세요', sub:'부가 설명', icon:'💡' }),
+      t => ({ type:'matrix', title:t, cells:[{title:'높은 영향·긴급',body:'즉시 실행'},{title:'높은 영향·비긴급',body:'계획 수립'},{title:'낮은 영향·긴급',body:'위임'},{title:'낮은 영향·비긴급',body:'보류'}] }),
+      t => ({ type:'quote', title:t, quote:'변화의 시작은 작은 한 걸음입니다.', author:'발표자' }),
+      t => ({ type:'roadmap', title:t, phases:[{title:'Phase 1',desc:'기반 구축',label:'Q1'},{title:'Phase 2',desc:'확장',label:'Q2'},{title:'Phase 3',desc:'안정화',label:'Q3'}] }),
+      t => ({ type:'cycle', title:t, nodes:[{title:'Plan',desc:'계획'},{title:'Do',desc:'실행'},{title:'Check',desc:'확인'},{title:'Act',desc:'개선'}] }),
+      t => ({ type:'two-column', title:t, leftTitle:'장점', rightTitle:'과제', leftItems:['장점 1','장점 2'], rightItems:['과제 1','과제 2'] }),
+    ];
+
     async function generatePresentation() {
       const title = document.getElementById('newTitle').value.trim();
       if (!title) { alert('발표 제목을 입력해주세요'); return; }
@@ -786,9 +818,9 @@
       const presenter = document.getElementById('newPresenter').value.trim();
       const topicsRaw = document.getElementById('newTopics').value.trim();
       const theme = document.getElementById('newTheme').value;
+      const slidesPerTopic = parseInt(document.getElementById('newSlidesPerTopic').value);
       const topics = topicsRaw ? topicsRaw.split('\n').map(t => t.trim()).filter(t => t) : [];
 
-      // 슬라이드 데이터 자동 구성
       const slides = {
         cover: { title, subtitle: subtitle || null, presenter: presenter || null },
         toc: topics.length > 0 ? topics : null,
@@ -796,8 +828,9 @@
         ending: { title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' }
       };
 
-      // 주제별 슬라이드 자동 생성
-      const slideTypes = ['bullets', 'cards', 'steps', 'progress', 'timeline', 'checklist', 'icon-grid', 'stats'];
+      // 타입 인덱스 셔플 (같은 타입 연속 방지)
+      let typeIdx = 0;
+
       topics.forEach((topic, i) => {
         // 섹션 구분
         slides.content.push({
@@ -807,30 +840,16 @@
           description: ''
         });
 
-        // 내용 슬라이드 (타입 순환)
-        const type = slideTypes[i % slideTypes.length];
-        if (type === 'bullets') {
-          slides.content.push({ type: 'bullets', title: topic, items: ['핵심 포인트 1을 입력하세요', '핵심 포인트 2를 입력하세요', '핵심 포인트 3을 입력하세요'] });
-        } else if (type === 'cards') {
-          slides.content.push({ type: 'cards', title: topic, cards: [{ title: '핵심 1', body: '내용을 입력하세요' }, { title: '핵심 2', body: '내용을 입력하세요' }, { title: '핵심 3', body: '내용을 입력하세요' }] });
-        } else if (type === 'steps') {
-          slides.content.push({ type: 'steps', title: topic, steps: [{ title: '1단계', desc: '내용 입력' }, { title: '2단계', desc: '내용 입력' }, { title: '3단계', desc: '내용 입력' }] });
-        } else if (type === 'progress') {
-          slides.content.push({ type: 'progress', title: topic, items: [{ label: '항목 1', value: 85, suffix: '%' }, { label: '항목 2', value: 72, suffix: '%' }, { label: '항목 3', value: 93, suffix: '%' }] });
-        } else if (type === 'timeline') {
-          slides.content.push({ type: 'timeline', title: topic, events: [{ year: '단계 1', desc: '내용 입력' }, { year: '단계 2', desc: '내용 입력' }, { year: '단계 3', desc: '내용 입력' }] });
-        } else if (type === 'checklist') {
-          slides.content.push({ type: 'checklist', title: topic, items: [{ text: '확인 항목 1', done: true }, { text: '확인 항목 2', done: true }, { text: '확인 항목 3', done: false }] });
-        } else if (type === 'icon-grid') {
-          slides.content.push({ type: 'icon-grid', title: topic, items: [{ title: '요소 1', desc: '설명 입력' }, { title: '요소 2', desc: '설명 입력' }, { title: '요소 3', desc: '설명 입력' }] });
-        } else if (type === 'stats') {
-          slides.content.push({ type: 'stats', title: topic, stats: [{ value: 95, suffix: '%', label: '지표 1' }, { value: 1200, suffix: '+', label: '지표 2' }, { value: 4.8, suffix: '/5', label: '지표 3' }] });
+        // 주제당 N장 슬라이드 생성
+        for (let j = 0; j < slidesPerTopic; j++) {
+          const template = SLIDE_POOL[typeIdx % SLIDE_POOL.length];
+          slides.content.push(template(topic));
+          typeIdx++;
         }
       });
 
-      // 주제가 없으면 기본 슬라이드
       if (topics.length === 0) {
-        slides.content.push({ type: 'bullets', title: '주요 내용', items: ['내용을 입력하세요', '내용을 입력하세요', '내용을 입력하세요'] });
+        slides.content.push({ type:'bullets', title:'주요 내용', image:'illust', items:['내용을 입력하세요','내용을 입력하세요','내용을 입력하세요'] });
       }
 
       hideCreateModal();
