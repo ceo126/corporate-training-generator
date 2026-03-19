@@ -4,6 +4,7 @@ const fs = require('fs');
 const multer = require('multer');
 const webGenerator = require('./lib/webGenerator');
 const pptGenerator = require('./lib/pptGenerator');
+const fileParser = require('./lib/fileParser');
 
 const app = express();
 const PORT = 8220;
@@ -112,8 +113,13 @@ function scanDir(baseDir, currentDir, files) {
   }
 }
 
-app.post('/api/upload', upload.array('files'), (req, res) => {
-  res.json({ success: true, count: req.files.length });
+app.post('/api/upload', (req, res, next) => {
+  upload.array('files')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    res.json({ success: true, count: req.files.length });
+  });
 });
 
 app.delete('/api/files/:name', (req, res) => {
@@ -161,6 +167,9 @@ app.get('/api/outputs', (req, res) => {
 
 app.delete('/api/outputs/:type/:name', (req, res) => {
   const { type, name } = req.params;
+  if (type !== 'pptx' && type !== 'web') {
+    return res.status(400).json({ error: '잘못된 타입입니다' });
+  }
   const dir = type === 'pptx' ? 'output/pptx' : 'output/web';
   const outputDir = path.join(__dirname, dir);
   const filePath = path.join(outputDir, name);
@@ -176,6 +185,25 @@ app.delete('/api/outputs/:type/:name', (req, res) => {
   }
 });
 
+// ============ 파일 파싱 ============
+
+app.post('/api/parse', async (req, res) => {
+  try {
+    const { filePath, sourceDir } = req.body;
+    if (!filePath) return res.status(400).json({ error: '파일 경로가 필요합니다' });
+    const fullPath = path.join(sourceDir || path.join(__dirname, 'input'), filePath);
+    // 소스 디렉토리 내 파일인지 확인
+    const resolvedDir = path.resolve(sourceDir || path.join(__dirname, 'input'));
+    if (!path.resolve(fullPath).startsWith(resolvedDir)) {
+      return res.status(400).json({ error: '잘못된 파일 경로입니다' });
+    }
+    const result = await fileParser.parseFile(fullPath);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ============ 생성 ============
 
 app.get('/editor', (req, res) => {
@@ -185,11 +213,16 @@ app.get('/editor', (req, res) => {
 app.post('/api/generate/web-from-data', (req, res) => {
   try {
     const { filename, slides, theme } = req.body;
+    const safeName = path.basename(filename);
     const html = webGenerator.generateHTML(slides, { theme, title: slides.cover?.title || 'Presentation' });
-    const outputPath = path.join(__dirname, 'output/web', filename);
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    const outputDir = path.join(__dirname, 'output/web');
+    const outputPath = path.join(outputDir, safeName);
+    if (!outputPath.startsWith(outputDir + path.sep) && outputPath !== outputDir + path.sep + safeName) {
+      return res.status(400).json({ error: '잘못된 파일명입니다' });
+    }
+    fs.mkdirSync(outputDir, { recursive: true });
     fs.writeFileSync(outputPath, html, 'utf8');
-    res.json({ success: true, path: `/output/web/${filename}` });
+    res.json({ success: true, path: `/output/web/${safeName}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -198,10 +231,12 @@ app.post('/api/generate/web-from-data', (req, res) => {
 app.post('/api/generate/web', (req, res) => {
   try {
     const { filename, html } = req.body;
-    const outputPath = path.join(__dirname, 'output/web', filename);
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    const safeName = path.basename(filename);
+    const outputDir = path.join(__dirname, 'output/web');
+    const outputPath = path.join(outputDir, safeName);
+    fs.mkdirSync(outputDir, { recursive: true });
     fs.writeFileSync(outputPath, html, 'utf8');
-    res.json({ success: true, path: `/output/web/${filename}` });
+    res.json({ success: true, path: `/output/web/${safeName}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -210,7 +245,8 @@ app.post('/api/generate/web', (req, res) => {
 app.post('/api/generate/pptx', async (req, res) => {
   try {
     const { filename, slides, theme } = req.body;
-    const outputPath = await pptGenerator.generate(slides, theme, filename);
+    const safeName = path.basename(filename);
+    const outputPath = await pptGenerator.generate(slides, theme, safeName);
     res.json({ success: true, path: outputPath });
   } catch (err) {
     res.status(500).json({ error: err.message });
