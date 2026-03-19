@@ -28,7 +28,9 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'input/'),
   filename: (req, file, cb) => {
     const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    cb(null, originalName);
+    // Path traversal 방지: 파일명에서 경로 구분자 제거
+    const safeName = path.basename(originalName);
+    cb(null, safeName);
   }
 });
 const upload = multer({
@@ -71,12 +73,16 @@ app.delete('/api/source', (req, res) => {
 // ============ 파일 관리 ============
 
 app.get('/api/files', (req, res) => {
-  const files = [];
-  for (const dir of sourceDirs) {
-    if (!fs.existsSync(dir)) continue;
-    scanDir(dir, dir, files);
+  try {
+    const files = [];
+    for (const dir of sourceDirs) {
+      if (!fs.existsSync(dir)) continue;
+      scanDir(dir, dir, files);
+    }
+    res.json({ files });
+  } catch (err) {
+    res.status(500).json({ error: '파일 목록 조회 실패: ' + err.message });
   }
-  res.json({ files });
 });
 
 function scanDir(baseDir, currentDir, files) {
@@ -140,29 +146,25 @@ app.delete('/api/files/:name', (req, res) => {
 // ============ 결과물 관리 ============
 
 app.get('/api/outputs', (req, res) => {
-  const pptxDir = path.join(__dirname, 'output/pptx');
-  const webDir = path.join(__dirname, 'output/web');
+  try {
+    const pptxDir = path.join(__dirname, 'output/pptx');
+    const webDir = path.join(__dirname, 'output/web');
 
-  const pptxFiles = fs.existsSync(pptxDir)
-    ? fs.readdirSync(pptxDir).filter(f => f.endsWith('.pptx')).map(f => ({
-        name: f,
-        type: 'pptx',
-        path: `/output/pptx/${f}`,
-        modified: fs.statSync(path.join(pptxDir, f)).mtime
-      }))
-    : [];
+    const safeReadDir = (dir, ext, type) => {
+      if (!fs.existsSync(dir)) return [];
+      return fs.readdirSync(dir).filter(f => f.endsWith(ext)).map(f => {
+        try {
+          return { name: f, type, path: `/output/${type === 'web' ? 'web' : 'pptx'}/${encodeURIComponent(f)}`, modified: fs.statSync(path.join(dir, f)).mtime };
+        } catch { return null; }
+      }).filter(Boolean);
+    };
 
-  const webFiles = fs.existsSync(webDir)
-    ? fs.readdirSync(webDir).filter(f => f.endsWith('.html')).map(f => ({
-        name: f,
-        type: 'web',
-        path: `/output/web/${f}`,
-        modified: fs.statSync(path.join(webDir, f)).mtime
-      }))
-    : [];
-
-  const all = [...pptxFiles, ...webFiles].sort((a, b) => new Date(b.modified) - new Date(a.modified));
-  res.json({ outputs: all });
+    const all = [...safeReadDir(pptxDir, '.pptx', 'pptx'), ...safeReadDir(webDir, '.html', 'web')]
+      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+    res.json({ outputs: all });
+  } catch (err) {
+    res.status(500).json({ error: '결과물 목록 조회 실패: ' + err.message });
+  }
 });
 
 app.delete('/api/outputs/:type/:name', (req, res) => {

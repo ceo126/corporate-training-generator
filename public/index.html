@@ -628,11 +628,11 @@
         const data = await res.json();
         const container = document.getElementById('sourceList');
         container.innerHTML = data.sources.map(s => {
-          const escaped = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+          const escaped = escHtml(s);
           return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(96,165,250,0.08);margin-bottom:4px;font-size:0.8rem;">
             <span style="color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escaped}">📁 ${escaped}</span>
-            <button class="delete-btn" onclick="removeSource('${escaped.replace(/\\/g,'\\\\')}')" style="font-size:0.75rem;">✕</button>
+            <button class="delete-btn" data-source="${escaped}" onclick="removeSource(this.dataset.source)" style="font-size:0.75rem;">✕</button>
           </div>`;
         }).join('');
       } catch(e) {}
@@ -722,7 +722,7 @@
               ${o.type === 'web'
                 ? `<a href="${escHtml(o.path)}" target="_blank" class="action-btn primary">발표 시작</a>`
                 : `<a href="${escHtml(o.path)}" download class="action-btn primary">다운로드</a>`}
-              <button class="action-btn secondary" onclick="deleteOutput('${escHtml(o.type)}','${escHtml(o.name).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:0.75rem;color:#ef4444;">삭제</button>
+              <button class="action-btn secondary" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:#ef4444;">삭제</button>
             </div>
           </div>`).join('');
       } catch(e) {
