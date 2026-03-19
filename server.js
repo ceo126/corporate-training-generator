@@ -194,7 +194,7 @@ app.post('/api/parse', async (req, res) => {
     const fullPath = path.join(sourceDir || path.join(__dirname, 'input'), filePath);
     // 소스 디렉토리 내 파일인지 확인
     const resolvedDir = path.resolve(sourceDir || path.join(__dirname, 'input'));
-    if (!path.resolve(fullPath).startsWith(resolvedDir)) {
+    if (!path.resolve(fullPath).startsWith(resolvedDir + path.sep) && path.resolve(fullPath) !== resolvedDir) {
       return res.status(400).json({ error: '잘못된 파일 경로입니다' });
     }
     const result = await fileParser.parseFile(fullPath);
@@ -214,14 +214,13 @@ app.post('/api/generate/web-from-data', (req, res) => {
   try {
     const { filename, slides, theme } = req.body;
     const safeName = path.basename(filename);
-    const html = webGenerator.generateHTML(slides, { theme, title: slides.cover?.title || 'Presentation' });
-    const outputDir = path.join(__dirname, 'output/web');
-    const outputPath = path.join(outputDir, safeName);
-    if (!outputPath.startsWith(outputDir + path.sep) && outputPath !== outputDir + path.sep + safeName) {
+    if (!safeName || safeName.startsWith('.')) {
       return res.status(400).json({ error: '잘못된 파일명입니다' });
     }
+    const html = webGenerator.generateHTML(slides, { theme, title: slides.cover?.title || 'Presentation' });
+    const outputDir = path.join(__dirname, 'output/web');
     fs.mkdirSync(outputDir, { recursive: true });
-    fs.writeFileSync(outputPath, html, 'utf8');
+    fs.writeFileSync(path.join(outputDir, safeName), html, 'utf8');
     res.json({ success: true, path: `/output/web/${safeName}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -232,10 +231,12 @@ app.post('/api/generate/web', (req, res) => {
   try {
     const { filename, html } = req.body;
     const safeName = path.basename(filename);
+    if (!safeName || safeName.startsWith('.')) {
+      return res.status(400).json({ error: '잘못된 파일명입니다' });
+    }
     const outputDir = path.join(__dirname, 'output/web');
-    const outputPath = path.join(outputDir, safeName);
     fs.mkdirSync(outputDir, { recursive: true });
-    fs.writeFileSync(outputPath, html, 'utf8');
+    fs.writeFileSync(path.join(outputDir, safeName), html, 'utf8');
     res.json({ success: true, path: `/output/web/${safeName}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -246,6 +247,9 @@ app.post('/api/generate/pptx', async (req, res) => {
   try {
     const { filename, slides, theme } = req.body;
     const safeName = path.basename(filename);
+    if (!safeName || safeName.startsWith('.')) {
+      return res.status(400).json({ error: '잘못된 파일명입니다' });
+    }
     const outputPath = await pptGenerator.generate(slides, theme, safeName);
     res.json({ success: true, path: outputPath });
   } catch (err) {
