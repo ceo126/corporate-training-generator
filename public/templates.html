@@ -82,24 +82,33 @@
     align-items: center;
   }
 
-  .btn-back {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
+  /* 네비게이션 바 (index.html 통일) */
+  .header-nav {
+    display: flex;
     gap: 6px;
-    transition: all 0.2s;
+    align-items: center;
   }
-
-  .btn-back:hover {
-    background: var(--bg-hover);
+  .header-nav a {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .header-nav a:hover {
+    color: var(--accent);
     border-color: var(--accent);
+    background: rgba(59,130,246,0.08);
+    transform: scale(1.02);
+  }
+  .header-nav a.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(59,130,246,0.1);
   }
 
   .theme-toggle {
@@ -181,6 +190,41 @@
 
   .theme-select:focus { border-color: var(--accent); }
 
+  /* 정렬 셀렉트 */
+  .sort-select {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    min-width: 130px;
+  }
+  .sort-select:focus { border-color: var(--accent); }
+
+  /* 비교 모드 버튼 */
+  .compare-btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .compare-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .compare-btn.active {
+    background: rgba(96,165,250,0.12);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
   /* Category Tabs */
   .category-tabs {
     padding: 0 40px;
@@ -201,6 +245,7 @@
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
+    position: relative;
   }
 
   .tab-btn:hover {
@@ -225,6 +270,38 @@
 
   .tab-btn.active .tab-count {
     background: rgba(255,255,255,0.25);
+  }
+
+  /* 카테고리 툴팁 */
+  .tab-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .tab-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--border-color);
+  }
+  .tab-btn:hover .tab-tooltip {
+    opacity: 1;
   }
 
   /* Grid */
@@ -262,6 +339,31 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   }
 
+  /* 비교 모드 체크박스 */
+  .card-checkbox {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-card);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: all 0.2s;
+    font-size: 12px;
+    color: #fff;
+  }
+  .card-checkbox.visible { display: flex; }
+  .card-checkbox.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
   /* 미니 슬라이드 미리보기 */
   .card-preview {
     width: 100%;
@@ -276,6 +378,38 @@
     padding: 10px;
     overflow: hidden;
     position: relative;
+  }
+
+  /* 미리보기 확대 팝업 */
+  .preview-popup {
+    position: fixed;
+    z-index: 500;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    width: 360px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .preview-popup.visible { opacity: 1; }
+  .preview-popup .popup-inner {
+    transform: scale(2);
+  }
+  .preview-popup .popup-title {
+    position: absolute;
+    bottom: 8px;
+    left: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   /* bullets 미리보기: 줄 3개 */
@@ -661,6 +795,24 @@
     border-color: var(--accent);
   }
 
+  /* 내 템플릿 저장 버튼 */
+  .save-custom-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--accent-purple);
+    background: rgba(167,139,250,0.1);
+    color: var(--accent-purple);
+    font-size: 0.75rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .save-custom-btn:hover {
+    background: var(--accent-purple);
+    color: #fff;
+  }
+
   /* Empty state */
   .empty-state {
     grid-column: 1 / -1;
@@ -781,6 +933,7 @@
     display: flex;
     gap: 10px;
     margin-top: 24px;
+    flex-wrap: wrap;
   }
 
   .btn-primary {
@@ -813,6 +966,75 @@
 
   .btn-secondary:hover { background: var(--bg-hover); }
 
+  /* 비교 모달 */
+  .compare-modal-content {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .compare-side {
+    flex: 1;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .compare-side h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+  .compare-side .type-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    background: rgba(96,165,250,0.12);
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .compare-side .desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .compare-side .preview-area {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 12px;
+  }
+
+  /* 원클릭 PPT 생성 모달 */
+  .ppt-form-group {
+    margin-bottom: 16px;
+  }
+  .ppt-form-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .ppt-form-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+  }
+  .ppt-form-group input:focus { border-color: var(--accent); }
+
   /* Loading */
   .loading {
     grid-column: 1 / -1;
@@ -843,6 +1065,8 @@
     .card-icon { width: 40px; height: 40px; font-size: 1.2rem; }
     .modal { padding: 20px; width: 95%; }
     .header h1 { font-size: 1.2rem; }
+    .header-nav { flex-wrap: wrap; }
+    .compare-modal-content { flex-direction: column; }
   }
 
   @media (max-width: 480px) {
@@ -868,7 +1092,12 @@
         <p>19개 템플릿 중 원하는 레이아웃을 선택하세요</p>
       </div>
       <div class="header-actions">
-        <a href="/" class="btn-back">&#8592; 메인으로</a>
+        <nav class="header-nav">
+          <a href="/" aria-label="홈 페이지로 이동">홈</a>
+          <a href="/editor" aria-label="슬라이드 에디터 열기">슬라이드 에디터</a>
+          <a href="/templates" class="active" aria-label="템플릿 갤러리 보기">템플릿 갤러리</a>
+          <a href="/presenter" aria-label="발표자 모드 시작">발표자 모드</a>
+        </nav>
         <button class="theme-toggle" onclick="toggleTheme()">
           <span id="themeIcon">&#127769;</span>
           <span id="themeLabel">다크 모드</span>
@@ -884,15 +1113,43 @@
     <select class="theme-select" id="themeSelect">
       <option value="">테마 선택...</option>
     </select>
+    <select class="sort-select" id="sortSelect" onchange="renderGrid()">
+      <option value="name">이름순</option>
+      <option value="popular">인기순</option>
+      <option value="recent">최근 사용순</option>
+    </select>
+    <button class="compare-btn" id="compareBtn" onclick="toggleCompareMode()">비교 모드</button>
   </div>
 
   <div class="category-tabs" id="categoryTabs">
-    <button class="tab-btn active" data-cat="all" onclick="setCategory('all')">전체</button>
-    <button class="tab-btn" data-cat="favorites" onclick="setCategory('favorites')">&#9733; 즐겨찾기</button>
-    <button class="tab-btn" data-cat="text" onclick="setCategory('text')">텍스트</button>
-    <button class="tab-btn" data-cat="chart" onclick="setCategory('chart')">차트 / 데이터</button>
-    <button class="tab-btn" data-cat="layout" onclick="setCategory('layout')">레이아웃</button>
-    <button class="tab-btn" data-cat="special" onclick="setCategory('special')">특수</button>
+    <button class="tab-btn active" data-cat="all" onclick="setCategory('all')">
+      전체
+      <span class="tab-tooltip">모든 템플릿을 한눈에 봅니다</span>
+    </button>
+    <button class="tab-btn" data-cat="favorites" onclick="setCategory('favorites')">
+      &#9733; 즐겨찾기
+      <span class="tab-tooltip">자주 쓰는 템플릿 모음</span>
+    </button>
+    <button class="tab-btn" data-cat="custom" onclick="setCategory('custom')">
+      내 템플릿
+      <span class="tab-tooltip">직접 저장한 커스텀 템플릿</span>
+    </button>
+    <button class="tab-btn" data-cat="text" onclick="setCategory('text')">
+      텍스트
+      <span class="tab-tooltip">글머리, 인용, 하이라이트 등 텍스트 중심</span>
+    </button>
+    <button class="tab-btn" data-cat="chart" onclick="setCategory('chart')">
+      차트 / 데이터
+      <span class="tab-tooltip">통계, 진행률, 도넛 등 데이터 시각화</span>
+    </button>
+    <button class="tab-btn" data-cat="layout" onclick="setCategory('layout')">
+      레이아웃
+      <span class="tab-tooltip">카드, 2단, 매트릭스 등 구조적 배치</span>
+    </button>
+    <button class="tab-btn" data-cat="special" onclick="setCategory('special')">
+      특수
+      <span class="tab-tooltip">타임라인, 로드맵, SWOT 등 특수 형태</span>
+    </button>
   </div>
 
   <div class="grid" id="templateGrid">
@@ -900,6 +1157,12 @@
       <div class="spinner"></div>
       <p>템플릿 로딩 중...</p>
     </div>
+  </div>
+
+  <!-- 미리보기 확대 팝업 -->
+  <div class="preview-popup" id="previewPopup">
+    <div class="popup-inner" id="popupInner"></div>
+    <div class="popup-title" id="popupTitle"></div>
   </div>
 
   <!-- Detail Modal -->
@@ -917,8 +1180,70 @@
       </div>
       <div class="modal-actions">
         <button class="btn-primary" id="modalOpenEditor">에디터에서 열기</button>
+        <button class="btn-secondary" id="modalPptBtn" onclick="openPptModal()">PPT 다운로드</button>
         <button class="btn-secondary" onclick="copyJson()">JSON 복사</button>
         <button class="btn-secondary" onclick="closeModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 비교 모달 -->
+  <div class="modal-overlay" id="compareModal">
+    <div class="modal" style="max-width:900px;">
+      <button class="modal-close" onclick="closeCompareModal()">&times;</button>
+      <div class="modal-header">
+        <h2>템플릿 비교</h2>
+        <p>선택한 2개의 템플릿을 나란히 비교합니다</p>
+      </div>
+      <div class="compare-modal-content" id="compareContent"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCompareModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 원클릭 PPT 생성 모달 -->
+  <div class="modal-overlay" id="pptModal">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close" onclick="closePptModal()">&times;</button>
+      <div class="modal-header">
+        <h2>PPT 빠른 생성</h2>
+        <p id="pptModalDesc">템플릿으로 즉시 PPT를 생성합니다</p>
+      </div>
+      <div class="ppt-form-group">
+        <label for="pptTitle">발표 제목</label>
+        <input type="text" id="pptTitle" placeholder="예: 2024년 사업 전략 발표">
+      </div>
+      <div class="ppt-form-group">
+        <label for="pptSubtitle">부제목 (선택)</label>
+        <input type="text" id="pptSubtitle" placeholder="예: 마케팅팀 분기 보고">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="pptGenerateBtn" onclick="generatePpt()">PPT 생성 및 다운로드</button>
+        <button class="btn-secondary" onclick="closePptModal()">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 커스텀 템플릿 저장 모달 -->
+  <div class="modal-overlay" id="customSaveModal">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close" onclick="closeCustomSaveModal()">&times;</button>
+      <div class="modal-header">
+        <h2>내 템플릿으로 저장</h2>
+        <p>현재 JSON 데이터를 커스텀 템플릿으로 저장합니다</p>
+      </div>
+      <div class="ppt-form-group">
+        <label for="customName">템플릿 이름</label>
+        <input type="text" id="customName" placeholder="예: 내 커스텀 카드">
+      </div>
+      <div class="ppt-form-group">
+        <label for="customDesc">설명 (선택)</label>
+        <input type="text" id="customDesc" placeholder="예: 3단 카드 레이아웃">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="saveCustomTemplate()">저장</button>
+        <button class="btn-secondary" onclick="closeCustomSaveModal()">취소</button>
       </div>
     </div>
   </div>
@@ -1065,7 +1390,72 @@
   function incrementUsage(type) {
     var counts = getUsageCounts();
     counts[type] = (counts[type] || 0) + 1;
+    counts['_lastUsed_' + type] = Date.now();
     localStorage.setItem('tpl-usage', JSON.stringify(counts));
+  }
+
+  // ============ 커스텀 템플릿 (localStorage) ============
+
+  function getCustomTemplates() {
+    try { return JSON.parse(localStorage.getItem('tpl-custom') || '[]'); } catch(e) { return []; }
+  }
+  function saveCustomTemplates(arr) {
+    localStorage.setItem('tpl-custom', JSON.stringify(arr));
+  }
+
+  // ============ 비교 모드 ============
+
+  let compareMode = false;
+  let compareSelections = []; // type[]
+
+  function toggleCompareMode() {
+    compareMode = !compareMode;
+    document.getElementById('compareBtn').classList.toggle('active', compareMode);
+    if (!compareMode) {
+      compareSelections = [];
+    }
+    renderGrid();
+  }
+
+  function toggleCompareSelection(type, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var idx = compareSelections.indexOf(type);
+    if (idx >= 0) {
+      compareSelections.splice(idx, 1);
+    } else {
+      if (compareSelections.length >= 2) {
+        compareSelections.shift();
+      }
+      compareSelections.push(type);
+    }
+    renderGrid();
+    if (compareSelections.length === 2) {
+      openCompareModal();
+    }
+  }
+
+  function openCompareModal() {
+    var content = document.getElementById('compareContent');
+    var html = '';
+    compareSelections.forEach(function(type) {
+      var tpl = allTemplates.find(function(t) { return t.type === type; });
+      if (!tpl) return;
+      html += '<div class="compare-side">'
+        + '<div class="type-tag">' + escHtml(tpl.type) + '</div>'
+        + '<h3>' + escHtml(tpl.name) + '</h3>'
+        + '<div class="desc">' + escHtml(tpl.description) + '</div>'
+        + '<div class="preview-area">' + getPreviewHtml(tpl.type) + '</div>'
+        + '<div class="json-block" style="max-height:200px;overflow:auto;font-size:0.72rem;">'
+        + syntaxHighlight(JSON.stringify(tpl.example, null, 2))
+        + '</div>'
+        + '</div>';
+    });
+    content.innerHTML = html;
+    document.getElementById('compareModal').classList.add('active');
+  }
+
+  function closeCompareModal() {
+    document.getElementById('compareModal').classList.remove('active');
   }
 
   // ============ State ============
@@ -1118,10 +1508,12 @@
       const cat = tab.dataset.cat;
       let count;
       if (cat === 'all') {
-        count = allTemplates.length;
+        count = allTemplates.length + getCustomTemplates().length;
       } else if (cat === 'favorites') {
         var favs = getFavorites();
         count = allTemplates.filter(t => favs.includes(t.type)).length;
+      } else if (cat === 'custom') {
+        count = getCustomTemplates().length;
       } else {
         const types = CATEGORIES[cat] || [];
         count = allTemplates.filter(t => types.includes(t.type)).length;
@@ -1130,7 +1522,13 @@
       if (!existing) {
         existing = document.createElement('span');
         existing.className = 'tab-count';
-        tab.appendChild(existing);
+        // tooltip 앞에 삽입
+        var tooltip = tab.querySelector('.tab-tooltip');
+        if (tooltip) {
+          tab.insertBefore(existing, tooltip);
+        } else {
+          tab.appendChild(existing);
+        }
       }
       existing.textContent = count;
     });
@@ -1152,7 +1550,14 @@
   }
 
   function getFiltered() {
-    let list = allTemplates;
+    var list;
+
+    if (currentCategory === 'custom') {
+      // 커스텀 템플릿만 표시
+      return getCustomTemplates();
+    }
+
+    list = allTemplates.slice();
 
     if (currentCategory === 'favorites') {
       var favs = getFavorites();
@@ -1170,6 +1575,23 @@
       );
     }
 
+    // 정렬
+    var sortBy = document.getElementById('sortSelect').value;
+    var usageCounts = getUsageCounts();
+    if (sortBy === 'popular') {
+      list.sort(function(a, b) {
+        return (usageCounts[b.type] || 0) - (usageCounts[a.type] || 0);
+      });
+    } else if (sortBy === 'recent') {
+      list.sort(function(a, b) {
+        return (usageCounts['_lastUsed_' + b.type] || 0) - (usageCounts['_lastUsed_' + a.type] || 0);
+      });
+    } else {
+      list.sort(function(a, b) {
+        return a.name.localeCompare(b.name, 'ko');
+      });
+    }
+
     return list;
   }
 
@@ -1179,31 +1601,91 @@
     const grid = document.getElementById('templateGrid');
     const filtered = getFiltered();
     var usageCounts = getUsageCounts();
+    var isCustom = (currentCategory === 'custom');
 
     if (filtered.length === 0) {
-      grid.innerHTML = '<div class="empty-state"><div class="icon">&#128269;</div><p>검색 결과가 없습니다</p></div>';
+      var emptyMsg = isCustom
+        ? '저장된 커스텀 템플릿이 없습니다'
+        : '검색 결과가 없습니다';
+      grid.innerHTML = '<div class="empty-state"><div class="icon">&#128269;</div><p>' + escHtml(emptyMsg) + '</p></div>';
       return;
     }
 
     grid.innerHTML = filtered.map(function(t, idx) {
-      var cat = getCategory(t.type);
-      var fav = isFavorite(t.type);
-      var usage = usageCounts[t.type] || 0;
+      var type = t.type || t.id || ('custom-' + idx);
+      var cat = isCustom ? 'custom' : getCategory(type);
+      var fav = isFavorite(type);
+      var usage = usageCounts[type] || 0;
       var delay = idx * 0.06;
-      return '<div class="card" style="animation-delay:' + delay + 's" onclick="openDetail(\'' + escHtml(t.type) + '\')">'
-        + '<button class="card-fav ' + (fav ? 'active' : '') + '" onclick="toggleFavorite(\'' + escHtml(t.type) + '\', event)" title="즐겨찾기">' + (fav ? '&#9733;' : '&#9734;') + '</button>'
-        + '<div class="card-badge">' + escHtml(CAT_LABELS[cat] || cat) + '</div>'
-        + '<div class="card-preview">' + getPreviewHtml(t.type) + '</div>'
-        + '<div class="card-top-row"><div class="card-type">' + escHtml(t.type) + '</div></div>'
+      var isCompareSelected = compareSelections.indexOf(type) >= 0;
+
+      var html = '<div class="card" style="animation-delay:' + delay + 's" onclick="' + (compareMode ? 'toggleCompareSelection(\'' + escHtml(type) + '\', event)' : 'openDetail(\'' + escHtml(type) + '\')') + '">';
+
+      // 비교 모드 체크박스
+      html += '<div class="card-checkbox ' + (compareMode ? 'visible' : '') + ' ' + (isCompareSelected ? 'checked' : '') + '">' + (isCompareSelected ? '&#10003;' : '') + '</div>';
+
+      if (!isCustom) {
+        html += '<button class="card-fav ' + (fav ? 'active' : '') + '" onclick="toggleFavorite(\'' + escHtml(type) + '\', event)" title="즐겨찾기">' + (fav ? '&#9733;' : '&#9734;') + '</button>';
+      }
+      html += '<div class="card-badge">' + escHtml(isCustom ? '내 템플릿' : (CAT_LABELS[cat] || cat)) + '</div>'
+        + '<div class="card-preview" data-type="' + escHtml(type) + '" data-name="' + escHtml(t.name) + '">' + getPreviewHtml(type) + '</div>'
+        + '<div class="card-top-row"><div class="card-type">' + escHtml(type) + '</div></div>'
         + '<div class="card-name">' + escHtml(t.name) + '</div>'
         + '<div class="card-desc">' + escHtml(t.description) + '</div>'
         + '<div class="card-footer">'
-        + '<span class="card-usage">' + (usage > 0 ? usage + '회 사용' : '') + '</span>'
-        + '<button class="card-quick-btn" onclick="quickCreate(\'' + escHtml(t.type) + '\', event)">이 템플릿으로 생성</button>'
-        + '</div>'
-        + '</div>';
+        + '<span class="card-usage">' + (usage > 0 ? usage + '회 사용' : '') + '</span>';
+
+      if (isCustom) {
+        html += '<button class="card-quick-btn" onclick="deleteCustomTemplate(' + idx + ', event)" style="color:var(--text-muted);">삭제</button>';
+      } else {
+        html += '<button class="card-quick-btn" onclick="quickCreate(\'' + escHtml(type) + '\', event)">이 템플릿으로 생성</button>';
+      }
+
+      html += '</div></div>';
+      return html;
     }).join('');
   }
+
+  // ============ 미리보기 확대 팝업 ============
+
+  var previewPopup = document.getElementById('previewPopup');
+  var popupInner = document.getElementById('popupInner');
+  var popupTitle = document.getElementById('popupTitle');
+  var popupTimeout = null;
+
+  document.addEventListener('mouseover', function(e) {
+    var preview = e.target.closest('.card-preview');
+    if (!preview) return;
+    if (popupTimeout) clearTimeout(popupTimeout);
+    popupTimeout = setTimeout(function() {
+      var type = preview.dataset.type;
+      var name = preview.dataset.name;
+      if (!type) return;
+      popupInner.innerHTML = getPreviewHtml(type);
+      popupTitle.textContent = name || type;
+      var rect = preview.getBoundingClientRect();
+      var popW = 360, popH = 220;
+      var left = rect.right + 12;
+      var top = rect.top;
+      if (left + popW > window.innerWidth) {
+        left = rect.left - popW - 12;
+      }
+      if (top + popH > window.innerHeight) {
+        top = window.innerHeight - popH - 12;
+      }
+      if (top < 0) top = 12;
+      previewPopup.style.left = left + 'px';
+      previewPopup.style.top = top + 'px';
+      previewPopup.classList.add('visible');
+    }, 400);
+  });
+
+  document.addEventListener('mouseout', function(e) {
+    var preview = e.target.closest('.card-preview');
+    if (!preview) return;
+    if (popupTimeout) { clearTimeout(popupTimeout); popupTimeout = null; }
+    previewPopup.classList.remove('visible');
+  });
 
   // ============ 빠른 생성 ============
 
@@ -1217,10 +1699,140 @@
     window.location.href = '/editor?' + params.toString();
   }
 
+  // ============ 원클릭 PPT 생성 ============
+
+  function openPptModal() {
+    if (!selectedTemplate) return;
+    document.getElementById('pptModalDesc').textContent = escHtml(selectedTemplate.name) + ' 템플릿으로 PPT를 생성합니다';
+    document.getElementById('pptTitle').value = '';
+    document.getElementById('pptSubtitle').value = '';
+    document.getElementById('pptModal').classList.add('active');
+  }
+
+  function closePptModal() {
+    document.getElementById('pptModal').classList.remove('active');
+  }
+
+  async function generatePpt() {
+    if (!selectedTemplate) return;
+    var title = document.getElementById('pptTitle').value.trim();
+    if (!title) { alert('제목을 입력해주세요.'); return; }
+    var subtitle = document.getElementById('pptSubtitle').value.trim();
+    var theme = document.getElementById('themeSelect').value || 'default';
+    var btn = document.getElementById('pptGenerateBtn');
+    var origText = btn.textContent;
+    btn.textContent = '생성 중...';
+    btn.disabled = true;
+
+    try {
+      var payload = {
+        title: title,
+        subtitle: subtitle,
+        theme: theme,
+        slides: [{
+          type: selectedTemplate.type,
+          data: selectedTemplate.example
+        }]
+      };
+
+      var res = await fetch('/api/generate/pptx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('PPT 생성 실패 (HTTP ' + res.status + ')');
+
+      var blob = await res.blob();
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = (title || 'presentation') + '.pptx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      incrementUsage(selectedTemplate.type);
+      closePptModal();
+      closeModal();
+    } catch (err) {
+      alert('PPT 생성 오류: ' + err.message);
+    } finally {
+      btn.textContent = origText;
+      btn.disabled = false;
+    }
+  }
+
+  // ============ 커스텀 템플릿 저장/삭제 ============
+
+  function openCustomSaveModal() {
+    if (!selectedTemplate) return;
+    document.getElementById('customName').value = selectedTemplate.name + ' (커스텀)';
+    document.getElementById('customDesc').value = selectedTemplate.description;
+    document.getElementById('customSaveModal').classList.add('active');
+  }
+
+  function closeCustomSaveModal() {
+    document.getElementById('customSaveModal').classList.remove('active');
+  }
+
+  function saveCustomTemplate() {
+    if (!selectedTemplate) return;
+    var name = document.getElementById('customName').value.trim();
+    if (!name) { alert('이름을 입력해주세요.'); return; }
+    var desc = document.getElementById('customDesc').value.trim();
+    var customs = getCustomTemplates();
+    customs.push({
+      id: 'custom-' + Date.now(),
+      type: selectedTemplate.type,
+      name: name,
+      description: desc || selectedTemplate.description,
+      example: selectedTemplate.example,
+      createdAt: Date.now()
+    });
+    saveCustomTemplates(customs);
+    closeCustomSaveModal();
+    closeModal();
+    updateTabCounts();
+    if (currentCategory === 'custom') renderGrid();
+    showToast('내 템플릿에 저장되었습니다');
+  }
+
+  function deleteCustomTemplate(idx, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var customs = getCustomTemplates();
+    if (idx >= 0 && idx < customs.length) {
+      customs.splice(idx, 1);
+      saveCustomTemplates(customs);
+      updateTabCounts();
+      renderGrid();
+    }
+  }
+
+  function showToast(msg) {
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;background:rgba(34,197,94,0.9);color:#fff;font-size:0.9rem;font-weight:600;z-index:9999;backdrop-filter:blur(8px);transition:opacity 0.3s;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 2000);
+  }
+
   // ============ Detail Modal ============
 
   function openDetail(type) {
-    const tpl = allTemplates.find(t => t.type === type);
+    // 커스텀 카테고리일 때는 커스텀 목록에서 찾기
+    var tpl;
+    if (currentCategory === 'custom') {
+      var customs = getCustomTemplates();
+      tpl = customs.find(function(t) { return t.type === type || t.id === type; });
+    }
+    if (!tpl) {
+      tpl = allTemplates.find(t => t.type === type);
+    }
     if (!tpl) return;
     selectedTemplate = tpl;
 
@@ -1250,7 +1862,7 @@
     if (!selectedTemplate) return;
     const text = JSON.stringify(selectedTemplate.example, null, 2);
     navigator.clipboard.writeText(text).then(() => {
-      const btn = document.querySelector('.modal-actions .btn-secondary');
+      const btn = document.querySelector('#detailModal .modal-actions .btn-secondary');
       const orig = btn.textContent;
       btn.textContent = '복사됨!';
       setTimeout(() => { btn.textContent = orig; }, 1500);
@@ -1303,16 +1915,30 @@
   // ============ Keyboard ============
 
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeModal();
+      closeCompareModal();
+      closePptModal();
+      closeCustomSaveModal();
+    }
     if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
       e.preventDefault();
       document.getElementById('searchInput').focus();
     }
   });
 
-  // Close modal on overlay click
+  // Close modals on overlay click
   document.getElementById('detailModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
+  });
+  document.getElementById('compareModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCompareModal();
+  });
+  document.getElementById('pptModal').addEventListener('click', function(e) {
+    if (e.target === this) closePptModal();
+  });
+  document.getElementById('customSaveModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCustomSaveModal();
   });
 
   // ============ Init ============

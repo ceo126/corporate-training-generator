@@ -137,7 +137,20 @@
     50% { opacity: 0.5; }
   }
 
-  /* 진행률 바 */
+  /* 슬라이드 진행률 바 (상단) */
+  .slide-progress-container {
+    height: 3px;
+    background: #2a2a4a;
+    flex-shrink: 0;
+  }
+  .slide-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #a78bfa, #7c3aed);
+    transition: width 0.3s ease;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* 타이머 진행률 바 */
   .progress-bar-container {
     height: 3px;
     background: #2a2a4a;
@@ -215,6 +228,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
   }
   .panel-header {
     padding: 8px 14px;
@@ -236,6 +250,7 @@
     justify-content: center;
     padding: 16px;
     min-height: 0;
+    position: relative;
   }
   .current-slide-frame iframe {
     width: 100%;
@@ -244,6 +259,94 @@
     border-radius: 8px;
     background: #000;
   }
+
+  /* 레이저 포인터 오버레이 */
+  .laser-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    cursor: crosshair;
+    pointer-events: none;
+  }
+  .laser-overlay.active {
+    pointer-events: auto;
+  }
+  .laser-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #ff0000;
+    border-radius: 50%;
+    box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.6), 0 0 20px 8px rgba(255, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 11;
+    display: none;
+  }
+  .laser-dot.visible { display: block; }
+
+  /* 레이저 리플 효과 */
+  .laser-ripple {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(255, 0, 0, 0.7);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 11;
+    animation: laserRipple 0.6s ease-out forwards;
+  }
+  @keyframes laserRipple {
+    0% { width: 10px; height: 10px; opacity: 1; }
+    100% { width: 50px; height: 50px; opacity: 0; }
+  }
+
+  /* 블랙아웃 / 화이트아웃 */
+  .screen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .screen-overlay.blackout {
+    background: #000;
+    color: #555;
+  }
+  .screen-overlay.whiteout {
+    background: #fff;
+    color: #ccc;
+  }
+  .screen-overlay.active { display: flex; }
+
+  /* 슬라이드 점프 인디케이터 */
+  .jump-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(42, 42, 74, 0.9);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    border-radius: 12px;
+    padding: 16px 28px;
+    font-size: 32px;
+    font-weight: 700;
+    color: #a78bfa;
+    z-index: 8000;
+    display: none;
+    letter-spacing: 2px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .jump-indicator.visible { display: block; }
 
   /* 오른쪽 패널 */
   .right-panels {
@@ -300,10 +403,14 @@
     white-space: pre-wrap;
     word-break: break-word;
     transition: font-size 0.2s;
+    outline: none;
   }
   .notes-content::-webkit-scrollbar { width: 6px; }
   .notes-content::-webkit-scrollbar-track { background: transparent; }
   .notes-content::-webkit-scrollbar-thumb { background: #3a3a5a; border-radius: 3px; }
+  .notes-content:focus {
+    box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.3);
+  }
   .notes-empty {
     flex: 1;
     display: flex;
@@ -357,6 +464,21 @@
   }
   .status-dot.connected { background: #22c55e; }
   .status-text { color: #888; }
+
+  /* 레이저 포인터 토글 버튼 */
+  .laser-toggle {
+    background: rgba(42, 42, 74, 0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #ccc;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: background 0.2s;
+  }
+  .laser-toggle:hover { background: rgba(58, 58, 90, 0.8); }
+  .laser-toggle.active { background: #7f1d1d; border-color: #ef4444; color: #fca5a5; }
 
   /* 대기 화면 */
   .waiting-screen {
@@ -435,6 +557,7 @@
     flex-shrink: 0;
     font-size: 11px;
     color: #666;
+    flex-wrap: wrap;
   }
   .shortcut {
     display: flex;
@@ -450,12 +573,49 @@
     font-family: monospace;
     color: #aaa;
   }
+
+  /* 리사이즈 핸들 */
+  .resize-handle {
+    width: 6px;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+    z-index: 5;
+    transition: background 0.2s;
+  }
+  .resize-handle:hover,
+  .resize-handle.dragging {
+    background: rgba(167, 139, 250, 0.4);
+    border-radius: 3px;
+  }
+  .resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 40px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 1px;
+  }
+  .resize-handle:hover::after {
+    background: rgba(167, 139, 250, 0.6);
+  }
 </style>
 </head>
 <body>
 
 <!-- 시간 알림 토스트 -->
 <div class="time-alert" id="timeAlert"></div>
+
+<!-- 블랙아웃/화이트아웃 오버레이 -->
+<div class="screen-overlay blackout" id="blackoutOverlay">아무 키나 누르면 돌아갑니다</div>
+<div class="screen-overlay whiteout" id="whiteoutOverlay">아무 키나 누르면 돌아갑니다</div>
+
+<!-- 슬라이드 점프 인디케이터 -->
+<div class="jump-indicator" id="jumpIndicator"></div>
 
 <!-- 헤더 -->
 <div class="header">
@@ -470,6 +630,7 @@
     <span class="clock-display" id="clockDisplay">--:--:--</span>
   </div>
   <div class="header-right">
+    <button class="laser-toggle" id="btnLaserToggle" title="레이저 포인터 (L)">레이저</button>
     <div class="target-section">
       <span>목표</span>
       <input type="number" id="targetMinutes" class="target-input" value="30" min="1" max="999">
@@ -490,7 +651,12 @@
   </div>
 </div>
 
-<!-- 진행률 바 -->
+<!-- 슬라이드 진행률 바 -->
+<div class="slide-progress-container">
+  <div class="slide-progress-bar" id="slideProgressBar" style="width: 0%"></div>
+</div>
+
+<!-- 타이머 진행률 바 -->
 <div class="progress-bar-container">
   <div class="progress-bar" id="progressBar" style="width: 0%"></div>
 </div>
@@ -510,10 +676,17 @@
   <!-- 현재 슬라이드 (연결 후 표시) -->
   <div class="current-slide-panel glass-panel" id="currentSlidePanel" style="display:none;">
     <div class="panel-header">현재 슬라이드</div>
-    <div class="current-slide-frame">
+    <div class="current-slide-frame" id="currentSlideFrameContainer">
       <iframe id="currentSlideFrame" sandbox="allow-same-origin"></iframe>
+      <!-- 레이저 포인터 오버레이 -->
+      <div class="laser-overlay" id="laserOverlay">
+        <div class="laser-dot" id="laserDot"></div>
+      </div>
     </div>
   </div>
+
+  <!-- 리사이즈 핸들 -->
+  <div class="resize-handle" id="resizeHandle" style="display:none;" title="드래그하여 패널 크기 조절"></div>
 
   <!-- 오른쪽: 다음 슬라이드 + 노트 -->
   <div class="right-panels" id="rightPanels" style="display:none;">
@@ -525,14 +698,14 @@
     </div>
     <div class="notes-panel glass-panel">
       <div class="panel-header">
-        <span>발표자 노트</span>
+        <span>발표자 노트 <span style="font-size:9px;color:#666;">(클릭하여 편집)</span></span>
         <div class="font-controls">
           <button class="font-btn" id="btnFontMinus" title="글꼴 축소">-</button>
           <span class="font-size-label" id="fontSizeLabel">15px</span>
           <button class="font-btn" id="btnFontPlus" title="글꼴 확대">+</button>
         </div>
       </div>
-      <div class="notes-content" id="notesContent" style="font-size: 15px;"></div>
+      <div class="notes-content" id="notesContent" contenteditable="true" style="font-size: 15px;" spellcheck="false"></div>
     </div>
   </div>
 </div>
@@ -543,11 +716,15 @@
 <!-- 단축키 안내 -->
 <div class="shortcuts-bar">
   <span class="shortcut"><kbd>&larr;</kbd> 이전</span>
-  <span class="shortcut"><kbd>&rarr;</kbd> <kbd>Space</kbd> <kbd>Enter</kbd> 다음</span>
+  <span class="shortcut"><kbd>&rarr;</kbd> <kbd>Space</kbd> 다음</span>
   <span class="shortcut"><kbd>Home</kbd> 처음</span>
   <span class="shortcut"><kbd>End</kbd> 마지막</span>
-  <span class="shortcut"><kbd>T</kbd> 타이머 시작/정지</span>
-  <span class="shortcut"><kbd>+</kbd> <kbd>-</kbd> 노트 크기</span>
+  <span class="shortcut"><kbd>T</kbd> 타이머</span>
+  <span class="shortcut"><kbd>B</kbd> 블랙아웃</span>
+  <span class="shortcut"><kbd>W</kbd> 화이트아웃</span>
+  <span class="shortcut"><kbd>L</kbd> 레이저</span>
+  <span class="shortcut"><kbd>F</kbd> 전체화면</span>
+  <span class="shortcut"><kbd>숫자</kbd>+<kbd>Enter</kbd> 점프</span>
 </div>
 
 <script>
@@ -579,6 +756,19 @@
   // 노트 폰트 크기
   let notesFontSize = 15;
 
+  // 레이저 포인터
+  let laserActive = false;
+
+  // 슬라이드 점프
+  let jumpBuffer = '';
+  let jumpTimeout = null;
+
+  // 블랙아웃/화이트아웃
+  let screenOverlayState = null; // null | 'black' | 'white'
+
+  // 리사이즈
+  let isResizing = false;
+
   // DOM
   const currentNum = document.getElementById('currentNum');
   const totalNum = document.getElementById('totalNum');
@@ -589,6 +779,7 @@
   const targetMinutes = document.getElementById('targetMinutes');
   const remainingDisplay = document.getElementById('remainingDisplay');
   const progressBar = document.getElementById('progressBar');
+  const slideProgressBar = document.getElementById('slideProgressBar');
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const waitingScreen = document.getElementById('waitingScreen');
@@ -603,6 +794,14 @@
   const btnFontMinus = document.getElementById('btnFontMinus');
   const btnFontPlus = document.getElementById('btnFontPlus');
   const fontSizeLabel = document.getElementById('fontSizeLabel');
+  const laserOverlay = document.getElementById('laserOverlay');
+  const laserDot = document.getElementById('laserDot');
+  const btnLaserToggle = document.getElementById('btnLaserToggle');
+  const blackoutOverlay = document.getElementById('blackoutOverlay');
+  const whiteoutOverlay = document.getElementById('whiteoutOverlay');
+  const jumpIndicator = document.getElementById('jumpIndicator');
+  const mainLayout = document.getElementById('mainLayout');
+  const resizeHandle = document.getElementById('resizeHandle');
 
   // === 현재 시각 표시 ===
   function updateClock() {
@@ -677,6 +876,7 @@
     waitingScreen.style.gridColumn = '1 / -1';
     currentSlidePanel.style.display = 'none';
     rightPanels.style.display = 'none';
+    resizeHandle.style.display = 'none';
     slideDotsBar.style.display = 'none';
   }
 
@@ -684,7 +884,13 @@
     waitingScreen.style.display = 'none';
     currentSlidePanel.style.display = '';
     rightPanels.style.display = '';
+    resizeHandle.style.display = '';
     slideDotsBar.style.display = 'flex';
+    // grid 레이아웃을 flex로 변경 (리사이즈 지원)
+    mainLayout.style.display = 'flex';
+    currentSlidePanel.style.flex = '1';
+    rightPanels.style.width = '400px';
+    rightPanels.style.flexShrink = '0';
   }
 
   // === 미니 슬라이드 도트 네비게이터 ===
@@ -715,6 +921,12 @@
     // 슬라이드 번호
     currentNum.textContent = totalSlides > 0 ? (currentSlide + 1) : '-';
     totalNum.textContent = totalSlides > 0 ? totalSlides : '-';
+
+    // 슬라이드 진행률 바 업데이트
+    if (totalSlides > 0) {
+      var slidePercent = ((currentSlide + 1) / totalSlides) * 100;
+      slideProgressBar.style.width = slidePercent + '%';
+    }
 
     if (totalSlides === 0) return;
 
@@ -838,7 +1050,6 @@
 
   // === 시간 경과 알림 ===
   function checkTimeAlerts(remainSec) {
-    var remainMin = Math.floor(remainSec / 60);
     // 10분 남음
     if (!alertShown[10] && remainSec <= 600 && remainSec > 540 && timerRunning) {
       showTimeAlert('10분 남았습니다', 'info');
@@ -914,25 +1125,204 @@
     }
   });
 
+  // === 레이저 포인터 ===
+  function toggleLaser() {
+    laserActive = !laserActive;
+    laserOverlay.classList.toggle('active', laserActive);
+    btnLaserToggle.classList.toggle('active', laserActive);
+    if (!laserActive) {
+      laserDot.classList.remove('visible');
+    }
+  }
+
+  btnLaserToggle.addEventListener('click', toggleLaser);
+
+  laserOverlay.addEventListener('mousemove', function(e) {
+    if (!laserActive) return;
+    var rect = laserOverlay.getBoundingClientRect();
+    laserDot.style.left = (e.clientX - rect.left) + 'px';
+    laserDot.style.top = (e.clientY - rect.top) + 'px';
+    laserDot.classList.add('visible');
+  });
+
+  laserOverlay.addEventListener('mouseleave', function() {
+    laserDot.classList.remove('visible');
+  });
+
+  laserOverlay.addEventListener('click', function(e) {
+    if (!laserActive) return;
+    var rect = laserOverlay.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    // 리플 효과
+    var ripple = document.createElement('div');
+    ripple.className = 'laser-ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    laserOverlay.appendChild(ripple);
+    setTimeout(function() { ripple.remove(); }, 600);
+  });
+
+  // === 블랙아웃 / 화이트아웃 ===
+  function setScreenOverlay(type) {
+    if (screenOverlayState === type) {
+      // 같은 키 다시 누르면 해제
+      clearScreenOverlay();
+      return;
+    }
+    screenOverlayState = type;
+    blackoutOverlay.classList.toggle('active', type === 'black');
+    whiteoutOverlay.classList.toggle('active', type === 'white');
+  }
+
+  function clearScreenOverlay() {
+    screenOverlayState = null;
+    blackoutOverlay.classList.remove('active');
+    whiteoutOverlay.classList.remove('active');
+  }
+
+  blackoutOverlay.addEventListener('click', clearScreenOverlay);
+  whiteoutOverlay.addEventListener('click', clearScreenOverlay);
+
+  // === 슬라이드 점프 (숫자 + Enter) ===
+  function showJumpIndicator() {
+    jumpIndicator.textContent = '슬라이드 ' + jumpBuffer;
+    jumpIndicator.classList.add('visible');
+  }
+
+  function hideJumpIndicator() {
+    jumpIndicator.classList.remove('visible');
+  }
+
+  function executeJump() {
+    var num = parseInt(jumpBuffer, 10);
+    if (num >= 1 && num <= totalSlides) {
+      goToSlide(num - 1);
+    }
+    jumpBuffer = '';
+    hideJumpIndicator();
+  }
+
+  function cancelJump() {
+    jumpBuffer = '';
+    hideJumpIndicator();
+    if (jumpTimeout) { clearTimeout(jumpTimeout); jumpTimeout = null; }
+  }
+
+  // === 전체화면 ===
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function() {});
+    } else {
+      document.exitFullscreen().catch(function() {});
+    }
+  }
+
+  // === 발표자 노트 실시간 편집 ===
+  notesContent.addEventListener('input', function() {
+    if (totalSlides === 0 || !slidesData[currentSlide]) return;
+    var newText = notesContent.innerText;
+    slidesData[currentSlide].notes = newText;
+    // BroadcastChannel로 변경 전파
+    channel.postMessage({
+      type: 'notesUpdate',
+      index: currentSlide,
+      notes: newText,
+      from: 'presenter'
+    });
+  });
+
+  // === 리사이즈 핸들 ===
+  resizeHandle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    isResizing = true;
+    resizeHandle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isResizing) return;
+    var layoutRect = mainLayout.getBoundingClientRect();
+    var rightWidth = layoutRect.right - e.clientX - 12; // 12 = padding
+    rightWidth = Math.max(250, Math.min(rightWidth, layoutRect.width - 300));
+    rightPanels.style.width = rightWidth + 'px';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (isResizing) {
+      isResizing = false;
+      resizeHandle.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+  });
+
   // === 키보드 ===
   document.addEventListener('keydown', function(e) {
+    // 블랙아웃/화이트아웃 상태에서는 아무 키로 해제
+    if (screenOverlayState) {
+      clearScreenOverlay();
+      e.preventDefault();
+      return;
+    }
+
+    // contenteditable 노트 편집 중이면 네비게이션 단축키 무시
+    var isEditing = (e.target === notesContent);
     // 입력 필드에 포커스 중이면 무시
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    var isInput = (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+
+    // 숫자 키 점프 (편집 중이 아닐 때)
+    if (!isEditing && !isInput && e.key >= '0' && e.key <= '9') {
+      e.preventDefault();
+      jumpBuffer += e.key;
+      showJumpIndicator();
+      if (jumpTimeout) clearTimeout(jumpTimeout);
+      jumpTimeout = setTimeout(cancelJump, 3000);
+      return;
+    }
+
+    // Enter로 점프 실행
+    if (!isEditing && !isInput && e.key === 'Enter' && jumpBuffer) {
+      e.preventDefault();
+      if (jumpTimeout) clearTimeout(jumpTimeout);
+      executeJump();
+      return;
+    }
+
+    // Escape로 점프 취소
+    if (e.key === 'Escape') {
+      if (jumpBuffer) { cancelJump(); e.preventDefault(); return; }
+      // 노트 편집 중이면 포커스 해제
+      if (isEditing) { notesContent.blur(); e.preventDefault(); return; }
+    }
+
+    if (isInput) return;
+    // 노트 편집 중에는 슬라이드 네비게이션 단축키 무시 (B, W, F, L, T 등은 동작)
+    if (isEditing) {
+      // 편집 중에도 작동해야 하는 키만 처리
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+      return;
+    }
 
     switch (e.key) {
       case 'ArrowRight':
       case ' ':
-      case 'Enter':
         e.preventDefault();
+        cancelJump();
         nextSlide();
         break;
       case 'ArrowLeft':
         e.preventDefault();
+        cancelJump();
         prevSlide();
         break;
       case 'Home':
         e.preventDefault();
-        firstSlide();
+        goToSlide(0);
         break;
       case 'End':
         e.preventDefault();
@@ -942,6 +1332,30 @@
       case 'T':
         e.preventDefault();
         toggleTimer();
+        break;
+      case 'b':
+      case 'B':
+        e.preventDefault();
+        setScreenOverlay('black');
+        break;
+      case 'w':
+      case 'W':
+        e.preventDefault();
+        setScreenOverlay('white');
+        break;
+      case 'l':
+      case 'L':
+        e.preventDefault();
+        toggleLaser();
+        break;
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        toggleFullscreen();
+        break;
+      case 'F11':
+        e.preventDefault();
+        toggleFullscreen();
         break;
       case '+':
       case '=':
