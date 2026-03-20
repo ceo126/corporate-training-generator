@@ -1078,6 +1078,127 @@
     .search-box { max-width: 100%; }
   }
 
+  /* 랜덤 선택 버튼 */
+  .random-btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-purple);
+    background: rgba(167,139,250,0.1);
+    color: var(--accent-purple);
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .random-btn:hover { background: var(--accent-purple); color: #fff; }
+
+  /* 링크 복사 버튼 */
+  .card-share-btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .card-share-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(96,165,250,0.08);
+  }
+
+  /* 테마 프리뷰 강화 */
+  .card.theme-preview-active {
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  }
+
+  /* 하이라이트 카드 (랜덤 선택 시) */
+  .card.highlighted {
+    border-color: var(--accent-purple) !important;
+    box-shadow: 0 0 20px rgba(167,139,250,0.3) !important;
+    animation: highlightPulse 1.5s ease-in-out;
+  }
+  @keyframes highlightPulse {
+    0% { box-shadow: 0 0 0 rgba(167,139,250,0); }
+    50% { box-shadow: 0 0 30px rgba(167,139,250,0.5); }
+    100% { box-shadow: 0 0 20px rgba(167,139,250,0.3); }
+  }
+
+  /* 사용 통계 대시보드 */
+  .stats-dashboard {
+    padding: 20px 40px 40px;
+  }
+  .stats-dashboard h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .stats-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .stats-empty {
+    width: 100%;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 20px 0;
+  }
+  .stat-bar-item {
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
+  }
+  .stat-bar-label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stat-bar-track {
+    height: 24px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #fff;
+    transition: width 0.6s ease;
+    min-width: 24px;
+  }
+  .stat-bar-rank {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
   @media (min-width: 1200px) {
     .grid { grid-template-columns: repeat(4, 1fr); }
   }
@@ -1119,6 +1240,7 @@
       <option value="recent">최근 사용순</option>
     </select>
     <button class="compare-btn" id="compareBtn" onclick="toggleCompareMode()">비교 모드</button>
+    <button class="random-btn" onclick="randomTemplate()">랜덤 선택</button>
   </div>
 
   <div class="category-tabs" id="categoryTabs">
@@ -1156,6 +1278,14 @@
     <div class="loading">
       <div class="spinner"></div>
       <p>템플릿 로딩 중...</p>
+    </div>
+  </div>
+
+  <!-- 사용 통계 대시보드 -->
+  <div class="stats-dashboard" id="statsDashboard">
+    <h2>내가 가장 많이 사용한 템플릿 TOP 5</h2>
+    <div class="stats-container" id="statsContainer">
+      <div class="stats-empty">아직 사용 기록이 없습니다. 템플릿을 사용해보세요!</div>
     </div>
   </div>
 
@@ -1638,6 +1768,7 @@
       if (isCustom) {
         html += '<button class="card-quick-btn" onclick="deleteCustomTemplate(' + idx + ', event)" style="color:var(--text-muted);">삭제</button>';
       } else {
+        html += '<button class="card-share-btn" onclick="shareTemplate(\'' + escHtml(type) + '\', event)" title="링크 복사">링크 복사</button>';
         html += '<button class="card-quick-btn" onclick="quickCreate(\'' + escHtml(type) + '\', event)">이 템플릿으로 생성</button>';
       }
 
@@ -1692,6 +1823,7 @@
   function quickCreate(type, e) {
     if (e) { e.stopPropagation(); e.preventDefault(); }
     incrementUsage(type);
+    renderStatsDashboard();
     var theme = document.getElementById('themeSelect').value;
     var params = new URLSearchParams();
     params.set('template', type);
@@ -1844,6 +1976,7 @@
     const theme = document.getElementById('themeSelect').value;
     document.getElementById('modalOpenEditor').onclick = function() {
       incrementUsage(tpl.type);
+      renderStatsDashboard();
       const params = new URLSearchParams();
       params.set('template', tpl.type);
       if (theme) params.set('theme', theme);
@@ -1941,9 +2074,123 @@
     if (e.target === this) closeCustomSaveModal();
   });
 
+  // ============ 테마 프리뷰 강화 ============
+
+  document.getElementById('themeSelect').addEventListener('change', function() {
+    var themeId = this.value;
+    var theme = allThemes.find(function(t) { return t.id === themeId; });
+    var cards = document.querySelectorAll('.card');
+    cards.forEach(function(card) {
+      card.classList.add('theme-preview-active');
+      if (theme) {
+        card.style.borderColor = theme.colors.primary;
+        card.style.boxShadow = '0 2px 12px ' + theme.colors.primary + '20';
+        // 미리보기 영역의 accent 색상 변경
+        var preview = card.querySelector('.card-preview');
+        if (preview) {
+          preview.style.setProperty('--accent', theme.colors.primary);
+        }
+      } else {
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+        var preview = card.querySelector('.card-preview');
+        if (preview) {
+          preview.style.removeProperty('--accent');
+        }
+      }
+    });
+  });
+
+  // ============ 템플릿 공유 (링크 복사) ============
+
+  function shareTemplate(type, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var url = window.location.origin + '/templates?template=' + encodeURIComponent(type);
+    navigator.clipboard.writeText(url).then(function() {
+      showToast('링크가 복사되었습니다!');
+    }).catch(function() {
+      // fallback
+      var inp = document.createElement('input');
+      inp.value = url;
+      document.body.appendChild(inp);
+      inp.select();
+      document.execCommand('copy');
+      document.body.removeChild(inp);
+      showToast('링크가 복사되었습니다!');
+    });
+  }
+
+  // ============ 사용 통계 대시보드 렌더링 ============
+
+  function renderStatsDashboard() {
+    var container = document.getElementById('statsContainer');
+    var usageCounts = getUsageCounts();
+    // type별 사용 횟수만 추출 (_lastUsed_ 제외)
+    var entries = [];
+    for (var key in usageCounts) {
+      if (key.startsWith('_lastUsed_')) continue;
+      var tpl = allTemplates.find(function(t) { return t.type === key; });
+      if (!tpl) continue;
+      entries.push({ type: key, name: tpl.name, count: usageCounts[key] });
+    }
+    entries.sort(function(a, b) { return b.count - a.count; });
+    var top5 = entries.slice(0, 5);
+
+    if (top5.length === 0) {
+      container.innerHTML = '<div class="stats-empty">아직 사용 기록이 없습니다. 템플릿을 사용해보세요!</div>';
+      return;
+    }
+
+    var maxCount = top5[0].count;
+    container.innerHTML = top5.map(function(item, i) {
+      var pct = Math.round((item.count / maxCount) * 100);
+      return '<div class="stat-bar-item">' +
+        '<div class="stat-bar-label">' + escHtml(item.name) + '</div>' +
+        '<div class="stat-bar-track">' +
+        '<span class="stat-bar-rank">#' + (i + 1) + '</span>' +
+        '<div class="stat-bar-fill" style="width:' + pct + '%">' + item.count + '회</div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  // ============ 랜덤 템플릿 ============
+
+  function randomTemplate() {
+    var filtered = getFiltered();
+    if (filtered.length === 0) return;
+    var idx = Math.floor(Math.random() * filtered.length);
+    var chosen = filtered[idx];
+    var type = chosen.type || chosen.id;
+
+    // 모든 카드에서 하이라이트 제거
+    document.querySelectorAll('.card').forEach(function(c) { c.classList.remove('highlighted'); });
+
+    // 해당 카드 찾아서 하이라이트 + 스크롤
+    var cards = document.querySelectorAll('.card');
+    cards.forEach(function(card, i) {
+      if (i === idx) {
+        card.classList.add('highlighted');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+
+  // ============ URL 파라미터로 템플릿 자동 선택 ============
+
+  function checkUrlParams() {
+    var params = new URLSearchParams(window.location.search);
+    var tplType = params.get('template');
+    if (tplType && allTemplates.length > 0) {
+      setTimeout(function() { openDetail(tplType); }, 300);
+    }
+  }
+
   // ============ Init ============
 
-  loadData();
+  loadData().then(function() {
+    renderStatsDashboard();
+    checkUrlParams();
+  }).catch(function() {});
 </script>
 </body>
 </html>

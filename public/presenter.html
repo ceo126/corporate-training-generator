@@ -103,6 +103,119 @@
   .timer-btn:hover { background: rgba(58, 58, 90, 0.8); }
   .timer-btn.active { background: #4c1d95; border-color: #7c3aed; color: #fff; }
 
+  /* 타이머 프리셋 버튼 */
+  .timer-presets {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .preset-btn {
+    background: rgba(42, 42, 74, 0.4);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: #888;
+    padding: 2px 7px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+  .preset-btn:hover { background: rgba(58, 58, 90, 0.8); color: #ccc; }
+  .preset-btn.active { background: #4c1d95; border-color: #7c3aed; color: #fff; }
+
+  /* 페이스 가이드 */
+  .pace-guide {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .pace-guide.ahead { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+  .pace-guide.on-track { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+  .pace-guide.behind { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+  /* 발표 점수 오버레이 */
+  .score-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 30, 0.92);
+    backdrop-filter: blur(12px);
+    z-index: 9500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .score-overlay.active { display: flex; }
+  .score-card {
+    background: rgba(22, 22, 42, 0.9);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    border-radius: 16px;
+    padding: 32px 40px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  }
+  .score-card h2 {
+    font-size: 20px;
+    color: #a78bfa;
+    margin-bottom: 20px;
+  }
+  .score-total {
+    font-size: 64px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .score-total.excellent { color: #22c55e; }
+  .score-total.good { color: #60a5fa; }
+  .score-total.fair { color: #f59e0b; }
+  .score-total.poor { color: #ef4444; }
+  .score-label {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+  .score-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #ccc;
+  }
+  .score-item .bar-bg {
+    width: 120px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .score-item .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  .score-close-btn {
+    background: rgba(42, 42, 74, 0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #ccc;
+    padding: 8px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: background 0.2s;
+  }
+  .score-close-btn:hover { background: rgba(58, 58, 90, 0.8); color: #fff; }
+
   /* 목표시간 설정 */
   .target-section {
     display: flex;
@@ -635,7 +748,15 @@
       <span>목표</span>
       <input type="number" id="targetMinutes" class="target-input" value="30" min="1" max="999">
       <span>분</span>
+      <div class="timer-presets">
+        <button class="preset-btn" data-min="5">5</button>
+        <button class="preset-btn" data-min="10">10</button>
+        <button class="preset-btn" data-min="15">15</button>
+        <button class="preset-btn" data-min="20">20</button>
+        <button class="preset-btn active" data-min="30">30</button>
+      </div>
       <span class="remaining-display" id="remainingDisplay"></span>
+      <span class="pace-guide" id="paceGuide" style="display:none;"></span>
     </div>
     <div class="timer-section">
       <span class="timer-display" id="timerDisplay">00:00:00</span>
@@ -713,6 +834,17 @@
 <!-- 미니 슬라이드 도트 네비게이터 -->
 <div class="slide-dots-bar" id="slideDotsBar" style="display:none;"></div>
 
+<!-- 발표 점수 오버레이 -->
+<div class="score-overlay" id="scoreOverlay">
+  <div class="score-card">
+    <h2>발표 완료!</h2>
+    <div class="score-total" id="scoreTotal">-</div>
+    <div class="score-label" id="scoreLabel">-</div>
+    <div class="score-details" id="scoreDetails"></div>
+    <button class="score-close-btn" id="btnScoreClose">닫기</button>
+  </div>
+</div>
+
 <!-- 단축키 안내 -->
 <div class="shortcuts-bar">
   <span class="shortcut"><kbd>&larr;</kbd> 이전</span>
@@ -725,6 +857,7 @@
   <span class="shortcut"><kbd>L</kbd> 레이저</span>
   <span class="shortcut"><kbd>F</kbd> 전체화면</span>
   <span class="shortcut"><kbd>숫자</kbd>+<kbd>Enter</kbd> 점프</span>
+  <span class="shortcut"><kbd>S</kbd> 점수</span>
 </div>
 
 <script>
@@ -762,6 +895,10 @@
   // 슬라이드 점프
   let jumpBuffer = '';
   let jumpTimeout = null;
+
+  // 슬라이드별 체류 시간 기록
+  let slideEnterTime = null;
+  let slideTimes = {}; // { index: totalSeconds }
 
   // 블랙아웃/화이트아웃
   let screenOverlayState = null; // null | 'black' | 'white'
@@ -802,6 +939,12 @@
   const jumpIndicator = document.getElementById('jumpIndicator');
   const mainLayout = document.getElementById('mainLayout');
   const resizeHandle = document.getElementById('resizeHandle');
+  const paceGuide = document.getElementById('paceGuide');
+  const scoreOverlay = document.getElementById('scoreOverlay');
+  const scoreTotal = document.getElementById('scoreTotal');
+  const scoreLabel = document.getElementById('scoreLabel');
+  const scoreDetails = document.getElementById('scoreDetails');
+  const btnScoreClose = document.getElementById('btnScoreClose');
 
   // === 현재 시각 표시 ===
   function updateClock() {
@@ -858,6 +1001,7 @@
       totalSlides = slidesData.length;
       currentSlide = typeof msg.currentIndex === 'number' ? msg.currentIndex : 0;
       visitedSlides.add(currentSlide);
+      slideEnterTime = Date.now();
       setConnected(true);
       showPresentation();
       buildDots();
@@ -985,9 +1129,11 @@
     if (totalSlides === 0) return;
     var newIndex = Math.max(0, Math.min(index, totalSlides - 1));
     if (newIndex === currentSlide) return;
+    recordSlideTime();
     currentSlide = newIndex;
     visitedSlides.add(currentSlide);
     updateDisplay();
+    updatePaceGuide();
     channel.postMessage({ type: 'goToSlide', index: currentSlide, from: 'presenter' });
   }
 
@@ -1085,6 +1231,7 @@
       timerInterval = setInterval(function() {
         timerSeconds++;
         updateTimerDisplay();
+        updatePaceGuide();
       }, 1000);
       timerRunning = true;
       btnTimerToggle.textContent = '정지';
@@ -1093,12 +1240,19 @@
   }
 
   function resetTimer() {
+    // 타이머가 작동 중이었으면 발표 점수 표시
+    if (timerSeconds > 10 && totalSlides > 0) {
+      showScore();
+    }
     clearInterval(timerInterval);
     timerRunning = false;
     timerSeconds = 0;
     btnTimerToggle.textContent = '시작';
     btnTimerToggle.classList.remove('active');
     alertShown = { 10: false, 5: false, 1: false };
+    slideTimes = {};
+    slideEnterTime = null;
+    paceGuide.style.display = 'none';
     updateTimerDisplay();
   }
 
@@ -1123,6 +1277,137 @@
       notesFontSize -= 2;
       updateFontSize();
     }
+  });
+
+  // === 타이머 프리셋 버튼 ===
+  document.querySelectorAll('.preset-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var min = parseInt(btn.dataset.min, 10);
+      targetMinutes.value = min;
+      document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      updateTimerDisplay();
+    });
+  });
+
+  // 타이머 입력 변경 시 프리셋 동기화
+  targetMinutes.addEventListener('change', function() {
+    var val = parseInt(targetMinutes.value, 10);
+    document.querySelectorAll('.preset-btn').forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.dataset.min, 10) === val);
+    });
+    updateTimerDisplay();
+  });
+
+  // === 페이스 가이드 ===
+  function updatePaceGuide() {
+    if (totalSlides <= 1 || !timerRunning) {
+      paceGuide.style.display = 'none';
+      return;
+    }
+    paceGuide.style.display = '';
+    var target = parseInt(targetMinutes.value, 10) || 30;
+    var targetSec = target * 60;
+    var expectedProgress = timerSeconds / targetSec; // 0~1 (시간 기준 진행률)
+    var actualProgress = (currentSlide + 1) / totalSlides; // 0~1 (슬라이드 기준 진행률)
+    var diff = actualProgress - expectedProgress;
+
+    if (diff > 0.1) {
+      paceGuide.textContent = '앞서감';
+      paceGuide.className = 'pace-guide ahead';
+    } else if (diff < -0.1) {
+      paceGuide.textContent = '뒤처짐';
+      paceGuide.className = 'pace-guide behind';
+    } else {
+      paceGuide.textContent = '적정';
+      paceGuide.className = 'pace-guide on-track';
+    }
+  }
+
+  // === 발표 점수 계산 ===
+  function recordSlideTime() {
+    if (slideEnterTime !== null && typeof currentSlide === 'number') {
+      var elapsed = (Date.now() - slideEnterTime) / 1000;
+      slideTimes[currentSlide] = (slideTimes[currentSlide] || 0) + elapsed;
+    }
+    slideEnterTime = Date.now();
+  }
+
+  function calculateScore() {
+    var target = parseInt(targetMinutes.value, 10) || 30;
+    var targetSec = target * 60;
+
+    // 1) 시간 준수도 (0~100) - 목표 시간에 얼마나 가까운지
+    var timeDiff = Math.abs(timerSeconds - targetSec);
+    var timeRatio = timeDiff / targetSec;
+    var timeScore = Math.max(0, Math.round(100 * (1 - timeRatio * 2)));
+
+    // 2) 슬라이드 배분도 (0~100) - 슬라이드별 시간이 균일한지
+    var distributeScore = 100;
+    if (totalSlides > 1) {
+      var times = [];
+      for (var i = 0; i < totalSlides; i++) {
+        times.push(slideTimes[i] || 0);
+      }
+      var avg = times.reduce(function(a, b) { return a + b; }, 0) / times.length;
+      if (avg > 0) {
+        var variance = times.reduce(function(sum, t) {
+          return sum + Math.pow(t - avg, 2);
+        }, 0) / times.length;
+        var cv = Math.sqrt(variance) / avg; // 변동계수
+        distributeScore = Math.max(0, Math.round(100 * (1 - cv)));
+      }
+    }
+
+    // 3) 슬라이드 커버리지 (0~100) - 몇 개의 슬라이드를 방문했는지
+    var coverageScore = totalSlides > 0 ? Math.round((visitedSlides.size / totalSlides) * 100) : 0;
+
+    // 종합 점수
+    var total = Math.round(timeScore * 0.4 + distributeScore * 0.3 + coverageScore * 0.3);
+
+    return { total: total, time: timeScore, distribute: distributeScore, coverage: coverageScore };
+  }
+
+  function showScore() {
+    recordSlideTime(); // 마지막 슬라이드 시간 기록
+    var s = calculateScore();
+
+    scoreTotal.textContent = s.total + '점';
+    if (s.total >= 85) {
+      scoreTotal.className = 'score-total excellent';
+      scoreLabel.textContent = '훌륭한 발표였습니다!';
+    } else if (s.total >= 70) {
+      scoreTotal.className = 'score-total good';
+      scoreLabel.textContent = '좋은 발표였습니다.';
+    } else if (s.total >= 50) {
+      scoreTotal.className = 'score-total fair';
+      scoreLabel.textContent = '괜찮은 발표였습니다.';
+    } else {
+      scoreTotal.className = 'score-total poor';
+      scoreLabel.textContent = '시간 배분을 개선해 보세요.';
+    }
+
+    function barColor(val) {
+      if (val >= 80) return '#22c55e';
+      if (val >= 60) return '#60a5fa';
+      if (val >= 40) return '#f59e0b';
+      return '#ef4444';
+    }
+
+    scoreDetails.innerHTML =
+      '<div class="score-item"><span>시간 준수도</span><span>' + s.time + '점</span><div class="bar-bg"><div class="bar-fill" style="width:' + s.time + '%;background:' + barColor(s.time) + '"></div></div></div>' +
+      '<div class="score-item"><span>슬라이드 배분</span><span>' + s.distribute + '점</span><div class="bar-bg"><div class="bar-fill" style="width:' + s.distribute + '%;background:' + barColor(s.distribute) + '"></div></div></div>' +
+      '<div class="score-item"><span>슬라이드 커버리지</span><span>' + s.coverage + '점</span><div class="bar-bg"><div class="bar-fill" style="width:' + s.coverage + '%;background:' + barColor(s.coverage) + '"></div></div></div>';
+
+    scoreOverlay.classList.add('active');
+  }
+
+  btnScoreClose.addEventListener('click', function() {
+    scoreOverlay.classList.remove('active');
+  });
+
+  scoreOverlay.addEventListener('click', function(e) {
+    if (e.target === scoreOverlay) scoreOverlay.classList.remove('active');
   });
 
   // === 레이저 포인터 ===
@@ -1347,6 +1632,11 @@
       case 'L':
         e.preventDefault();
         toggleLaser();
+        break;
+      case 's':
+      case 'S':
+        e.preventDefault();
+        if (timerSeconds > 0 && totalSlides > 0) showScore();
         break;
       case 'f':
       case 'F':

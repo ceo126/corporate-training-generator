@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const multer = require('multer');
 const webGenerator = require('./lib/webGenerator');
 const pptGenerator = require('./lib/pptGenerator');
@@ -200,6 +201,50 @@ let sourceDirs = [
 // ============================================================
 //  미들웨어
 // ============================================================
+
+// --- 인메모리 Rate Limiter (IP당 분당 60회) ---
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1분
+const RATE_LIMIT_MAX = 60;
+
+// 1분마다 만료된 항목 정리
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of rateLimitMap) {
+    if (now - data.windowStart > RATE_LIMIT_WINDOW) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 60000);
+
+app.use((req, res, next) => {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  let entry = rateLimitMap.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW) {
+    entry = { count: 0, windowStart: now };
+    rateLimitMap.set(ip, entry);
+  }
+  entry.count++;
+  res.header('X-RateLimit-Limit', String(RATE_LIMIT_MAX));
+  res.header('X-RateLimit-Remaining', String(Math.max(0, RATE_LIMIT_MAX - entry.count)));
+  if (entry.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({
+      success: false,
+      error: '요청이 너무 많습니다. 1분 후 다시 시도해주세요.',
+      code: 'RATE_LIMIT_EXCEEDED'
+    });
+  }
+  next();
+});
+
+// --- 요청 ID 부여 (X-Request-Id) ---
+app.use((req, res, next) => {
+  const requestId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString('hex');
+  req.requestId = requestId;
+  res.header('X-Request-Id', requestId);
+  next();
+});
 
 // --- 보안 헤더 ---
 app.use((req, res, next) => {
@@ -1166,6 +1211,10 @@ app.get('/api-docs', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/api-docs.html'));
 });
 
+app.get('/api-docs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/api-docs.html'));
+});
+
 // ============================================================
 //  API: API 문서
 // ============================================================
@@ -1497,6 +1546,21 @@ app.use((req, res) => {
 });
 
 // ============================================================
+//  404 Catch-All (등록되지 않은 라우트)
+// ============================================================
+
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({
+      success: false,
+      error: '존재하지 않는 API 엔드포인트입니다: ' + req.method + ' ' + req.path,
+      code: 'NOT_FOUND'
+    });
+  }
+  res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
+});
+
+// ============================================================
 //  글로벌 에러 핸들러 (표준화된 에러 응답)
 // ============================================================
 
@@ -1523,14 +1587,42 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`\n========================================`);
+  // 등록된 라우트 수 계산
+  let routeCount = 0;
+  app._router.stack.forEach(layer => {
+    if (layer.route) {
+      routeCount++;
+    } else if (layer.name === 'router') {
+      layer.handle.stack.forEach(r => { if (r.route) routeCount++; });
+    }
+  });
+
+  console.log(`\n`);
+  console.log(`  ██████╗ ██████╗ ████████╗`);
+  console.log(`  ██╔══██╗██╔══██╗╚══██╔══╝`);
+  console.log(`  ██████╔╝██████╔╝   ██║   `);
+  console.log(`  ██╔═══╝ ██╔═══╝    ██║   `);
+  console.log(`  ██║     ██║        ██║   `);
+  console.log(`  ╚═╝     ╚═╝        ╚═╝   `);
   console.log(`  기업교육 발표자료 생성기 v${APP_VERSION}`);
-  console.log(`  http://localhost:${PORT}`);
-  console.log(`========================================`);
-  console.log(`\n[사용법]`);
-  console.log(`1. input/ 폴더에 교육자료(PDF, DOCX, TXT) 넣기`);
-  console.log(`2. 웹 UI에서 파일 확인 또는 업로드`);
-  console.log(`3. Claude Code에게 "발표자료 만들어줘" 요청\n`);
+  console.log(``);
+  console.log(`  ┌─────────────────────────────────────┐`);
+  console.log(`  │  URL : http://localhost:${PORT}          │`);
+  console.log(`  │  라우트 : ${String(routeCount).padStart(3)} 개 등록됨            │`);
+  console.log(`  │  Node  : ${process.version.padEnd(25)} │`);
+  console.log(`  └─────────────────────────────────────┘`);
+  console.log(`\n  [소스 디렉토리]`);
+  if (sourceDirs.length === 0) {
+    console.log(`    (없음)`);
+  } else {
+    sourceDirs.forEach((d, i) => {
+      console.log(`    ${i + 1}. ${d}`);
+    });
+  }
+  console.log(`\n  [사용법]`);
+  console.log(`  1. input/ 폴더에 교육자료(PDF, DOCX, TXT) 넣기`);
+  console.log(`  2. 웹 UI에서 파일 확인 또는 업로드`);
+  console.log(`  3. Claude Code에게 "발표자료 만들어줘" 요청\n`);
 });
 
 // --- Graceful Shutdown ---
