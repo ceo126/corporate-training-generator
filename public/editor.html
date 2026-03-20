@@ -1465,35 +1465,342 @@
     outline: none;
     font-family: 'Noto Sans KR', sans-serif;
   }
+
+  /* === 신규 기능 CSS === */
+
+  /* (1) 슬라이드 애니메이션 프리뷰 재생 버튼 */
+  .preview-play-bar {
+    position: absolute;
+    bottom: 88px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px 12px;
+    z-index: 10;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+  }
+  .preview-play-bar button {
+    background: none; border: none; color: var(--text-secondary);
+    cursor: pointer; font-size: 0.85rem; padding: 2px 6px; border-radius: 4px;
+  }
+  .preview-play-bar button:hover { background: var(--border-color); color: var(--text-primary); }
+  .preview-play-bar button.playing { color: #16a34a; }
+
+  /* 슬라이드 전환 애니메이션 */
+  .slide-preview.anim-fade-enter { animation: animFadeIn 0.5s ease; }
+  @keyframes animFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .slide-preview.anim-slide-enter { animation: animSlideIn 0.5s ease; }
+  @keyframes animSlideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .slide-preview.anim-zoom-enter { animation: animZoomIn 0.5s ease; }
+  @keyframes animZoomIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* (2) 다중 선택 */
+  .thumb-item.multi-selected {
+    border-color: #f59e0b;
+    box-shadow: 0 0 8px rgba(245,158,11,0.4);
+  }
+  .multi-select-bar {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.7rem;
+    color: #f59e0b;
+  }
+  .multi-select-bar.show { display: flex; }
+  .multi-select-bar button {
+    background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4);
+    color: #f59e0b; padding: 3px 8px; border-radius: 4px; cursor: pointer;
+    font-size: 0.65rem; font-family: 'Noto Sans KR', sans-serif;
+  }
+  .multi-select-bar button:hover { background: rgba(245,158,11,0.35); }
+  .multi-select-bar button.danger-ms { color: #dc2626; border-color: rgba(220,38,38,0.4); background: rgba(220,38,38,0.15); }
+
+  /* (3) 슬라이드 잠금 */
+  .thumb-lock {
+    position: absolute;
+    top: 3px;
+    right: 24px;
+    background: rgba(245,158,11,0.85);
+    border: none;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.55rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 2;
+  }
+  .thumb-item:hover .thumb-lock { display: flex; }
+  .thumb-item.locked .thumb-lock { display: flex; background: rgba(220,38,38,0.85); }
+  .thumb-item.locked { opacity: 0.8; }
+  .thumb-item.locked .thumb-delete { display: none !important; }
+  .thumb-item.locked .thumb-actions { display: none !important; }
+
+  /* (4) 찾기/바꾸기 */
+  .find-replace-bar {
+    display: none;
+    position: fixed;
+    top: 54px;
+    right: 16px;
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    z-index: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    min-width: 340px;
+  }
+  .find-replace-bar.show { display: block; }
+  .find-replace-bar .fr-row {
+    display: flex; gap: 6px; align-items: center; margin-bottom: 6px;
+  }
+  .find-replace-bar input {
+    flex: 1; padding: 6px 8px; background: var(--bg-input);
+    border: 1px solid var(--border-color); border-radius: 4px;
+    color: var(--text-primary); font-size: 0.8rem; outline: none;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .find-replace-bar input:focus { border-color: #2563eb; }
+  .find-replace-bar button {
+    padding: 5px 10px; background: var(--bg-input); border: 1px solid var(--border-color);
+    color: var(--text-primary); border-radius: 4px; cursor: pointer;
+    font-size: 0.75rem; font-family: 'Noto Sans KR', sans-serif; white-space: nowrap;
+  }
+  .find-replace-bar button:hover { background: var(--border-hover); }
+  .find-replace-bar .fr-info { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* (5) 슬라이드 통계 */
+  .stats-panel {
+    display: none;
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 20px;
+    z-index: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    display: none;
+    gap: 20px;
+  }
+  .stats-panel.show { display: flex; }
+  .stats-panel .stat-box { text-align: center; }
+  .stats-panel .stat-box .sv { font-size: 1.1rem; font-weight: 700; color: var(--accent-light); }
+  .stats-panel .stat-box .sl { font-size: 0.65rem; color: var(--text-muted); }
+
+  /* (6) 테마 미리보기 스와치 */
+  .theme-swatch-popup {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    z-index: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    min-width: 160px;
+  }
+  .theme-swatch-popup.show { display: block; }
+  .theme-swatch-row {
+    display: flex; gap: 4px; align-items: center; margin-bottom: 4px;
+  }
+  .theme-swatch-row .sw-circle {
+    width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+  }
+  .theme-swatch-row .sw-label { font-size: 0.65rem; color: var(--text-secondary); }
+
+  /* (7) 스플래시 화면 */
+  .splash-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #1e1e1e;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    transition: opacity 0.5s;
+  }
+  .splash-overlay.fade-out { opacity: 0; pointer-events: none; }
+  .splash-overlay .splash-logo {
+    font-size: 2rem; font-weight: 900; color: #2563eb;
+    letter-spacing: -1px;
+  }
+  .splash-overlay .splash-sub {
+    font-size: 0.85rem; color: #666;
+  }
+
+  /* (8) 썸네일 텍스트 미리보기 */
+  .thumb-text-preview {
+    font-size: 0.45rem;
+    color: #777;
+    line-height: 1.3;
+    max-height: 2.2em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    padding: 0 4px;
+    word-break: break-all;
+  }
+
+  /* (9) 드래그 고스트 */
+  .drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 9999;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.4);
+    transform: rotate(2deg);
+  }
+
+  /* (10) 포커스 모드 */
+  body.focus-mode .sidebar { display: none; }
+  body.focus-mode .edit-panel { display: none; }
+  body.focus-mode .preview-area { flex: 1; }
+  body.focus-mode .toolbar { display: none; }
+  .focus-mode-hint {
+    display: none;
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    background: rgba(37,99,235,0.9);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    z-index: 800;
+  }
+  body.focus-mode .focus-mode-hint { display: block; }
+
+  /* (11) 되돌리기 사이드바 */
+  .history-sidebar {
+    position: fixed;
+    top: 52px;
+    right: 0;
+    width: 280px;
+    height: calc(100vh - 80px);
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    z-index: 400;
+    display: none;
+    flex-direction: column;
+    box-shadow: -4px 0 16px rgba(0,0,0,0.2);
+  }
+  .history-sidebar.show { display: flex; }
+  .history-sidebar-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.8rem; font-weight: 600; color: var(--text-white);
+  }
+  .history-sidebar-header button {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 1rem;
+  }
+  .history-sidebar-body {
+    flex: 1; overflow-y: auto; padding: 8px;
+  }
+  .history-sidebar-body::-webkit-scrollbar { width: 5px; }
+  .history-sidebar-body::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+  .hs-item {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.1s;
+  }
+  .hs-item:hover { background: var(--accent-bg); }
+  .hs-item .hs-desc { flex: 1; }
+  .hs-item .hs-time { font-size: 0.6rem; color: var(--text-muted); white-space: nowrap; margin-left: 8px; }
+
+  /* (12) 단축키 리마인더 */
+  .shortcut-reminder {
+    position: fixed;
+    bottom: 32px;
+    right: 12px;
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    z-index: 100;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .shortcut-reminder:hover { opacity: 1; }
+  body.focus-mode .shortcut-reminder { bottom: 8px; }
 </style>
 </head>
 <body>
 
+<!-- (7) 스플래시 화면 -->
+<div class="splash-overlay" id="splashOverlay">
+  <div class="splash-logo">Slide Editor</div>
+  <div class="splash-sub">슬라이드 에디터를 불러오는 중...</div>
+</div>
+
 <!-- 상단 툴바 -->
 <div class="toolbar">
   <span class="logo">Slide Editor</span>
-  <label style="font-size:0.8rem;color:var(--text-secondary);">테마</label>
-  <select id="themeSelect">
-    <option value="modern">Modern Blue</option>
-    <option value="light">Light</option>
-    <option value="dark">Dark Mode</option>
-    <option value="corporate">Corporate</option>
-    <option value="warm">Warm Orange</option>
-  </select>
+  <label for="themeSelect" style="font-size:0.8rem;color:var(--text-secondary);">테마</label>
+  <div style="position:relative;display:inline-block;" id="themeSelectWrapper">
+    <select id="themeSelect" aria-describedby="themeHelp">
+      <option value="modern">Modern Blue</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark Mode</option>
+      <option value="corporate">Corporate</option>
+      <option value="warm">Warm Orange</option>
+    </select>
+    <div class="theme-swatch-popup" id="themeSwatch"></div>
+    <span id="themeHelp" hidden>슬라이드 전체 색상 테마를 선택합니다</span>
+  </div>
   <div class="tb-divider"></div>
   <button class="tb-btn" id="editorThemeBtn" onclick="toggleEditorTheme()" title="에디터 다크/라이트 전환">&#x263E; 에디터 테마</button>
   <div class="tb-divider"></div>
   <button class="tb-btn" id="undoBtn" onclick="undo()" disabled title="실행 취소 (Ctrl+Z)">&#x21A9; 실행취소</button>
   <button class="tb-btn" id="redoBtn" onclick="redo()" disabled title="다시 실행 (Ctrl+Y)">&#x21AA; 다시실행</button>
-  <button class="tb-btn" onclick="showHistoryModal()" title="히스토리 보기">&#x1F4CB; 히스토리</button>
+  <button class="tb-btn" onclick="toggleHistorySidebar()" title="히스토리 사이드바 (최근 20개)">&#x1F4CB; 히스토리</button>
+  <button class="tb-btn" onclick="toggleStatsPanel()" title="슬라이드 통계">&#x1F4CA; 통계</button>
   <div class="tb-divider"></div>
-  <label style="font-size:0.8rem;color:var(--text-secondary);">전환효과</label>
-  <select id="transitionSelect" onchange="autoSave()">
+  <label for="transitionSelect" style="font-size:0.8rem;color:var(--text-secondary);">전환효과</label>
+  <select id="transitionSelect" onchange="autoSave()" aria-describedby="transHelp">
     <option value="none">없음</option>
     <option value="fade">페이드</option>
     <option value="slide">슬라이드</option>
     <option value="zoom">줌</option>
   </select>
+  <span id="transHelp" hidden>슬라이드 전환 시 적용되는 애니메이션 효과</span>
   <div class="tb-divider"></div>
   <button class="tb-btn" onclick="showMasterModal()" title="마스터 설정">&#x2699; 마스터</button>
   <!-- 템플릿 삽입 드롭다운 -->
@@ -1521,6 +1828,13 @@
       <span>슬라이드</span>
       <button onclick="showAddModal()">+ 추가</button>
     </div>
+    <div class="multi-select-bar" id="multiSelectBar">
+      <span id="multiSelectCount">0개 선택</span>
+      <button onclick="multiDeleteSelected()">삭제</button>
+      <button onclick="multiMoveUp()">위로</button>
+      <button onclick="multiMoveDown()">아래로</button>
+      <button onclick="clearMultiSelect()">선택해제</button>
+    </div>
     <div class="thumb-list" id="thumbList"></div>
   </div>
 
@@ -1538,8 +1852,16 @@
       <iframe class="web-preview-iframe" id="webPreviewIframe"></iframe>
     </div>
     <div class="notes-bar" id="notesBar" style="display:none;">
-      <label>발표자 노트:</label>
-      <textarea id="notesInput" placeholder="이 슬라이드의 발표자 노트를 입력하세요..." oninput="updateNotes(this.value)"></textarea>
+      <label for="notesInput">발표자 노트:</label>
+      <textarea id="notesInput" placeholder="이 슬라이드의 발표자 노트를 입력하세요..." oninput="updateNotes(this.value)" aria-describedby="notesHelp"></textarea>
+      <span id="notesHelp" hidden>프레젠테이션 모드에서 N키로 표시됩니다</span>
+    </div>
+    <!-- (1) 애니메이션 재생 바 -->
+    <div class="preview-play-bar" id="previewPlayBar">
+      <button onclick="playPrevSlide()" title="이전 슬라이드">&#x23EE;</button>
+      <button id="playBtn" onclick="toggleAutoPlay()" title="자동 재생/정지">&#x25B6;</button>
+      <button onclick="playNextSlide()" title="다음 슬라이드">&#x23ED;</button>
+      <span id="playStatus" style="font-size:0.65rem;">정지</span>
     </div>
     <!-- 줌 컨트롤 (#7) -->
     <div class="preview-zoom-bar">
@@ -1711,6 +2033,10 @@
       <li><span>슬라이드 삭제</span><span class="key">Delete</span></li>
       <li><span>전체화면 미리보기</span><span class="key">F5</span></li>
       <li><span>전체화면 종료</span><span class="key">Esc</span></li>
+      <li><span>찾기</span><span class="key">Ctrl + F</span></li>
+      <li><span>바꾸기</span><span class="key">Ctrl + H</span></li>
+      <li><span>포커스 모드</span><span class="key">F2</span></li>
+      <li><span>Ctrl+클릭으로 다중 선택</span><span class="key">Ctrl + 클릭</span></li>
       <li><span>이 도움말 표시</span><span class="key">?</span></li>
     </ul>
     <button class="tb-btn" style="width:100%;margin-top:14px;" onclick="hideHelpModal()">닫기</button>
@@ -1772,6 +2098,52 @@
   <div class="fs-notes" id="fsNotes"></div>
 </div>
 
+<!-- (4) 찾기/바꾸기 바 -->
+<div class="find-replace-bar" id="findReplaceBar">
+  <div class="fr-row">
+    <label for="frFindInput" class="sr-only" hidden>검색어</label>
+    <input id="frFindInput" placeholder="검색어 입력..." aria-describedby="frHelp" oninput="doFind()">
+    <button onclick="doFindPrev()" title="이전">&#x25B2;</button>
+    <button onclick="doFindNext()" title="다음">&#x25BC;</button>
+    <button onclick="closeFindReplace()">X</button>
+  </div>
+  <div class="fr-row" id="frReplaceRow" style="display:none;">
+    <label for="frReplaceInput" class="sr-only" hidden>바꿀 텍스트</label>
+    <input id="frReplaceInput" placeholder="바꿀 텍스트...">
+    <button onclick="doReplace()">바꾸기</button>
+    <button onclick="doReplaceAll()">모두 바꾸기</button>
+  </div>
+  <div class="fr-info" id="frInfo"></div>
+  <span id="frHelp" hidden>전체 슬라이드 텍스트에서 검색합니다</span>
+</div>
+
+<!-- (5) 슬라이드 통계 패널 -->
+<div class="stats-panel" id="statsPanel">
+  <div class="stat-box"><div class="sv" id="statTotalText">0</div><div class="sl">총 글자수</div></div>
+  <div class="stat-box"><div class="sv" id="statWordCount">0</div><div class="sl">총 단어수</div></div>
+  <div class="stat-box"><div class="sv" id="statEstTime">0분</div><div class="sl">예상 발표시간</div></div>
+  <div class="stat-box"><div class="sv" id="statAvgItems">0</div><div class="sl">슬라이드당 평균 항목</div></div>
+  <div class="stat-box"><div class="sv" id="statSlideCount">0</div><div class="sl">슬라이드 수</div></div>
+  <button onclick="toggleStatsPanel()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;padding:2px;">X</button>
+</div>
+
+<!-- (11) 되돌리기 사이드바 -->
+<div class="history-sidebar" id="historySidebar">
+  <div class="history-sidebar-header">
+    <span>변경 히스토리</span>
+    <button onclick="toggleHistorySidebar()" title="닫기">X</button>
+  </div>
+  <div class="history-sidebar-body" id="historySidebarBody">
+    <div style="color:var(--text-muted);font-size:0.75rem;padding:12px;">히스토리가 없습니다</div>
+  </div>
+</div>
+
+<!-- (10) 포커스 모드 힌트 -->
+<div class="focus-mode-hint" id="focusModeHint">포커스 모드 | F2 또는 Esc로 해제</div>
+
+<!-- (12) 단축키 리마인더 -->
+<div class="shortcut-reminder" id="shortcutReminder">Ctrl+S 저장 | Ctrl+D 복제 | F2 포커스</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1788,6 +2160,13 @@ let currentZoom = 100; // (#7)
 let editPanelCollapsed = false; // (#9)
 let masterSettings = { fontScale: 1, bgColor: '', logoUrl: '' }; // (#2)
 let sectionGroupState = {}; // (#5) { sectionIndex: collapsed? }
+let multiSelectedIndices = []; // (2) 다중 선택
+let autoPlayTimer = null; // (1) 자동 재생
+let autoPlayActive = false;
+let findResults = []; // (4) 찾기 결과
+let findCurrentIdx = -1;
+let historyTimestamps = []; // (11) 히스토리 타임스탬프
+let focusModeActive = false; // (10) 포커스 모드
 
 // ============ 타입 아이콘/라벨 맵 ============
 const TYPE_ICONS = {
@@ -1857,12 +2236,15 @@ function pushHistory(description) {
   if (historyPaused) return;
   undoStack.push(JSON.stringify(slides));
   historyDescriptions.push(description || '변경');
+  historyTimestamps.push(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   if (undoStack.length > MAX_HISTORY) {
     undoStack.shift();
     historyDescriptions.shift();
+    historyTimestamps.shift();
   }
   redoStack = [];
   updateUndoRedoButtons();
+  updateHistorySidebar();
 }
 
 function undo() {
@@ -2179,6 +2561,355 @@ const SLIDE_TEMPLATES = {
   ending: function() { return { _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal', _imageUrl: '' }; }
 };
 
+// ============ (1) 슬라이드 애니메이션 재생 ============
+function toggleAutoPlay() {
+  if (autoPlayActive) { stopAutoPlay(); return; }
+  autoPlayActive = true;
+  document.getElementById('playBtn').innerHTML = '&#x23F8;';
+  document.getElementById('playBtn').classList.add('playing');
+  document.getElementById('playStatus').textContent = '재생 중';
+  autoPlayTimer = setInterval(function() {
+    if (selectedIndex < slides.length - 1) {
+      selectSlide(selectedIndex + 1);
+    } else {
+      selectSlide(0);
+    }
+  }, 2000);
+}
+function stopAutoPlay() {
+  autoPlayActive = false;
+  if (autoPlayTimer) { clearInterval(autoPlayTimer); autoPlayTimer = null; }
+  document.getElementById('playBtn').innerHTML = '&#x25B6;';
+  document.getElementById('playBtn').classList.remove('playing');
+  document.getElementById('playStatus').textContent = '정지';
+}
+function playNextSlide() {
+  if (selectedIndex < slides.length - 1) selectSlide(selectedIndex + 1);
+}
+function playPrevSlide() {
+  if (selectedIndex > 0) selectSlide(selectedIndex - 1);
+}
+
+// ============ (2) 다중 선택 ============
+function onThumbClick(e, i) {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    var idx = multiSelectedIndices.indexOf(i);
+    if (idx >= 0) multiSelectedIndices.splice(idx, 1);
+    else multiSelectedIndices.push(i);
+    updateMultiSelectBar();
+    renderThumbs();
+    return;
+  }
+  multiSelectedIndices = [];
+  updateMultiSelectBar();
+  selectSlide(i);
+}
+function updateMultiSelectBar() {
+  var bar = document.getElementById('multiSelectBar');
+  var countEl = document.getElementById('multiSelectCount');
+  if (multiSelectedIndices.length > 0) {
+    bar.classList.add('show');
+    countEl.textContent = multiSelectedIndices.length + '개 선택';
+  } else {
+    bar.classList.remove('show');
+  }
+}
+function clearMultiSelect() {
+  multiSelectedIndices = [];
+  updateMultiSelectBar();
+  renderThumbs();
+}
+function multiDeleteSelected() {
+  if (multiSelectedIndices.length === 0) return;
+  var toDelete = multiSelectedIndices.filter(function(i) { return !slides[i]._locked; }).sort(function(a,b){return b-a;});
+  if (slides.length - toDelete.length < 1) { showToast('최소 1개 슬라이드 필요', true); return; }
+  pushHistory(toDelete.length + '개 슬라이드 일괄 삭제');
+  toDelete.forEach(function(i) { slides.splice(i, 1); });
+  multiSelectedIndices = [];
+  if (selectedIndex >= slides.length) selectedIndex = slides.length - 1;
+  updateMultiSelectBar();
+  renderAll();
+  autoSave();
+  showToast(toDelete.length + '개 슬라이드 삭제됨');
+}
+function multiMoveUp() {
+  if (multiSelectedIndices.length === 0) return;
+  var sorted = multiSelectedIndices.slice().sort(function(a,b){return a-b;});
+  if (sorted[0] <= 0) return;
+  pushHistory(sorted.length + '개 슬라이드 위로 이동');
+  sorted.forEach(function(i) {
+    var t = slides.splice(i, 1)[0];
+    slides.splice(i - 1, 0, t);
+  });
+  multiSelectedIndices = sorted.map(function(i){return i-1;});
+  updateMultiSelectBar();
+  renderAll();
+  autoSave();
+}
+function multiMoveDown() {
+  if (multiSelectedIndices.length === 0) return;
+  var sorted = multiSelectedIndices.slice().sort(function(a,b){return b-a;});
+  if (sorted[0] >= slides.length - 1) return;
+  pushHistory(sorted.length + '개 슬라이드 아래로 이동');
+  sorted.forEach(function(i) {
+    var t = slides.splice(i, 1)[0];
+    slides.splice(i + 1, 0, t);
+  });
+  multiSelectedIndices = sorted.map(function(i){return i+1;});
+  updateMultiSelectBar();
+  renderAll();
+  autoSave();
+}
+
+// ============ (3) 슬라이드 잠금 ============
+function toggleLock(i) {
+  slides[i]._locked = !slides[i]._locked;
+  renderThumbs();
+  renderEditPanel();
+  autoSave();
+  showToast(slides[i]._locked ? '슬라이드 ' + (i+1) + ' 잠금됨' : '슬라이드 ' + (i+1) + ' 잠금 해제');
+}
+
+// ============ (4) 찾기/바꾸기 ============
+function openFind() {
+  document.getElementById('findReplaceBar').classList.add('show');
+  document.getElementById('frReplaceRow').style.display = 'none';
+  document.getElementById('frFindInput').focus();
+}
+function openReplace() {
+  document.getElementById('findReplaceBar').classList.add('show');
+  document.getElementById('frReplaceRow').style.display = 'flex';
+  document.getElementById('frFindInput').focus();
+}
+function closeFindReplace() {
+  document.getElementById('findReplaceBar').classList.remove('show');
+  findResults = [];
+  findCurrentIdx = -1;
+}
+function getAllSlideTexts() {
+  var texts = [];
+  slides.forEach(function(s, si) {
+    var fields = ['title','subtitle','presenter','description','body','quote','author','sub','icon'];
+    fields.forEach(function(f) {
+      if (s[f]) texts.push({ slideIndex: si, field: f, text: s[f] });
+    });
+    var arrayFields = ['items','cards','steps','stats','events','levels','nodes','phases','cells','strengths','weaknesses','opportunities','threats','leftItems','rightItems'];
+    arrayFields.forEach(function(af) {
+      if (Array.isArray(s[af])) {
+        s[af].forEach(function(item, ii) {
+          if (typeof item === 'string') texts.push({ slideIndex: si, field: af, itemIndex: ii, text: item });
+          else if (item) {
+            ['title','body','desc','text','label','value','year','quote','name'].forEach(function(k) {
+              if (item[k]) texts.push({ slideIndex: si, field: af, itemIndex: ii, subField: k, text: String(item[k]) });
+            });
+          }
+        });
+      }
+    });
+  });
+  return texts;
+}
+function doFind() {
+  var query = document.getElementById('frFindInput').value;
+  if (!query) { findResults = []; findCurrentIdx = -1; document.getElementById('frInfo').textContent = ''; return; }
+  var texts = getAllSlideTexts();
+  findResults = texts.filter(function(t) { return t.text.toLowerCase().indexOf(query.toLowerCase()) >= 0; });
+  findCurrentIdx = findResults.length > 0 ? 0 : -1;
+  document.getElementById('frInfo').textContent = findResults.length + '개 찾음';
+  if (findCurrentIdx >= 0) selectSlide(findResults[0].slideIndex);
+}
+function doFindNext() {
+  if (findResults.length === 0) return;
+  findCurrentIdx = (findCurrentIdx + 1) % findResults.length;
+  selectSlide(findResults[findCurrentIdx].slideIndex);
+  document.getElementById('frInfo').textContent = (findCurrentIdx + 1) + ' / ' + findResults.length;
+}
+function doFindPrev() {
+  if (findResults.length === 0) return;
+  findCurrentIdx = (findCurrentIdx - 1 + findResults.length) % findResults.length;
+  selectSlide(findResults[findCurrentIdx].slideIndex);
+  document.getElementById('frInfo').textContent = (findCurrentIdx + 1) + ' / ' + findResults.length;
+}
+function doReplace() {
+  if (findCurrentIdx < 0 || findResults.length === 0) return;
+  var query = document.getElementById('frFindInput').value;
+  var replaceWith = document.getElementById('frReplaceInput').value;
+  var r = findResults[findCurrentIdx];
+  var s = slides[r.slideIndex];
+  if (s._locked) { showToast('잠긴 슬라이드는 수정할 수 없습니다', true); return; }
+  pushHistory('찾기/바꾸기');
+  if (r.itemIndex !== undefined && r.subField) {
+    s[r.field][r.itemIndex][r.subField] = s[r.field][r.itemIndex][r.subField].split(query).join(replaceWith);
+  } else if (r.itemIndex !== undefined) {
+    s[r.field][r.itemIndex] = s[r.field][r.itemIndex].split(query).join(replaceWith);
+  } else {
+    s[r.field] = s[r.field].split(query).join(replaceWith);
+  }
+  renderAll(); autoSave(); doFind();
+}
+function doReplaceAll() {
+  var query = document.getElementById('frFindInput').value;
+  var replaceWith = document.getElementById('frReplaceInput').value;
+  if (!query) return;
+  pushHistory('모두 바꾸기: ' + query + ' -> ' + replaceWith);
+  var count = 0;
+  findResults.forEach(function(r) {
+    var s = slides[r.slideIndex];
+    if (s._locked) return;
+    if (r.itemIndex !== undefined && r.subField) {
+      s[r.field][r.itemIndex][r.subField] = s[r.field][r.itemIndex][r.subField].split(query).join(replaceWith);
+    } else if (r.itemIndex !== undefined) {
+      s[r.field][r.itemIndex] = s[r.field][r.itemIndex].split(query).join(replaceWith);
+    } else {
+      s[r.field] = s[r.field].split(query).join(replaceWith);
+    }
+    count++;
+  });
+  renderAll(); autoSave(); doFind();
+  showToast(count + '개 항목 바꿈');
+}
+
+// ============ (5) 슬라이드 통계 ============
+function toggleStatsPanel() {
+  var panel = document.getElementById('statsPanel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) calcStats();
+}
+function calcStats() {
+  var totalChars = 0, totalWords = 0, totalItems = 0;
+  slides.forEach(function(s) {
+    var texts = [];
+    ['title','subtitle','presenter','description','body','quote','author','sub'].forEach(function(f) {
+      if (s[f]) texts.push(s[f]);
+    });
+    var arrFields = ['items','cards','steps','stats','events','levels','nodes','phases','cells'];
+    arrFields.forEach(function(af) {
+      if (Array.isArray(s[af])) {
+        totalItems += s[af].length;
+        s[af].forEach(function(item) {
+          if (typeof item === 'string') texts.push(item);
+          else if (item) {
+            ['title','body','desc','text','label'].forEach(function(k) { if (item[k]) texts.push(String(item[k])); });
+          }
+        });
+      }
+    });
+    var combined = texts.join(' ');
+    totalChars += combined.length;
+    totalWords += combined.split(/\s+/).filter(function(w){return w.length>0;}).length;
+  });
+  var estMinutes = Math.max(1, Math.round(totalWords / 150));
+  var avgItems = slides.length > 0 ? (totalItems / slides.length).toFixed(1) : 0;
+  document.getElementById('statTotalText').textContent = totalChars.toLocaleString();
+  document.getElementById('statWordCount').textContent = totalWords.toLocaleString();
+  document.getElementById('statEstTime').textContent = estMinutes + '분';
+  document.getElementById('statAvgItems').textContent = avgItems;
+  document.getElementById('statSlideCount').textContent = slides.length;
+}
+
+// ============ (6) 테마 실시간 미리보기 ============
+var THEME_COLORS = {
+  modern: { bg: '#1e293b', accent: '#2563eb', text: '#ffffff' },
+  light: { bg: '#ffffff', accent: '#2563eb', text: '#1e293b' },
+  dark: { bg: '#0f172a', accent: '#3b82f6', text: '#e2e8f0' },
+  corporate: { bg: '#1a1a2e', accent: '#16213e', text: '#eef1f6' },
+  warm: { bg: '#1e1810', accent: '#f59e0b', text: '#fef3c7' }
+};
+function initThemeSwatchPreview() {
+  var wrapper = document.getElementById('themeSelectWrapper');
+  var swatch = document.getElementById('themeSwatch');
+  var select = document.getElementById('themeSelect');
+  select.addEventListener('mouseenter', function() {
+    var html = '';
+    Object.keys(THEME_COLORS).forEach(function(key) {
+      var c = THEME_COLORS[key];
+      var names = { modern: 'Modern Blue', light: 'Light', dark: 'Dark Mode', corporate: 'Corporate', warm: 'Warm Orange' };
+      html += '<div class="theme-swatch-row">' +
+        '<div class="sw-circle" style="background:' + c.bg + '"></div>' +
+        '<div class="sw-circle" style="background:' + c.accent + '"></div>' +
+        '<div class="sw-circle" style="background:' + c.text + '"></div>' +
+        '<span class="sw-label">' + escHtml(names[key] || key) + '</span></div>';
+    });
+    swatch.innerHTML = html;
+    swatch.classList.add('show');
+  });
+  select.addEventListener('mouseleave', function() {
+    setTimeout(function() { swatch.classList.remove('show'); }, 200);
+  });
+}
+
+// ============ (8) 썸네일 텍스트 미리보기 ============
+function getSlidePreviewText(s) {
+  if (s._type === 'cover') return s.subtitle || '';
+  if (s._type === 'ending') return s.subtitle || '';
+  if (s._type === 'section') return s.description || '';
+  if (s.type === 'bullets' && s.items) return s.items.slice(0, 2).join(' / ');
+  if (s.type === 'cards' && s.cards) return s.cards.map(function(c){return c.title;}).slice(0, 2).join(' / ');
+  if (s.type === 'text') return (s.body || '').substring(0, 60);
+  if (s.type === 'steps' && s.steps) return s.steps.map(function(st){return typeof st==='string'?st:st.title;}).slice(0, 2).join(' / ');
+  if (s.type === 'quote') return (s.quote || '').substring(0, 60);
+  return '';
+}
+
+// ============ (10) 포커스 모드 ============
+function toggleFocusMode() {
+  focusModeActive = !focusModeActive;
+  document.body.classList.toggle('focus-mode', focusModeActive);
+  updateShortcutReminder();
+}
+
+// ============ (11) 되돌리기 사이드바 ============
+function toggleHistorySidebar() {
+  var sb = document.getElementById('historySidebar');
+  sb.classList.toggle('show');
+  if (sb.classList.contains('show')) updateHistorySidebar();
+}
+function updateHistorySidebar() {
+  var body = document.getElementById('historySidebarBody');
+  if (!body) return;
+  var last20 = historyDescriptions.slice(-20).reverse();
+  var last20Times = historyTimestamps.slice(-20).reverse();
+  if (last20.length === 0) {
+    body.innerHTML = '<div style="color:var(--text-muted);font-size:0.75rem;padding:12px;">히스토리가 없습니다</div>';
+    return;
+  }
+  body.innerHTML = last20.map(function(desc, i) {
+    var realIdx = historyDescriptions.length - 1 - i;
+    return '<div class="hs-item" onclick="restoreHistory(' + realIdx + ')" title="클릭하여 복원">' +
+      '<span class="hs-desc">' + escHtml(desc) + '</span>' +
+      '<span class="hs-time">' + escHtml(last20Times[i] || '') + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+// ============ (12) 단축키 리마인더 ============
+function updateShortcutReminder() {
+  var el = document.getElementById('shortcutReminder');
+  if (!el) return;
+  if (focusModeActive) {
+    el.textContent = 'F2 포커스 해제 | ↑↓ 슬라이드 이동 | F5 발표';
+  } else if (selectedIndex >= 0) {
+    el.textContent = 'Ctrl+S 저장 | Ctrl+D 복제 | Del 삭제 | F2 포커스 | Ctrl+F 찾기';
+  } else {
+    el.textContent = 'Ctrl+S 저장 | Ctrl+N 추가 | F2 포커스 | ? 도움말';
+  }
+}
+
+// ============ (9) 드래그 고스트 ============
+function setupDragGhost(item) {
+  item.addEventListener('dragstart', function(e) {
+    var ghost = this.cloneNode(true);
+    ghost.classList.add('drag-ghost');
+    ghost.style.width = this.offsetWidth + 'px';
+    ghost.style.position = 'absolute';
+    ghost.style.top = '-9999px';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, this.offsetWidth / 2, 20);
+    setTimeout(function() { document.body.removeChild(ghost); }, 0);
+  });
+}
+
 // ============ 초기화 ============
 function init() {
   // 백업 복구 확인
@@ -2228,6 +2959,7 @@ function init() {
   ensureSlideFields();
 
   initTemplateDropdown();
+  initThemeSwatchPreview();
   renderAll();
   if (slides.length > 0) selectSlide(0);
 
@@ -2238,6 +2970,16 @@ function init() {
   }, 5000);
 
   updateUndoRedoButtons();
+  updateShortcutReminder();
+
+  // (7) 스플래시 페이드아웃
+  setTimeout(function() {
+    var splash = document.getElementById('splashOverlay');
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(function() { splash.remove(); }, 500);
+    }
+  }, 500);
 }
 
 function ensureSlideFields() {
@@ -2248,6 +2990,7 @@ function ensureSlideFields() {
     if (s._bgImage === undefined) s._bgImage = '';
     if (s._fontSize === undefined) s._fontSize = 'normal';
     if (s._imageUrl === undefined) s._imageUrl = '';
+    if (s._locked === undefined) s._locked = false;
   });
 }
 
@@ -2351,12 +3094,24 @@ function renderThumbs() {
         html += '<div class="thumb-section-divider"></div>';
       }
 
-      html += '<div class="thumb-item ' + (i === selectedIndex ? 'active' : '') + '" onclick="selectSlide(' + i + ')" draggable="true" data-index="' + i + '" oncontextmenu="onThumbContextMenu(event,' + i + ')">' +
+      var isLocked = s._locked || false;
+      var isMulti = multiSelectedIndices.indexOf(i) >= 0;
+      var thumbClasses = 'thumb-item';
+      if (i === selectedIndex) thumbClasses += ' active';
+      if (isLocked) thumbClasses += ' locked';
+      if (isMulti) thumbClasses += ' multi-selected';
+
+      // (8) 썸네일 텍스트 미리보기
+      var thumbText = getSlidePreviewText(s);
+
+      html += '<div class="' + thumbClasses + '" onclick="onThumbClick(event,' + i + ')" draggable="true" data-index="' + i + '" oncontextmenu="onThumbContextMenu(event,' + i + ')">' +
         '<div class="thumb-preview">' +
           '<span class="thumb-badge" title="' + escAttr(typeLabel) + '">' + typeIcon + '</span>' +
           '<span class="thumb-title">' + escHtml(title) + '</span>' +
+          (thumbText ? '<div class="thumb-text-preview">' + escHtml(thumbText) + '</div>' : '') +
           '<span class="thumb-num">' + (i + 1) + escHtml(hasNotes) + '</span>' +
         '</div>' +
+        '<button class="thumb-lock" onclick="event.stopPropagation();toggleLock(' + i + ')" title="' + (isLocked ? '잠금 해제' : '잠금') + '">' + (isLocked ? '&#x1F512;' : '&#x1F513;') + '</button>' +
         '<button class="thumb-delete" onclick="event.stopPropagation();requestDeleteSlide(' + i + ')">X</button>' +
         '<div class="thumb-actions">' +
           (i > 0 ? '<button class="thumb-action-btn" onclick="event.stopPropagation();moveSlide(' + i + ',-1)" title="위로">&#x25B2;</button>' : '') +
@@ -2376,6 +3131,8 @@ function renderThumbs() {
 function setupDragDrop() {
   var items = document.querySelectorAll('.thumb-item[draggable]');
   items.forEach(function(item) {
+    // (9) 드래그 고스트 설정
+    setupDragGhost(item);
     item.addEventListener('dragstart', function(e) {
       dragIndex = parseInt(this.dataset.index);
       e.dataTransfer.effectAllowed = 'move';
@@ -2547,6 +3304,15 @@ function renderPreview() {
   }
 
   el.innerHTML = html;
+
+  // (1) 전환 애니메이션 적용
+  if (autoPlayActive) {
+    var trans = document.getElementById('transitionSelect').value;
+    if (trans !== 'none') {
+      el.classList.add('anim-' + trans + '-enter');
+      setTimeout(function() { el.classList.remove('anim-' + trans + '-enter'); }, 600);
+    }
+  }
 }
 
 function getPlaceholder(type, field) {
@@ -2925,10 +3691,12 @@ function updateNotes(value) {
 function selectSlide(i) {
   selectedIndex = i;
   renderAll();
+  updateShortcutReminder();
 }
 
 function deleteSlide(i) {
   if (slides.length <= 1) { showToast('최소 1개 슬라이드 필요', true); return; }
+  if (slides[i]._locked) { showToast('잠긴 슬라이드는 삭제할 수 없습니다', true); return; }
   pushHistory('슬라이드 ' + (i+1) + ' 삭제');
   slides.splice(i, 1);
   if (selectedIndex >= slides.length) selectedIndex = slides.length - 1;
@@ -2959,6 +3727,7 @@ function addSlide(type) {
 // ============ 필드 업데이트 ============
 function updateField(field, value) {
   if (selectedIndex < 0) return;
+  if (slides[selectedIndex]._locked && field !== '_locked') { showToast('잠긴 슬라이드는 수정할 수 없습니다', true); return; }
   var desc = '슬라이드 ' + (selectedIndex+1) + ' ' + field + ' 변경';
   pushHistory(desc);
   slides[selectedIndex][field] = value;
@@ -3496,6 +4265,14 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     exportJSON();
   }
+  if (e.ctrlKey && e.key === 'f') {
+    e.preventDefault();
+    openFind();
+  }
+  if (e.ctrlKey && e.key === 'h') {
+    e.preventDefault();
+    openReplace();
+  }
   if (e.ctrlKey && e.shiftKey && e.key === 'ArrowUp' && selectedIndex > 0) {
     e.preventDefault();
     moveSlide(selectedIndex, -1);
@@ -3508,7 +4285,12 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     startPresentation();
   }
+  if (e.key === 'F2') {
+    e.preventDefault();
+    toggleFocusMode();
+  }
   if (e.key === 'Escape') {
+    if (focusModeActive) { toggleFocusMode(); return; }
     hideAddModal();
     hideDeleteConfirm();
     hideHelpModal();
@@ -3516,6 +4298,11 @@ document.addEventListener('keydown', function(e) {
     hideHistoryModal();
     hideRecentFiles();
     closeTemplateDropdown();
+    closeFindReplace();
+    var sb = document.getElementById('historySidebar');
+    if (sb.classList.contains('show')) sb.classList.remove('show');
+    var sp = document.getElementById('statsPanel');
+    if (sp.classList.contains('show')) sp.classList.remove('show');
   }
   if (!isTyping && e.key === 'ArrowUp' && !e.ctrlKey && selectedIndex > 0) {
     e.preventDefault();
