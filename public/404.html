@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 - 페이지를 찾을 수 없습니다</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#0f1117;color:#e1e4e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative}
+
+/* 파티클 */
+.particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.particle{position:absolute;border-radius:50%;opacity:0;animation:float linear infinite}
+
+@keyframes float{
+  0%{opacity:0;transform:translateY(100vh) scale(0)}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{opacity:0;transform:translateY(-10vh) scale(1)}
+}
+
+/* 메인 */
+.content{position:relative;z-index:1;text-align:center;padding:24px}
+
+.error-code{font-size:clamp(120px,20vw,220px);font-weight:900;line-height:1;background:linear-gradient(135deg,#58a6ff 0%,#bc8cff 40%,#f778ba 70%,#ff7b72 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s ease-in-out infinite;background-size:200% 200%;user-select:none;margin-bottom:8px}
+
+@keyframes shimmer{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+
+.error-msg{font-size:clamp(18px,3vw,28px);font-weight:300;color:#8b949e;margin-bottom:8px}
+.error-sub{font-size:14px;color:#484f58;margin-bottom:40px}
+
+.home-btn{display:inline-block;background:linear-gradient(135deg,#238636,#2ea043);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:600;transition:all .3s;box-shadow:0 4px 20px rgba(35,134,54,.3)}
+.home-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(35,134,54,.45)}
+
+/* 링크 목록 */
+.links{margin-top:48px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.links a{color:#58a6ff;text-decoration:none;font-size:13px;padding:8px 16px;border:1px solid #21262d;border-radius:8px;transition:all .2s;background:#161b22}
+.links a:hover{border-color:#58a6ff;background:#1c2333}
+
+/* 구분선 */
+.divider{width:60px;height:1px;background:#21262d;margin:32px auto}
+
+@media(max-width:600px){
+  .links{gap:8px}
+  .links a{font-size:12px;padding:6px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="content">
+  <div class="error-code">404</div>
+  <div class="error-msg">페이지를 찾을 수 없습니다</div>
+  <div class="error-sub">요청하신 페이지가 존재하지 않거나 이동되었습니다</div>
+  <a href="/" class="home-btn">홈으로 돌아가기</a>
+  <div class="divider"></div>
+  <div class="links">
+    <a href="/">대시보드</a>
+    <a href="/editor">에디터</a>
+    <a href="/templates">템플릿</a>
+    <a href="/presenter">발표자 모드</a>
+    <a href="/api-docs">API 문서</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  var container = document.getElementById('particles');
+  var colors = ['#58a6ff','#bc8cff','#f778ba','#ff7b72','#3fb950','#d2a8ff'];
+  var count = 30;
+
+  for (var i = 0; i < count; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    var size = Math.random() * 6 + 2;
+    var left = Math.random() * 100;
+    var dur = Math.random() * 12 + 8;
+    var delay = Math.random() * 10;
+    var color = colors[Math.floor(Math.random() * colors.length)];
+
+    p.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;' +
+      'left:' + left + '%;' +
+      'background:' + color + ';' +
+      'animation-duration:' + dur + 's;' +
+      'animation-delay:' + delay + 's;' +
+      'box-shadow:0 0 ' + (size * 2) + 'px ' + color + '40;';
+
+    container.appendChild(p);
+  }
+})();
+</script>
+</body>
+</html>

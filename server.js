@@ -1162,6 +1162,10 @@ app.get('/presenter', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/presenter.html'));
 });
 
+app.get('/api-docs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/api-docs.html'));
+});
+
 // ============================================================
 //  API: API 문서
 // ============================================================
@@ -1477,6 +1481,19 @@ app.post('/api/export-all', (req, res) => {
   } catch (err) {
     errorResponse(res, 500, '내보내기 목록 조회 실패: ' + err.message, 'EXPORT_ERROR');
   }
+});
+
+// ============================================================
+//  404 Catch-All
+// ============================================================
+
+app.use((req, res) => {
+  // API 요청에는 JSON 반환
+  if (req.path.startsWith('/api/') || req.headers.accept === 'application/json') {
+    return res.status(404).json({ success: false, error: '요청한 리소스를 찾을 수 없습니다', code: 'NOT_FOUND', path: req.originalUrl });
+  }
+  // HTML 요청에는 404.html 반환
+  res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
 });
 
 // ============================================================

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API 문서 - 기업교육 발표자료 생성기</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#0f1117;color:#e1e4e8;min-height:100vh}
+
+/* 네비게이션 */
+.nav{background:#161b22;border-bottom:1px solid #30363d;padding:0 24px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.nav-logo{font-weight:700;font-size:16px;color:#58a6ff;margin-right:32px;white-space:nowrap}
+.nav-links{display:flex;gap:4px}
+.nav-links a{color:#8b949e;text-decoration:none;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:500;transition:all .2s}
+.nav-links a:hover{color:#e1e4e8;background:#21262d}
+.nav-links a.active{color:#58a6ff;background:#1c2333}
+
+/* 헤더 */
+.header{padding:48px 24px 32px;text-align:center;border-bottom:1px solid #21262d}
+.header h1{font-size:32px;font-weight:700;background:linear-gradient(135deg,#58a6ff,#bc8cff,#f778ba);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.header p{color:#8b949e;font-size:15px}
+.header .stats{display:flex;justify-content:center;gap:24px;margin-top:20px}
+.header .stat{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:12px 24px;text-align:center}
+.header .stat .val{font-size:24px;font-weight:700;color:#58a6ff}
+.header .stat .lbl{font-size:12px;color:#8b949e;margin-top:2px}
+
+/* 검색 + 필터 */
+.toolbar{max-width:1100px;margin:24px auto;padding:0 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.search-box{flex:1;min-width:240px;position:relative}
+.search-box input{width:100%;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px 10px 38px;color:#e1e4e8;font-size:14px;outline:none;transition:border .2s}
+.search-box input:focus{border-color:#58a6ff}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#484f58;width:16px;height:16px}
+.filter-btns{display:flex;gap:6px;flex-wrap:wrap}
+.filter-btn{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:8px 14px;color:#8b949e;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.filter-btn:hover{border-color:#484f58;color:#e1e4e8}
+.filter-btn.active{border-color:#58a6ff;color:#58a6ff;background:#1c2333}
+
+/* 카테고리 */
+.container{max-width:1100px;margin:0 auto;padding:0 24px 60px}
+.category{margin-top:32px}
+.category-title{font-size:18px;font-weight:700;color:#e1e4e8;margin-bottom:14px;padding-left:4px;display:flex;align-items:center;gap:8px}
+.category-title .icon{font-size:20px}
+.category-count{font-size:12px;color:#8b949e;background:#21262d;border-radius:10px;padding:2px 8px}
+
+/* API 카드 */
+.api-card{background:#161b22;border:1px solid #30363d;border-radius:10px;margin-bottom:10px;overflow:hidden;transition:border .2s}
+.api-card:hover{border-color:#484f58}
+.api-card-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+.method-badge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:.5px;min-width:62px;text-align:center}
+.method-GET{background:#1b4332;color:#3fb950;border:1px solid #238636}
+.method-POST{background:#0c2d6b;color:#58a6ff;border:1px solid #1f6feb}
+.method-PUT{background:#3d2800;color:#d29922;border:1px solid #9e6a03}
+.method-DELETE{background:#3d0a0a;color:#f85149;border:1px solid #da3633}
+.api-path{font-family:'JetBrains Mono',monospace;font-size:13px;color:#e1e4e8;flex:1}
+.api-path .param{color:#d2a8ff}
+.api-desc{color:#8b949e;font-size:13px;flex:2;margin-left:8px}
+.api-card-header .expand-icon{color:#484f58;transition:transform .2s;font-size:12px}
+.api-card-header .expand-icon.open{transform:rotate(180deg)}
+
+/* 카드 디테일 */
+.api-detail{display:none;border-top:1px solid #21262d;padding:18px;background:#0d1117}
+.api-detail.open{display:block}
+.detail-section{margin-bottom:16px}
+.detail-section:last-child{margin-bottom:0}
+.detail-label{font-size:12px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.detail-info{font-family:'JetBrains Mono',monospace;font-size:12px;color:#e1e4e8;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:10px 14px;word-break:break-all}
+
+/* 테스트 영역 */
+.test-area{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.test-area textarea{flex:1;min-width:260px;min-height:80px;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#e1e4e8;resize:vertical;outline:none}
+.test-area textarea:focus{border-color:#58a6ff}
+.test-btn{background:linear-gradient(135deg,#238636,#2ea043);color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+.test-btn:hover{opacity:.85}
+.test-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* 응답 영역 */
+.response-area{margin-top:12px}
+.response-meta{display:flex;gap:12px;margin-bottom:8px;font-size:12px}
+.response-status{padding:2px 8px;border-radius:4px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.response-status.ok{background:#1b4332;color:#3fb950}
+.response-status.err{background:#3d0a0a;color:#f85149}
+.response-time{color:#8b949e}
+.response-body{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;max-height:400px;overflow:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6}
+.response-body .json-key{color:#79c0ff}
+.response-body .json-string{color:#a5d6ff}
+.response-body .json-number{color:#d2a8ff}
+.response-body .json-bool{color:#ffa657}
+.response-body .json-null{color:#8b949e}
+
+/* 로딩 */
+.loading{display:flex;justify-content:center;align-items:center;padding:80px 0;color:#8b949e;font-size:15px;gap:12px}
+.spinner{width:20px;height:20px;border:2px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 에러 */
+.error-msg{text-align:center;padding:40px;color:#f85149}
+
+/* 반응형 */
+@media(max-width:768px){
+  .nav{padding:0 12px}
+  .nav-logo{margin-right:12px;font-size:14px}
+  .nav-links a{padding:6px 10px;font-size:12px}
+  .header{padding:32px 16px 24px}
+  .header h1{font-size:24px}
+  .header .stats{flex-wrap:wrap;gap:10px}
+  .toolbar{padding:0 16px}
+  .container{padding:0 16px 40px}
+  .api-card-header{flex-wrap:wrap;gap:8px;padding:12px 14px}
+  .api-desc{margin-left:0;flex-basis:100%}
+  .test-area{flex-direction:column}
+  .test-area textarea{min-width:100%}
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0d1117}
+::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#484f58}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">PPT Generator</div>
+  <div class="nav-links">
+    <a href="/">홈</a>
+    <a href="/editor">에디터</a>
+    <a href="/templates">템플릿</a>
+    <a href="/presenter">발표자 모드</a>
+    <a href="/api-docs" class="active">API 문서</a>
+  </div>
+</nav>
+
+<div class="header">
+  <h1>API Documentation</h1>
+  <p>기업교육 발표자료 생성기 REST API 레퍼런스</p>
+  <div class="stats" id="headerStats">
+    <div class="stat"><div class="val" id="statTotal">-</div><div class="lbl">총 엔드포인트</div></div>
+    <div class="stat"><div class="val" id="statGet">-</div><div class="lbl">GET</div></div>
+    <div class="stat"><div class="val" id="statPost">-</div><div class="lbl">POST</div></div>
+    <div class="stat"><div class="val" id="statDelete">-</div><div class="lbl">DELETE</div></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="search-box">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 7a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Zm-.82 4.74a6 6 0 1 1 1.06-1.06l3.04 3.04a.75.75 0 1 1-1.06 1.06l-3.04-3.04Z"/></svg>
+    <input type="text" id="searchInput" placeholder="경로 또는 설명으로 검색..." autocomplete="off">
+  </div>
+  <div class="filter-btns" id="filterBtns">
+    <button class="filter-btn active" data-filter="all">전체</button>
+    <button class="filter-btn" data-filter="GET">GET</button>
+    <button class="filter-btn" data-filter="POST">POST</button>
+    <button class="filter-btn" data-filter="DELETE">DELETE</button>
+  </div>
+</div>
+
+<div class="container" id="apiContainer">
+  <div class="loading"><div class="spinner"></div> API 문서를 불러오는 중...</div>
+</div>
+
+<script>
+const CATEGORIES = {
+  '서버/상태': { icon: '&#x1f4ca;', match: p => ['/api/health','/api/version','/api/recent','/api/stats','/api/docs'].includes(p) },
+  '파일 관리': { icon: '&#x1f4c1;', match: p => p.startsWith('/api/files') || p.startsWith('/api/source') || p === '/api/upload' },
+  '생성': { icon: '&#x26a1;', match: p => p.startsWith('/api/generate') || p === '/api/parse' || p === '/api/preview' },
+  '결과물': { icon: '&#x1f4e6;', match: p => p.startsWith('/api/outputs') || p.startsWith('/api/favorite') || p === '/api/export-all' },
+  '설정/검색': { icon: '&#x2699;', match: p => ['/api/settings','/api/search','/api/templates','/api/themes','/api/favorites'].includes(p) }
+};
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function highlightPath(p) {
+  return escHtml(p).replace(/:(\w+)/g, '<span class="param">:$1</span>');
+}
+
+function syntaxHighlight(json) {
+  if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+  return escHtml(json)
+    .replace(/"([^"]+)"(?=\s*:)/g, '<span class="json-key">"$1"</span>')
+    .replace(/:\s*"([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+    .replace(/:\s*(\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+    .replace(/:\s*(true|false)/g, ': <span class="json-bool">$1</span>')
+    .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
+}
+
+function categorize(endpoint) {
+  for (const [cat, cfg] of Object.entries(CATEGORIES)) {
+    if (cfg.match(endpoint.path)) return cat;
+  }
+  return '기타';
+}
+
+let allEndpoints = [];
+
+async function loadDocs() {
+  const container = document.getElementById('apiContainer');
+  try {
+    const res = await fetch('/api/docs');
+    const data = await res.json();
+    allEndpoints = data.endpoints || [];
+
+    document.getElementById('statTotal').textContent = allEndpoints.length;
+    document.getElementById('statGet').textContent = allEndpoints.filter(e => e.method === 'GET').length;
+    document.getElementById('statPost').textContent = allEndpoints.filter(e => e.method === 'POST').length;
+    document.getElementById('statDelete').textContent = allEndpoints.filter(e => e.method === 'DELETE').length;
+
+    renderEndpoints(allEndpoints);
+  } catch (err) {
+    container.innerHTML = '<div class="error-msg">API 문서를 불러올 수 없습니다: ' + escHtml(err.message) + '</div>';
+  }
+}
+
+function renderEndpoints(endpoints) {
+  const container = document.getElementById('apiContainer');
+  if (endpoints.length === 0) {
+    container.innerHTML = '<div class="error-msg">검색 결과가 없습니다</div>';
+    return;
+  }
+
+  const grouped = {};
+  for (const ep of endpoints) {
+    const cat = categorize(ep);
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(ep);
+  }
+
+  let html = '';
+  for (const [cat, eps] of Object.entries(grouped)) {
+    const cfg = CATEGORIES[cat] || { icon: '&#x1f4cb;' };
+    html += '<div class="category">';
+    html += '<div class="category-title"><span class="icon">' + cfg.icon + '</span> ' + escHtml(cat) + ' <span class="category-count">' + eps.length + '</span></div>';
+
+    for (let i = 0; i < eps.length; i++) {
+      const ep = eps[i];
+      const uid = cat.replace(/[^a-z]/gi,'') + '_' + i;
+      const needsBody = ep.method === 'POST' || ep.method === 'PUT' || (ep.method === 'DELETE' && ep.requestBody);
+      const isUpload = ep.path === '/api/upload';
+
+      html += '<div class="api-card" data-method="' + ep.method + '" data-path="' + escHtml(ep.path) + '" data-desc="' + escHtml(ep.description) + '">';
+      html += '<div class="api-card-header" onclick="toggleCard(\'' + uid + '\')">';
+      html += '<span class="method-badge method-' + ep.method + '">' + ep.method + '</span>';
+      html += '<span class="api-path">' + highlightPath(ep.path) + '</span>';
+      html += '<span class="api-desc">' + escHtml(ep.description) + '</span>';
+      html += '<span class="expand-icon" id="icon_' + uid + '">&#9660;</span>';
+      html += '</div>';
+
+      html += '<div class="api-detail" id="detail_' + uid + '">';
+
+      if (ep.requestBody) {
+        html += '<div class="detail-section"><div class="detail-label">요청 Body</div><div class="detail-info">' + escHtml(ep.requestBody) + '</div></div>';
+      }
+      html += '<div class="detail-section"><div class="detail-label">응답</div><div class="detail-info">' + escHtml(ep.response) + '</div></div>';
+
+      // 테스트 영역
+      if (!isUpload) {
+        html += '<div class="detail-section"><div class="detail-label">테스트</div>';
+        html += '<div class="test-area">';
+        if (needsBody && ep.requestBody && ep.requestBody !== 'multipart/form-data - files[]') {
+          html += '<textarea id="body_' + uid + '" placeholder="JSON body를 입력하세요...">' + escHtml(getDefaultBody(ep)) + '</textarea>';
+        }
+        html += '<button class="test-btn" onclick="testApi(\'' + uid + '\',\'' + ep.method + '\',\'' + escHtml(ep.path) + '\')">테스트 실행</button>';
+        html += '</div>';
+        html += '<div class="response-area" id="resp_' + uid + '"></div>';
+      } else {
+        html += '<div class="detail-section"><div class="detail-info">파일 업로드 API는 웹 UI를 통해 테스트해주세요.</div></div>';
+      }
+
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function getDefaultBody(ep) {
+  if (!ep.requestBody || ep.requestBody.startsWith('multipart')) return '';
+  try {
+    // 간단한 기본값 제공
+    if (ep.path === '/api/source') return '{\n  "dirPath": "C:/example"\n}';
+    if (ep.path === '/api/settings') return '{\n  "defaultTheme": "modern"\n}';
+    if (ep.path.includes('/rename')) return '{\n  "newName": "new-name.html"\n}';
+    if (ep.path === '/api/parse') return '{\n  "filePath": "example.txt",\n  "sourceDir": ""\n}';
+    if (ep.path === '/api/export-all') return '{\n  "type": "all"\n}';
+    if (ep.path === '/api/generate/from-text') return '{\n  "text": "섹션 1\\n내용입니다\\n\\n섹션 2\\n두 번째 내용",\n  "title": "테스트 발표자료",\n  "outputType": "web",\n  "theme": "modern"\n}';
+    if (ep.path === '/api/preview') return '{\n  "slides": {\n    "cover": {"title":"테스트"},\n    "slides": [{"title":"슬라이드","type":"bullets","items":["항목1"]}]\n  },\n  "theme": "modern"\n}';
+  } catch {}
+  return '';
+}
+
+function toggleCard(uid) {
+  const detail = document.getElementById('detail_' + uid);
+  const icon = document.getElementById('icon_' + uid);
+  if (detail.classList.contains('open')) {
+    detail.classList.remove('open');
+    icon.classList.remove('open');
+  } else {
+    detail.classList.add('open');
+    icon.classList.add('open');
+  }
+}
+
+async function testApi(uid, method, pathTemplate) {
+  const respArea = document.getElementById('resp_' + uid);
+  const bodyEl = document.getElementById('body_' + uid);
+  respArea.innerHTML = '<div class="loading" style="padding:12px"><div class="spinner"></div> 요청 중...</div>';
+
+  let url = pathTemplate;
+  // 경로 파라미터가 있으면 placeholder로 대체 (간단한 처리)
+  if (url.includes(':type')) url = url.replace(':type', 'web');
+  if (url.includes(':name')) url = url.replace(':name', 'test');
+  if (url.includes(':sourceDir')) url = url.replace(':sourceDir', btoa('input'));
+  if (url.includes(':filePath')) url = url.replace(':filePath', btoa('test.txt'));
+
+  const opts = { method };
+  if (bodyEl && bodyEl.value.trim()) {
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = bodyEl.value.trim();
+  }
+
+  const start = performance.now();
+  try {
+    const res = await fetch(url, opts);
+    const elapsed = Math.round(performance.now() - start);
+    const data = await res.json();
+    const isOk = res.status >= 200 && res.status < 400;
+
+    respArea.innerHTML =
+      '<div class="response-meta">' +
+        '<span class="response-status ' + (isOk ? 'ok' : 'err') + '">' + res.status + ' ' + res.statusText + '</span>' +
+        '<span class="response-time">' + elapsed + 'ms</span>' +
+      '</div>' +
+      '<div class="response-body">' + syntaxHighlight(data) + '</div>';
+  } catch (err) {
+    const elapsed = Math.round(performance.now() - start);
+    respArea.innerHTML =
+      '<div class="response-meta">' +
+        '<span class="response-status err">Error</span>' +
+        '<span class="response-time">' + elapsed + 'ms</span>' +
+      '</div>' +
+      '<div class="response-body" style="color:#f85149">' + escHtml(err.message) + '</div>';
+  }
+}
+
+// 검색
+document.getElementById('searchInput').addEventListener('input', function() {
+  applyFilters();
+});
+
+// 필터 버튼
+document.getElementById('filterBtns').addEventListener('click', function(e) {
+  if (e.target.classList.contains('filter-btn')) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    applyFilters();
+  }
+});
+
+function applyFilters() {
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  const method = document.querySelector('.filter-btn.active').dataset.filter;
+
+  const filtered = allEndpoints.filter(ep => {
+    if (method !== 'all' && ep.method !== method) return false;
+    if (query && !ep.path.toLowerCase().includes(query) && !ep.description.toLowerCase().includes(query)) return false;
+    return true;
+  });
+
+  renderEndpoints(filtered);
+}
+
+loadDocs();
+</script>
+</body>
+</html>
