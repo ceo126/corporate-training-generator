@@ -788,6 +788,110 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     slides.toc = sectionTitles;
   }
 
+  /** 카드 파싱: "키워드: 설명" 또는 앞 단어 분리 */
+  function parseCardLine(line) {
+    const colonIdx = line.indexOf(':');
+    const dashIdx = line.indexOf(' - ');
+    if (colonIdx > 0 && colonIdx < 20) {
+      return { title: line.substring(0, colonIdx).trim(), body: line.substring(colonIdx + 1).trim() };
+    } else if (dashIdx > 0 && dashIdx < 25) {
+      return { title: line.substring(0, dashIdx).trim(), body: line.substring(dashIdx + 3).trim() };
+    }
+    const words = line.split(/\s+/);
+    const titleWords = words.slice(0, Math.min(3, Math.ceil(words.length / 2)));
+    return { title: titleWords.join(' '), body: words.slice(titleWords.length).join(' ') || line };
+  }
+
+  /** 슬라이드 타입 풀 (반복 방지) */
+  const contentTypePool = ['bullets', 'cards', 'highlight', 'steps', 'two-column', 'stats'];
+  let typePoolIdx = 0;
+  function nextType() {
+    const t = contentTypePool[typePoolIdx % contentTypePool.length];
+    typePoolIdx++;
+    return t;
+  }
+
+  /** 항목들을 간결한 슬라이드 여러 장으로 분할 (슬라이드당 최대 3항목) */
+  function splitIntoSlides(sectionTitle, bodyLines) {
+    const MAX_PER_SLIDE = 3;
+    const results = [];
+
+    if (bodyLines.length <= MAX_PER_SLIDE) {
+      // 3개 이하면 분할 없이 하나의 슬라이드
+      results.push(buildSlide(sectionTitle, bodyLines, nextType()));
+    } else {
+      // 4개 이상이면 분할
+      for (let j = 0; j < bodyLines.length; j += MAX_PER_SLIDE) {
+        const chunk = bodyLines.slice(j, j + MAX_PER_SLIDE);
+        const partNum = Math.floor(j / MAX_PER_SLIDE) + 1;
+        const totalParts = Math.ceil(bodyLines.length / MAX_PER_SLIDE);
+        const slideTitle = totalParts > 1
+          ? `${sectionTitle} (${partNum}/${totalParts})`
+          : sectionTitle;
+        results.push(buildSlide(slideTitle, chunk, nextType()));
+      }
+    }
+    return results;
+  }
+
+  /** 타입에 맞는 슬라이드 데이터 생성 */
+  function buildSlide(slideTitle, items, slideType) {
+    const hasNumbers = items.some(l => /\d+[%명건원개만억조달러배]/.test(l));
+
+    // 숫자가 있으면 stats 우선
+    if (hasNumbers && items.length <= 3) slideType = 'stats';
+
+    let slide;
+    switch (slideType) {
+      case 'bullets':
+        slide = { title: slideTitle, type: 'bullets', items };
+        break;
+      case 'cards':
+        slide = {
+          title: slideTitle, type: 'cards',
+          cards: items.map(l => parseCardLine(l))
+        };
+        break;
+      case 'steps':
+        slide = {
+          title: slideTitle, type: 'steps',
+          steps: items.map((l, j) => ({ title: `STEP ${j + 1}`, desc: stripNumberPrefix(l) }))
+        };
+        break;
+      case 'stats': {
+        const stats = items.map(line => {
+          const numMatch = line.match(/(\d[\d,.]*)\s*([%명건원개만억조달러배위]?)/);
+          if (numMatch) {
+            const label = line.replace(numMatch[0], '').replace(/[:\-]/g, '').trim() || line;
+            return { value: parseInt(numMatch[1].replace(/[,.]/g, '')), suffix: numMatch[2] || '', label };
+          }
+          return { value: 0, suffix: '', label: line };
+        });
+        slide = { title: slideTitle, type: 'stats', stats };
+        break;
+      }
+      case 'highlight':
+        slide = {
+          title: slideTitle, type: 'highlight',
+          body: items[0] || '', sub: items.slice(1).join(' · ') || ''
+        };
+        break;
+      case 'two-column': {
+        const mid = Math.ceil(items.length / 2);
+        slide = {
+          title: slideTitle, type: 'two-column',
+          leftTitle: '핵심', leftItems: items.slice(0, mid),
+          rightTitle: '상세', rightItems: items.slice(mid).length > 0 ? items.slice(mid) : ['']
+        };
+        break;
+      }
+      default:
+        slide = { title: slideTitle, type: 'bullets', items };
+    }
+    slide.image = 'illust';
+    return slide;
+  }
+
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i];
     const lines = section.split('\n').map(l => l.trim()).filter(Boolean);
@@ -795,7 +899,7 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     const sectionTitle = stripNumberPrefix(rawTitle);
     const bodyLines = lines.slice(1);
 
-    // 섹션 구분 슬라이드 삽입 (각 섹션 앞에)
+    // 섹션 구분 슬라이드
     slides.content.push({
       isSection: true,
       sectionNumber: String(i + 1).padStart(2, '0'),
@@ -803,89 +907,9 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
       description: bodyLines.length > 0 ? bodyLines[0] : ''
     });
 
-    // 내용 기반 슬라이드 타입 자동 선택
-    const slideType = chooseBestType(bodyLines, i, sections.length);
-
-    let slide;
-    switch (slideType) {
-      case 'bullets':
-        slide = {
-          title: sectionTitle,
-          type: 'bullets',
-          items: bodyLines.length > 0 ? bodyLines : [section]
-        };
-        break;
-      case 'cards':
-        slide = {
-          title: sectionTitle,
-          type: 'cards',
-          cards: bodyLines.map(line => {
-            // "핵심 키워드: 설명" 형태 파싱 시도
-            const colonIdx = line.indexOf(':');
-            const dashIdx = line.indexOf(' - ');
-            if (colonIdx > 0 && colonIdx < 20) {
-              return { title: line.substring(0, colonIdx).trim(), body: line.substring(colonIdx + 1).trim() };
-            } else if (dashIdx > 0 && dashIdx < 25) {
-              return { title: line.substring(0, dashIdx).trim(), body: line.substring(dashIdx + 3).trim() };
-            }
-            // 앞 2~4단어를 제목으로 사용
-            const words = line.split(/\s+/);
-            const titleWords = words.slice(0, Math.min(3, Math.ceil(words.length / 2)));
-            const restWords = words.slice(titleWords.length);
-            return { title: titleWords.join(' '), body: restWords.join(' ') || line };
-          })
-        };
-        if (slide.cards.length === 0) slide.cards = [{ title: sectionTitle, body: section }];
-        break;
-      case 'steps':
-        slide = {
-          title: sectionTitle,
-          type: 'steps',
-          steps: bodyLines.map((line, j) => {
-            const stepTitle = stripNumberPrefix(line);
-            return { title: `STEP ${j + 1}`, desc: stepTitle };
-          })
-        };
-        if (slide.steps.length === 0) slide.steps = [{ title: 'STEP 1', desc: section }];
-        break;
-      case 'stats': {
-        const stats = bodyLines.map(line => {
-          const numMatch = line.match(/(\d[\d,.]*)\s*([%명건원개만억조]?)/);
-          if (numMatch) {
-            const label = line.replace(numMatch[0], '').replace(/[:\-]/g, '').trim() || line;
-            return { value: parseInt(numMatch[1].replace(/[,.]/g, '')), suffix: numMatch[2] || '', label };
-          }
-          return { value: 0, suffix: '', label: line };
-        });
-        slide = { title: sectionTitle, type: 'stats', stats };
-        break;
-      }
-      case 'highlight':
-        slide = {
-          title: sectionTitle,
-          type: 'highlight',
-          body: bodyLines.join(' ') || section,
-          sub: sectionTitle
-        };
-        break;
-      case 'two-column': {
-        const mid = Math.ceil(bodyLines.length / 2);
-        slide = {
-          title: sectionTitle,
-          type: 'two-column',
-          leftTitle: '현황',
-          leftItems: bodyLines.slice(0, mid),
-          rightTitle: '방향',
-          rightItems: bodyLines.slice(mid)
-        };
-        break;
-      }
-      default:
-        slide = { title: sectionTitle, type: 'bullets', items: bodyLines.length > 0 ? bodyLines : [section] };
-    }
-    // 모든 내용 슬라이드에 SVG 일러스트 배경 추가
-    slide.image = 'illust';
-    slides.content.push(slide);
+    // 항목을 간결한 슬라이드들로 분할 (슬라이드당 최대 3개)
+    const contentSlides = splitIntoSlides(sectionTitle, bodyLines);
+    contentSlides.forEach(s => slides.content.push(s));
   }
 
   // 엔딩 슬라이드 (ending 구조 사용)
