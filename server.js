@@ -744,7 +744,7 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
   const slideTitle = title || '발표자료';
   const slides = {
     cover: { title: slideTitle, subtitle: `총 ${sections.length}개 섹션` },
-    slides: []
+    content: []
   };
 
   const slideTypes = ['bullets', 'cards', 'steps', 'highlight', 'two-column'];
@@ -804,11 +804,11 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
       default:
         slide = { title: sectionTitle, type: 'bullets', items: bodyLines.length > 0 ? bodyLines : [section] };
     }
-    slides.slides.push(slide);
+    slides.content.push(slide);
   }
 
   // 마지막에 마무리 슬라이드 추가
-  slides.slides.push({
+  slides.content.push({
     title: '감사합니다',
     type: 'highlight',
     body: slideTitle,
@@ -826,12 +826,12 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     const webName = safeName.endsWith('.html') ? safeName : safeName.replace(/\.[^.]+$/, '.html');
     fs.writeFileSync(path.join(outputDir, webName), html, 'utf8');
     addActivity('create', `텍스트→웹 발표자료: ${webName}`);
-    res.json({ success: true, path: `/output/web/${encodeURIComponent(webName)}`, slides, slideCount: slides.slides.length });
+    res.json({ success: true, path: `/output/web/${encodeURIComponent(webName)}`, slides, slideCount: slides.content.length });
   } else {
     const pptxName = safeName.endsWith('.pptx') ? safeName : safeName.replace(/\.[^.]+$/, '.pptx');
     const outputPath = await pptGenerator.generate(slides, selectedTheme, pptxName);
     addActivity('create', `텍스트→PPTX: ${pptxName}`);
-    res.json({ success: true, path: outputPath, slides, slideCount: slides.slides.length });
+    res.json({ success: true, path: outputPath, slides, slideCount: slides.content.length });
   }
 }));
 
