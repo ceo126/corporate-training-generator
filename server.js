@@ -19,6 +19,14 @@ const MAX_BULK_FILES = 20;
 const MAX_PREVIEW_LENGTH = 5000;
 const SCAN_CACHE_TTL = 10000; // 10초
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
+const MAX_RECENT_ACTIVITIES = 20;
+
+const APP_VERSION = '3.0.0';
+const CHANGELOG = [
+  { version: '3.0.0', date: '2026-03-20', changes: ['최근 활동 API 추가', '즐겨찾기 기능 추가', '결과물 상세 정보 API', '텍스트→슬라이드 자동 생성', '버전 정보 API', '보안 헤더 강화', '요청 크기 제한 세분화', '정적 파일 캐싱 강화'] },
+  { version: '2.1.0', date: '2026-03-15', changes: ['API 문서 엔드포인트', '통합 검색', '사용자 설정'] },
+  { version: '2.0.0', date: '2026-03-10', changes: ['웹 발표자료 생성', '일괄 생성', '파일 미리보기'] }
+];
 
 // ============================================================
 //  유틸리티 함수
@@ -78,6 +86,28 @@ function formatSize(bytes) {
   const units = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i];
+}
+
+/** 결과물 디렉토리 경로 헬퍼 */
+function getOutputDir(type) {
+  return path.join(__dirname, type === 'pptx' ? 'output/pptx' : 'output/web');
+}
+
+// ============================================================
+//  최근 활동 (메모리 저장, 최대 20건)
+// ============================================================
+
+const recentActivities = [];
+
+function addActivity(action, detail) {
+  recentActivities.unshift({
+    action,
+    detail,
+    timestamp: new Date().toISOString()
+  });
+  if (recentActivities.length > MAX_RECENT_ACTIVITIES) {
+    recentActivities.length = MAX_RECENT_ACTIVITIES;
+  }
 }
 
 // ============================================================
@@ -151,7 +181,7 @@ function loadSettings() {
       return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
     }
   } catch {}
-  return { defaultTheme: 'modern', defaultSlideCount: 10 };
+  return { defaultTheme: 'modern', defaultSlideCount: 10, favorites: [] };
 }
 
 function saveSettings(settings) {
@@ -170,6 +200,14 @@ let sourceDirs = [
 // ============================================================
 //  미들웨어
 // ============================================================
+
+// --- 보안 헤더 ---
+app.use((req, res, next) => {
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'SAMEORIGIN');
+  res.header('X-XSS-Protection', '1; mode=block');
+  next();
+});
 
 // --- CORS 헤더 ---
 app.use((req, res, next) => {
@@ -190,12 +228,29 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// --- 요청 크기 제한 세분화 ---
+// /api/generate/* 는 50MB, 나머지는 1MB
+app.use('/api/generate', express.json({ limit: '50mb' }));
+app.use('/api/generate', express.urlencoded({ extended: true, limit: '50mb' }));
+app.use((req, res, next) => {
+  // generate 경로가 아닌 경우에만 1MB 제한 적용
+  if (req.path.startsWith('/api/generate')) return next();
+  express.json({ limit: '1mb' })(req, res, (err) => {
+    if (err) return errorResponse(res, 413, '요청 크기가 1MB를 초과합니다', 'PAYLOAD_TOO_LARGE');
+    express.urlencoded({ extended: true, limit: '1mb' })(req, res, next);
+  });
+});
 
-// --- Static 파일 (ETag 활성화) ---
+// --- Static 파일 (ETag + Cache-Control 활성화) ---
 app.use(express.static('public', { etag: true, lastModified: true }));
-app.use('/output', express.static('output', { etag: true, lastModified: true }));
+app.use('/output', express.static('output', {
+  etag: true,
+  lastModified: true,
+  maxAge: '1h',
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+  }
+}));
 
 // ============================================================
 //  파일 업로드 설정
@@ -220,6 +275,69 @@ const upload = multer({
     } else {
       cb(new Error(`지원하지 않는 파일 형식: ${ext}`));
     }
+  }
+});
+
+// ============================================================
+//  API: 버전 정보
+// ============================================================
+
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: APP_VERSION,
+    name: '기업교육 발표자료 생성기',
+    nodeVersion: process.version,
+    changelog: CHANGELOG
+  });
+});
+
+// ============================================================
+//  API: 최근 활동
+// ============================================================
+
+app.get('/api/recent', (req, res) => {
+  res.json({ activities: recentActivities });
+});
+
+// ============================================================
+//  API: 즐겨찾기
+// ============================================================
+
+app.get('/api/favorites', (req, res) => {
+  try {
+    const settings = loadSettings();
+    const favorites = settings.favorites || [];
+    res.json({ success: true, favorites });
+  } catch (err) {
+    errorResponse(res, 500, '즐겨찾기 조회 실패: ' + err.message, 'FAVORITES_ERROR');
+  }
+});
+
+app.post('/api/favorite/:type/:name', (req, res) => {
+  const { type, name } = req.params;
+  const typeErr = validateType(type);
+  if (typeErr) return errorResponse(res, 400, typeErr, 'INVALID_TYPE');
+
+  try {
+    const settings = loadSettings();
+    if (!settings.favorites) settings.favorites = [];
+
+    const key = `${type}/${name}`;
+    const idx = settings.favorites.indexOf(key);
+    let added;
+
+    if (idx === -1) {
+      settings.favorites.push(key);
+      added = true;
+    } else {
+      settings.favorites.splice(idx, 1);
+      added = false;
+    }
+
+    saveSettings(settings);
+    res.json({ success: true, favorited: added, key, favorites: settings.favorites });
+  } catch (err) {
+    errorResponse(res, 500, '즐겨찾기 토글 실패: ' + err.message, 'FAVORITE_TOGGLE_ERROR');
   }
 });
 
@@ -270,6 +388,7 @@ app.post('/api/upload', (req, res, next) => {
       return errorResponse(res, 400, err.message, 'UPLOAD_ERROR');
     }
     invalidateScanCache();
+    addActivity('upload', `${req.files.length}개 파일 업로드`);
     res.json({ success: true, count: req.files.length });
   });
 });
@@ -284,6 +403,7 @@ app.delete('/api/files/:name', (req, res) => {
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
     invalidateScanCache();
+    addActivity('delete', `파일 삭제: ${req.params.name}`);
     res.json({ success: true });
   } else {
     errorResponse(res, 404, '파일을 찾을 수 없습니다', 'FILE_NOT_FOUND');
@@ -316,13 +436,48 @@ app.get('/api/outputs', (req, res) => {
   }
 });
 
+app.get('/api/outputs/:type/:name/info', (req, res) => {
+  const { type, name } = req.params;
+  const typeErr = validateType(type);
+  if (typeErr) return errorResponse(res, 400, typeErr, 'INVALID_TYPE');
+
+  const outputDir = getOutputDir(type);
+  const filePath = path.join(outputDir, path.basename(name));
+  if (!filePath.startsWith(outputDir + path.sep)) {
+    return errorResponse(res, 400, '잘못된 경로입니다', 'INVALID_PATH');
+  }
+  if (!fs.existsSync(filePath)) {
+    return errorResponse(res, 404, '파일을 찾을 수 없습니다', 'FILE_NOT_FOUND');
+  }
+
+  try {
+    const stat = fs.statSync(filePath);
+    const settings = loadSettings();
+    const favorites = settings.favorites || [];
+    const key = `${type}/${name}`;
+
+    res.json({
+      success: true,
+      name,
+      type,
+      size: stat.size,
+      sizeFormatted: formatSize(stat.size),
+      created: stat.birthtime,
+      modified: stat.mtime,
+      favorited: favorites.includes(key),
+      path: `/output/${type}/${encodeURIComponent(name)}`
+    });
+  } catch (err) {
+    errorResponse(res, 500, '파일 정보 조회 실패: ' + err.message, 'FILE_INFO_ERROR');
+  }
+});
+
 app.delete('/api/outputs/:type/:name', (req, res) => {
   const { type, name } = req.params;
   const typeErr = validateType(type);
   if (typeErr) return errorResponse(res, 400, typeErr, 'INVALID_TYPE');
 
-  const dir = type === 'pptx' ? 'output/pptx' : 'output/web';
-  const outputDir = path.join(__dirname, dir);
+  const outputDir = getOutputDir(type);
   const filePath = path.join(outputDir, name);
   // Path Traversal 방지
   if (!filePath.startsWith(outputDir + path.sep)) {
@@ -330,15 +485,12 @@ app.delete('/api/outputs/:type/:name', (req, res) => {
   }
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
+    addActivity('delete', `결과물 삭제: ${type}/${name}`);
     res.json({ success: true });
   } else {
     errorResponse(res, 404, '파일을 찾을 수 없습니다', 'FILE_NOT_FOUND');
   }
 });
-
-// ============================================================
-//  API: 결과물 이름 변경
-// ============================================================
 
 app.post('/api/outputs/:type/:name/rename', (req, res) => {
   const { type, name } = req.params;
@@ -349,8 +501,7 @@ app.post('/api/outputs/:type/:name/rename', (req, res) => {
   const nameErr = validateFileName(newName);
   if (nameErr) return errorResponse(res, 400, nameErr, 'INVALID_FILENAME');
 
-  const dir = type === 'pptx' ? 'output/pptx' : 'output/web';
-  const outputDir = path.join(__dirname, dir);
+  const outputDir = getOutputDir(type);
   const oldPath = path.join(outputDir, name);
   const newPath = path.join(outputDir, newName);
   // Path Traversal 방지
@@ -371,17 +522,12 @@ app.post('/api/outputs/:type/:name/rename', (req, res) => {
   }
 });
 
-// ============================================================
-//  API: 결과물 복제
-// ============================================================
-
 app.post('/api/outputs/:type/:name/duplicate', (req, res) => {
   const { type, name } = req.params;
   const typeErr = validateType(type);
   if (typeErr) return errorResponse(res, 400, typeErr, 'INVALID_TYPE');
 
-  const dir = type === 'pptx' ? 'output/pptx' : 'output/web';
-  const outputDir = path.join(__dirname, dir);
+  const outputDir = getOutputDir(type);
   const srcPath = path.join(outputDir, path.basename(name));
   if (!srcPath.startsWith(outputDir + path.sep) && srcPath !== outputDir + path.sep + path.basename(name)) {
     return errorResponse(res, 400, '잘못된 경로입니다', 'INVALID_PATH');
@@ -449,6 +595,7 @@ app.post('/api/generate/web-from-data', asyncHandler(async (req, res) => {
   const outputDir = path.join(__dirname, 'output/web');
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(path.join(outputDir, safeName), html, 'utf8');
+  addActivity('create', `웹 발표자료 생성: ${safeName}`);
   res.json({ success: true, path: `/output/web/${safeName}` });
 }));
 
@@ -461,6 +608,7 @@ app.post('/api/generate/web', asyncHandler(async (req, res) => {
   const outputDir = path.join(__dirname, 'output/web');
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(path.join(outputDir, safeName), html, 'utf8');
+  addActivity('create', `웹 발표자료 생성: ${safeName}`);
   res.json({ success: true, path: `/output/web/${safeName}` });
 }));
 
@@ -471,7 +619,116 @@ app.post('/api/generate/pptx', asyncHandler(async (req, res) => {
   if (nameErr) return errorResponse(res, 400, nameErr, 'INVALID_FILENAME');
 
   const outputPath = await pptGenerator.generate(slides, theme, safeName);
+  addActivity('create', `PPTX 생성: ${safeName}`);
   res.json({ success: true, path: outputPath });
+}));
+
+// ============================================================
+//  API: 텍스트 → 슬라이드 자동 생성
+// ============================================================
+
+app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
+  const { text, title, outputType, theme, filename } = req.body;
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return errorResponse(res, 400, '텍스트가 필요합니다', 'MISSING_TEXT');
+  }
+
+  // 텍스트를 섹션으로 분리
+  const sections = text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+
+  // 슬라이드 구조 자동 생성
+  const slideTitle = title || '발표자료';
+  const slides = {
+    cover: { title: slideTitle, subtitle: `총 ${sections.length}개 섹션` },
+    slides: []
+  };
+
+  const slideTypes = ['bullets', 'cards', 'steps', 'highlight', 'two-column'];
+
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i];
+    const lines = section.split('\n').map(l => l.trim()).filter(Boolean);
+    const sectionTitle = lines[0] || `섹션 ${i + 1}`;
+    const bodyLines = lines.slice(1);
+    const typeIndex = i % slideTypes.length;
+    const slideType = slideTypes[typeIndex];
+
+    let slide;
+    switch (slideType) {
+      case 'bullets':
+        slide = {
+          title: sectionTitle,
+          type: 'bullets',
+          items: bodyLines.length > 0 ? bodyLines : [section]
+        };
+        break;
+      case 'cards':
+        slide = {
+          title: sectionTitle,
+          type: 'cards',
+          cards: bodyLines.map((line, j) => ({ title: `포인트 ${j + 1}`, body: line }))
+        };
+        if (slide.cards.length === 0) slide.cards = [{ title: '내용', body: section }];
+        break;
+      case 'steps':
+        slide = {
+          title: sectionTitle,
+          type: 'steps',
+          steps: bodyLines.map((line, j) => ({ title: `${j + 1}단계`, desc: line }))
+        };
+        if (slide.steps.length === 0) slide.steps = [{ title: '1단계', desc: section }];
+        break;
+      case 'highlight':
+        slide = {
+          title: sectionTitle,
+          type: 'highlight',
+          body: bodyLines.join(' ') || section,
+          sub: ''
+        };
+        break;
+      case 'two-column':
+        const mid = Math.ceil(bodyLines.length / 2);
+        slide = {
+          title: sectionTitle,
+          type: 'two-column',
+          leftTitle: '핵심 내용',
+          leftItems: bodyLines.slice(0, mid).length > 0 ? bodyLines.slice(0, mid) : [section],
+          rightTitle: '상세 내용',
+          rightItems: bodyLines.slice(mid).length > 0 ? bodyLines.slice(mid) : ['']
+        };
+        break;
+      default:
+        slide = { title: sectionTitle, type: 'bullets', items: bodyLines.length > 0 ? bodyLines : [section] };
+    }
+    slides.slides.push(slide);
+  }
+
+  // 마지막에 마무리 슬라이드 추가
+  slides.slides.push({
+    title: '감사합니다',
+    type: 'highlight',
+    body: slideTitle,
+    sub: 'Q&A'
+  });
+
+  const type = outputType || 'web';
+  const safeName = path.basename(filename || (slideTitle + (type === 'pptx' ? '.pptx' : '.html')));
+  const selectedTheme = theme || 'modern';
+
+  if (type === 'web') {
+    const html = webGenerator.generateHTML(slides, { theme: selectedTheme, title: slideTitle });
+    const outputDir = path.join(__dirname, 'output/web');
+    fs.mkdirSync(outputDir, { recursive: true });
+    const webName = safeName.endsWith('.html') ? safeName : safeName.replace(/\.[^.]+$/, '.html');
+    fs.writeFileSync(path.join(outputDir, webName), html, 'utf8');
+    addActivity('create', `텍스트→웹 발표자료: ${webName}`);
+    res.json({ success: true, path: `/output/web/${encodeURIComponent(webName)}`, slides, slideCount: slides.slides.length });
+  } else {
+    const pptxName = safeName.endsWith('.pptx') ? safeName : safeName.replace(/\.[^.]+$/, '.pptx');
+    const outputPath = await pptGenerator.generate(slides, selectedTheme, pptxName);
+    addActivity('create', `텍스트→PPTX: ${pptxName}`);
+    res.json({ success: true, path: outputPath, slides, slideCount: slides.slides.length });
+  }
 }));
 
 // ============================================================
@@ -497,6 +754,7 @@ app.get('/api/health', (req, res) => {
 
     res.json({
       status: 'ok',
+      version: APP_VERSION,
       uptime: Math.floor((Date.now() - SERVER_START_TIME) / 1000),
       uptimeFormatted: formatUptime(Math.floor((Date.now() - SERVER_START_TIME) / 1000)),
       memory: {
@@ -810,6 +1068,10 @@ app.post('/api/generate/bulk', asyncHandler(async (req, res) => {
   const successCount = results.filter(r => r.status === 'success').length;
   const errorCount = results.filter(r => r.status === 'error').length;
 
+  if (successCount > 0) {
+    addActivity('create', `일괄 생성 완료: ${successCount}/${files.length}건 (${outputType})`);
+  }
+
   res.json({
     success: true,
     total: files.length,
@@ -910,7 +1172,31 @@ app.get('/api/docs', (req, res) => {
       method: 'GET', path: '/api/health',
       description: '서버 상태 확인 (업타임, 메모리, 파일 수)',
       requestBody: null,
-      response: '{ status, uptime, uptimeFormatted, memory, files, sourceDirs, nodeVersion }'
+      response: '{ status, version, uptime, uptimeFormatted, memory, files, sourceDirs, nodeVersion }'
+    },
+    {
+      method: 'GET', path: '/api/version',
+      description: '버전 정보 + 변경 로그',
+      requestBody: null,
+      response: '{ version, name, nodeVersion, changelog }'
+    },
+    {
+      method: 'GET', path: '/api/recent',
+      description: '최근 활동 목록 (최대 20건)',
+      requestBody: null,
+      response: '{ activities: [{ action, detail, timestamp }] }'
+    },
+    {
+      method: 'GET', path: '/api/favorites',
+      description: '즐겨찾기 목록 조회',
+      requestBody: null,
+      response: '{ success: true, favorites: string[] }'
+    },
+    {
+      method: 'POST', path: '/api/favorite/:type/:name',
+      description: '결과물 즐겨찾기 토글',
+      requestBody: null,
+      response: '{ success: true, favorited: boolean, key, favorites }'
     },
     {
       method: 'GET', path: '/api/sources',
@@ -955,6 +1241,12 @@ app.get('/api/docs', (req, res) => {
       response: '{ outputs: [{ name, type, path, modified }] }'
     },
     {
+      method: 'GET', path: '/api/outputs/:type/:name/info',
+      description: '결과물 상세 정보 (크기, 생성일, 수정일)',
+      requestBody: null,
+      response: '{ success, name, type, size, sizeFormatted, created, modified, favorited, path }'
+    },
+    {
       method: 'DELETE', path: '/api/outputs/:type/:name',
       description: '결과물 삭제 (type: pptx | web)',
       requestBody: null,
@@ -989,6 +1281,12 @@ app.get('/api/docs', (req, res) => {
       description: 'PPTX 발표자료 생성',
       requestBody: '{ filename: string, slides: object, theme?: string }',
       response: '{ success: true, path: string }'
+    },
+    {
+      method: 'POST', path: '/api/generate/from-text',
+      description: '텍스트 → 슬라이드 자동 생성 (섹션 분리 → 다양한 레이아웃 매핑)',
+      requestBody: '{ text: string, title?: string, outputType?: "web"|"pptx", theme?: string, filename?: string }',
+      response: '{ success: true, path: string, slides: object, slideCount: number }'
     },
     {
       method: 'POST', path: '/api/generate/bulk',
@@ -1063,7 +1361,7 @@ app.get('/api/docs', (req, res) => {
       response: '{ totalFiles, totalSize, files: [{ name, type, path, size }] }'
     }
   ];
-  res.json({ version: '2.1.0', totalEndpoints: docs.length, endpoints: docs });
+  res.json({ version: APP_VERSION, totalEndpoints: docs.length, endpoints: docs });
 });
 
 // ============================================================
@@ -1209,7 +1507,7 @@ process.on('unhandledRejection', (reason) => {
 
 const server = app.listen(PORT, () => {
   console.log(`\n========================================`);
-  console.log(`  기업교육 발표자료 생성기 v2.1`);
+  console.log(`  기업교육 발표자료 생성기 v${APP_VERSION}`);
   console.log(`  http://localhost:${PORT}`);
   console.log(`========================================`);
   console.log(`\n[사용법]`);
