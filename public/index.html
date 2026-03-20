@@ -11,47 +11,145 @@
 
   :root {
     --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-hover: rgba(255,255,255,0.06);
-    --bg-card: rgba(255,255,255,0.03);
-    --border-color: rgba(255,255,255,0.08);
+    --bg-secondary: rgba(30, 41, 59, 0.65);
+    --bg-hover: rgba(255,255,255,0.08);
+    --bg-card: rgba(255,255,255,0.04);
+    --border-color: rgba(255,255,255,0.10);
     --border-light: rgba(255,255,255,0.06);
     --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
-    --accent: #60a5fa;
-    --accent-purple: #a78bfa;
-    --accent-blue: #2563eb;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-glow: rgba(59,130,246,0.25);
+    --success: #22c55e;
+    --error: #ef4444;
+    --warning: #f59e0b;
     --modal-bg: rgba(0,0,0,0.6);
+    --glass-bg: rgba(30, 41, 59, 0.55);
+    --glass-border: rgba(255,255,255,0.12);
+    --glass-blur: 12px;
   }
 
   [data-theme="light"] {
-    --bg-primary: #f1f5f9;
-    --bg-secondary: #ffffff;
-    --bg-hover: rgba(0,0,0,0.04);
-    --bg-card: rgba(0,0,0,0.02);
-    --border-color: rgba(0,0,0,0.1);
+    --bg-primary: #e8ecf4;
+    --bg-secondary: rgba(255, 255, 255, 0.65);
+    --bg-hover: rgba(0,0,0,0.05);
+    --bg-card: rgba(0,0,0,0.03);
+    --border-color: rgba(0,0,0,0.10);
     --border-light: rgba(0,0,0,0.06);
     --text-primary: #1e293b;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
     --accent: #3b82f6;
-    --accent-purple: #8b5cf6;
-    --accent-blue: #2563eb;
+    --accent-hover: #2563eb;
+    --accent-glow: rgba(59,130,246,0.2);
+    --success: #16a34a;
+    --error: #dc2626;
+    --warning: #d97706;
     --modal-bg: rgba(0,0,0,0.4);
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(0,0,0,0.10);
+    --glass-blur: 12px;
   }
 
+  /* Animated gradient background */
   body {
     font-family: 'Noto Sans KR', sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
     min-height: 100vh;
-    transition: background 0.3s, color 0.3s;
+    transition: color 0.3s;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, #0f172a, #1a1a3e, #0f2027, #1e293b);
+    background-size: 400% 400%;
+    animation: gradientShift 20s ease infinite;
+  }
+
+  [data-theme="light"] body::before {
+    background: linear-gradient(135deg, #e8ecf4, #dbeafe, #ede9fe, #e0f2fe);
+    background-size: 400% 400%;
+    animation: gradientShift 20s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Typography system */
+  h1 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  h2 { font-size: 1.05rem; }
+  h3 { font-size: 1rem; }
+  .caption { font-size: 0.75rem; }
+
+  /* Focus visible for accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Glassmorphism panels */
+  .panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+
+  /* CSS-only tooltips */
+  [data-tooltip] {
+    position: relative;
+  }
+
+  [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 100;
+  }
+
+  [data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
   }
 
   .header {
-    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
-    border-bottom: 1px solid var(--border-color);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
     padding: 25px 40px;
     position: relative;
   }
@@ -63,9 +161,8 @@
   }
 
   .header h1 {
-    font-size: 1.6rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -95,16 +192,19 @@
   .theme-toggle:hover {
     background: var(--bg-hover);
     border-color: var(--accent);
+    transform: scale(1.02);
   }
 
   .theme-toggle .label {
     font-size: 0.8rem;
   }
 
-  /* 통계 대시보드 */
+  /* Stats dashboard glassmorphism */
   .stats-bar {
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
     padding: 14px 40px;
     display: flex;
     gap: 30px;
@@ -124,7 +224,7 @@
   }
 
   .stat-label {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
   }
 
@@ -146,13 +246,6 @@
     gap: 30px;
   }
 
-  .panel {
-    background: var(--bg-secondary);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    overflow: hidden;
-  }
-
   .panel-header {
     padding: 18px 24px;
     border-bottom: 1px solid var(--border-light);
@@ -162,8 +255,10 @@
   }
 
   .panel-header h2 {
-    font-size: 1.1rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .panel-header-actions {
@@ -176,7 +271,46 @@
     padding: 20px 24px;
   }
 
-  /* 검색 입력란 */
+  /* SVG icon inline styles */
+  .icon-svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .icon-svg svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .file-icon-svg {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .file-icon-svg svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .file-icon-svg.pdf { background: rgba(239,68,68,0.15); }
+  .file-icon-svg.pdf svg { color: #ef4444; }
+  .file-icon-svg.docx { background: rgba(59,130,246,0.15); }
+  .file-icon-svg.docx svg { color: #3b82f6; }
+  .file-icon-svg.txt { background: rgba(34,197,94,0.15); }
+  .file-icon-svg.txt svg { color: #22c55e; }
+  .file-icon-svg.other { background: rgba(168,85,247,0.15); }
+  .file-icon-svg.other svg { color: #a855f7; }
+
+  /* Search input */
   .search-input {
     width: 100%;
     padding: 8px 12px 8px 34px;
@@ -187,29 +321,32 @@
     font-size: 0.85rem;
     font-family: 'Noto Sans KR', sans-serif;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
     margin-bottom: 12px;
   }
 
-  .search-input:focus { border-color: var(--accent-blue); }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
   .search-wrapper {
     position: relative;
   }
 
   .search-wrapper::before {
-    content: '🔍';
+    content: '';
     position: absolute;
     left: 10px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 0.8rem;
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
+    background-size: contain;
     pointer-events: none;
   }
 
-  /* 파일 업로드 */
+  /* File upload zone */
   .upload-zone {
-    border: 2px dashed rgba(96,165,250,0.3);
+    border: 2px dashed rgba(59,130,246,0.3);
     border-radius: 12px;
     padding: 30px;
     text-align: center;
@@ -219,13 +356,15 @@
   }
 
   .upload-zone:hover {
-    border-color: #60a5fa;
-    background: rgba(96,165,250,0.05);
+    border-color: var(--accent);
+    background: rgba(59,130,246,0.05);
+    transform: scale(1.01);
   }
 
-  .upload-zone .icon {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+  .upload-zone .icon-svg {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 10px;
   }
 
   .upload-zone p {
@@ -239,7 +378,50 @@
     margin-top: 8px;
   }
 
-  /* 파일 목록 */
+  /* Upload progress bar */
+  .upload-progress {
+    display: none;
+    margin-bottom: 15px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+
+  .upload-progress.active { display: block; }
+
+  .upload-progress-inner {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 12px;
+  }
+
+  .upload-progress-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .upload-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #60a5fa);
+    border-radius: 3px;
+    transition: width 0.15s ease;
+    width: 0%;
+  }
+
+  .upload-progress-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* File list */
   .file-list {
     list-style: none;
   }
@@ -257,6 +439,7 @@
 
   .file-item:hover {
     background: var(--bg-hover);
+    transform: translateX(2px);
   }
 
   .file-info {
@@ -267,23 +450,6 @@
     flex: 1;
     min-width: 0;
   }
-
-  .file-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  .file-icon.pdf { background: rgba(239,68,68,0.15); color: #ef4444; }
-  .file-icon.docx { background: rgba(59,130,246,0.15); color: #3b82f6; }
-  .file-icon.txt { background: rgba(34,197,94,0.15); color: #22c55e; }
-  .file-icon.other { background: rgba(168,85,247,0.15); color: #a855f7; }
 
   .file-name {
     font-size: 0.9rem;
@@ -310,11 +476,11 @@
   }
 
   .delete-btn:hover {
-    color: #ef4444;
+    color: var(--error);
     background: rgba(239,68,68,0.1);
   }
 
-  /* 결과물 목록 */
+  /* Output items */
   .output-item {
     display: flex;
     align-items: center;
@@ -323,6 +489,12 @@
     border-radius: 10px;
     background: var(--bg-card);
     margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+
+  .output-item:hover {
+    background: var(--bg-hover);
+    transform: translateX(2px);
   }
 
   .output-info {
@@ -349,7 +521,7 @@
 
   .output-badge.web {
     background: rgba(34,197,94,0.15);
-    color: #22c55e;
+    color: var(--success);
   }
 
   .output-actions {
@@ -358,6 +530,7 @@
     flex-shrink: 0;
   }
 
+  /* Buttons - micro animations */
   .action-btn {
     padding: 6px 14px;
     border-radius: 8px;
@@ -365,20 +538,30 @@
     font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     font-family: 'Noto Sans KR', sans-serif;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
   }
 
+  .action-btn:hover {
+    transform: scale(1.02);
+  }
+
+  .action-btn:active {
+    transform: scale(0.98);
+  }
+
   .action-btn.primary {
-    background: #2563eb;
+    background: var(--accent);
     color: white;
+    box-shadow: 0 2px 8px var(--accent-glow);
   }
 
   .action-btn.primary:hover {
-    background: #1d4ed8;
+    background: var(--accent-hover);
+    box-shadow: 0 4px 16px var(--accent-glow);
   }
 
   .action-btn.secondary {
@@ -388,6 +571,7 @@
 
   .action-btn.secondary:hover {
     background: rgba(255,255,255,0.12);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
 
   .action-btn.rename-btn {
@@ -395,7 +579,7 @@
     padding: 4px 10px;
   }
 
-  /* 정렬 토글 */
+  /* Sort toggle */
   .sort-toggle {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -411,12 +595,79 @@
   .sort-toggle:hover {
     border-color: var(--accent);
     color: var(--accent);
+    transform: scale(1.02);
   }
 
-  /* 안내 */
+  /* View mode toggle */
+  .view-toggle {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .view-toggle-btn {
+    background: var(--bg-card);
+    border: none;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .view-toggle-btn:not(:last-child) {
+    border-right: 1px solid var(--border-color);
+  }
+
+  .view-toggle-btn.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .view-toggle-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Card view for outputs */
+  .output-grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .output-grid-view .output-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .output-grid-view .output-info {
+    width: 100%;
+  }
+
+  .output-grid-view .output-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .output-grid-view .output-actions .action-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.72rem;
+  }
+
+  /* Guide box */
   .guide-box {
-    background: rgba(96,165,250,0.08);
-    border: 1px solid rgba(96,165,250,0.2);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
     border-radius: 12px;
     padding: 20px;
     margin-top: 20px;
@@ -424,7 +675,7 @@
 
   .guide-box h3 {
     font-size: 0.95rem;
-    color: #60a5fa;
+    color: var(--accent);
     margin-bottom: 12px;
   }
 
@@ -444,12 +695,12 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.8rem;
-    color: #a78bfa;
+    color: var(--accent);
   }
 
   .shortcut-hint {
     margin-top: 10px;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
   }
 
@@ -461,20 +712,98 @@
     border: 1px solid var(--border-color);
   }
 
+  /* Enhanced empty state with CSS art */
   .empty-state {
     text-align: center;
-    padding: 30px;
+    padding: 40px 30px;
     color: var(--text-muted);
   }
 
-  .empty-state .icon {
-    font-size: 2rem;
-    margin-bottom: 10px;
+  .empty-state-art {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    position: relative;
+  }
+
+  .empty-state-art .doc {
+    width: 50px;
+    height: 64px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .empty-state-art .doc::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 8px;
+    right: 8px;
+    height: 3px;
+    background: var(--border-color);
+    border-radius: 2px;
+    box-shadow: 0 8px 0 var(--border-color), 0 16px 0 var(--border-color), 0 24px 0 var(--border-color);
+  }
+
+  .empty-state-art .sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: sparkle-float 2s ease-in-out infinite;
+  }
+
+  .empty-state-art .sparkle:nth-child(2) { top: 5px; right: 5px; animation-delay: 0s; }
+  .empty-state-art .sparkle:nth-child(3) { bottom: 10px; left: 2px; animation-delay: 0.7s; width: 6px; height: 6px; }
+  .empty-state-art .sparkle:nth-child(4) { top: 15px; left: 8px; animation-delay: 1.3s; width: 5px; height: 5px; }
+
+  @keyframes sparkle-float {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  .empty-state p {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+
+  .empty-state .empty-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .empty-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .empty-cta:hover {
+    background: var(--accent-hover);
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px var(--accent-glow);
   }
 
   #fileInput { display: none; }
 
-  /* 새 발표자료 버튼 */
+  /* Create section buttons */
   .create-section {
     display: flex;
     gap: 12px;
@@ -492,33 +821,42 @@
     font-weight: 600;
     cursor: pointer;
     font-family: 'Noto Sans KR', sans-serif;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
     text-decoration: none;
   }
 
+  .create-btn:hover {
+    transform: scale(1.02);
+  }
+
+  .create-btn:active {
+    transform: scale(0.98);
+  }
+
   .create-btn.gradient {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
     color: #fff;
-    box-shadow: 0 4px 20px rgba(37,99,235,0.3);
+    box-shadow: 0 4px 20px var(--accent-glow);
   }
 
   .create-btn.gradient:hover {
-    box-shadow: 0 6px 30px rgba(37,99,235,0.5);
-    transform: translateY(-1px);
+    box-shadow: 0 6px 30px rgba(59,130,246,0.5);
+    transform: translateY(-1px) scale(1.02);
   }
 
   .create-btn.outline {
     background: transparent;
-    color: #60a5fa;
-    border: 1px solid rgba(96,165,250,0.3);
+    color: var(--accent);
+    border: 1px solid rgba(59,130,246,0.3);
   }
 
   .create-btn.outline:hover {
-    background: rgba(96,165,250,0.08);
-    border-color: #60a5fa;
+    background: rgba(59,130,246,0.08);
+    border-color: var(--accent);
+    box-shadow: 0 2px 12px var(--accent-glow);
   }
 
-  /* 생성 모달 */
+  /* Modal */
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -533,9 +871,11 @@
   .modal-overlay.show { display: flex; }
 
   .modal {
-    background: var(--bg-secondary);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-radius: 16px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border);
     padding: 30px;
     width: 520px;
     max-width: 90vw;
@@ -573,11 +913,12 @@
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
 
   .modal input:focus, .modal select:focus, .modal textarea:focus {
-    border-color: #2563eb;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
   }
 
   .modal textarea { resize: vertical; min-height: 80px; }
@@ -600,12 +941,16 @@
     transition: all 0.2s;
   }
 
+  .modal-actions button:hover {
+    transform: scale(1.02);
+  }
+
   .modal-actions .btn-primary {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
     color: #fff;
   }
 
-  .modal-actions .btn-primary:hover { opacity: 0.9; }
+  .modal-actions .btn-primary:hover { box-shadow: 0 4px 16px var(--accent-glow); }
 
   .modal-actions .btn-cancel {
     background: rgba(255,255,255,0.08);
@@ -630,8 +975,8 @@
     transition: all 0.2s;
   }
 
-  .format-option:hover { border-color: rgba(96,165,250,0.3); }
-  .format-option.selected { border-color: #2563eb; background: rgba(37,99,235,0.1); }
+  .format-option:hover { border-color: rgba(59,130,246,0.3); transform: scale(1.02); }
+  .format-option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
   .format-option .fmt-icon { font-size: 1.5rem; margin-bottom: 4px; }
   .format-option .fmt-name { font-size: 0.8rem; color: var(--text-primary); font-weight: 600; }
   .format-option .fmt-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
@@ -646,6 +991,7 @@
     z-index: 2000;
     flex-direction: column;
     gap: 16px;
+    backdrop-filter: blur(4px);
   }
 
   .generating-overlay.show { display: flex; }
@@ -654,14 +1000,14 @@
     width: 40px;
     height: 40px;
     border: 3px solid rgba(255,255,255,0.15);
-    border-top-color: #60a5fa;
+    border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* 토스트 알림 */
+  /* Toast notifications */
   .toast-container {
     position: fixed;
     top: 20px;
@@ -674,8 +1020,10 @@
   }
 
   .toast {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
     border-radius: 10px;
     padding: 12px 20px;
     font-size: 0.85rem;
@@ -689,9 +1037,9 @@
     max-width: 360px;
   }
 
-  .toast.success { border-left: 3px solid #22c55e; }
-  .toast.error { border-left: 3px solid #ef4444; }
-  .toast.info { border-left: 3px solid #3b82f6; }
+  .toast.success { border-left: 3px solid var(--success); }
+  .toast.error { border-left: 3px solid var(--error); }
+  .toast.info { border-left: 3px solid var(--accent); }
 
   .toast.removing {
     animation: toastOut 0.3s ease-in forwards;
@@ -707,12 +1055,12 @@
     to { opacity: 0; transform: translateX(60px); }
   }
 
-  /* 드래그 앤 드롭 전체화면 오버레이 */
+  /* Drag overlay */
   .drag-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(37,99,235,0.12);
-    border: 3px dashed #60a5fa;
+    background: rgba(59,130,246,0.12);
+    border: 3px dashed var(--accent);
     z-index: 3000;
     display: none;
     align-items: center;
@@ -728,7 +1076,7 @@
   .drag-overlay .drag-icon { font-size: 3rem; }
   .drag-overlay .drag-text { font-size: 1.1rem; color: var(--accent); font-weight: 600; }
 
-  /* 파일 미리보기 모달 */
+  /* Preview modal */
   .preview-modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -743,9 +1091,11 @@
   .preview-modal-overlay.show { display: flex; }
 
   .preview-modal {
-    background: var(--bg-secondary);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-radius: 16px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border);
     width: 700px;
     max-width: 92vw;
     max-height: 80vh;
@@ -782,7 +1132,7 @@
   }
 
   .preview-close:hover {
-    color: #ef4444;
+    color: var(--error);
     background: rgba(239,68,68,0.1);
   }
 
@@ -797,11 +1147,11 @@
     color: var(--text-secondary);
   }
 
-  /* 이름 변경 인라인 입력 */
+  /* Rename input */
   .rename-input {
     padding: 4px 8px;
     border-radius: 6px;
-    border: 1px solid var(--accent-blue);
+    border: 1px solid var(--accent);
     background: var(--bg-card);
     color: var(--text-primary);
     font-size: 0.85rem;
@@ -810,7 +1160,7 @@
     width: 180px;
   }
 
-  /* 네비게이션 링크 */
+  /* Header nav */
   .header-nav {
     display: flex;
     gap: 6px;
@@ -832,24 +1182,25 @@
   .header-nav a:hover {
     color: var(--accent);
     border-color: var(--accent);
-    background: rgba(96,165,250,0.08);
+    background: rgba(59,130,246,0.08);
+    transform: scale(1.02);
   }
 
   .header-nav a.active {
     color: var(--accent);
     border-color: var(--accent);
-    background: rgba(96,165,250,0.1);
+    background: rgba(59,130,246,0.1);
   }
 
-  /* 일괄 작업 바 */
+  /* Batch action bar */
   .batch-bar {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 10px 16px;
     border-radius: 10px;
-    background: rgba(96,165,250,0.06);
-    border: 1px solid rgba(96,165,250,0.15);
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(59,130,246,0.15);
     margin-bottom: 12px;
     flex-wrap: wrap;
   }
@@ -878,11 +1229,12 @@
   .batch-btn:hover {
     border-color: var(--accent);
     color: var(--accent);
+    transform: scale(1.02);
   }
 
   .batch-btn.danger:hover {
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--error);
+    color: var(--error);
   }
 
   .output-checkbox {
@@ -893,10 +1245,12 @@
     flex-shrink: 0;
   }
 
-  /* 서버 상태 푸터 */
+  /* Server footer */
   .server-footer {
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border-color);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-top: 1px solid var(--glass-border);
     padding: 12px 40px;
     display: flex;
     align-items: center;
@@ -911,14 +1265,14 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #22c55e;
+    background: var(--success);
     display: inline-block;
     margin-right: 6px;
     animation: pulse-dot 2s infinite;
   }
 
   .server-footer .status-dot.offline {
-    background: #ef4444;
+    background: var(--error);
     animation: none;
   }
 
@@ -942,7 +1296,7 @@
     font-weight: 500;
   }
 
-  /* 결과물 미리보기 iframe 모달 */
+  /* iframe modal */
   .iframe-modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -957,9 +1311,11 @@
   .iframe-modal-overlay.show { display: flex; }
 
   .iframe-modal {
-    background: var(--bg-secondary);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-radius: 16px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border);
     width: 90vw;
     height: 85vh;
     display: flex;
@@ -991,7 +1347,7 @@
     width: 100%;
   }
 
-  /* 활동 로그 */
+  /* Activity panel */
   .activity-panel {
     margin-top: 24px;
   }
@@ -1036,12 +1392,12 @@
     height: 8px;
     border-radius: 50%;
     background: var(--accent);
-    border: 2px solid var(--bg-secondary);
+    border: 2px solid var(--glass-bg);
   }
 
-  .activity-item.upload::before { background: #22c55e; }
-  .activity-item.generate::before { background: #a78bfa; }
-  .activity-item.delete::before { background: #ef4444; }
+  .activity-item.upload::before { background: var(--success); }
+  .activity-item.generate::before { background: #6366f1; }
+  .activity-item.delete::before { background: var(--error); }
 
   .activity-time {
     font-size: 0.7rem;
@@ -1057,7 +1413,50 @@
     font-size: 0.82rem;
   }
 
-  /* 반응형 */
+  /* Loading skeleton */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s ease infinite;
+    border-radius: 8px;
+  }
+
+  @keyframes skeleton-pulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .skeleton-file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+
+  .skeleton-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .skeleton-text {
+    height: 14px;
+    border-radius: 4px;
+  }
+
+  .skeleton-text.w60 { width: 60%; }
+  .skeleton-text.w40 { width: 40%; }
+  .skeleton-text.w80 { width: 80%; }
+
+  .skeleton-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  /* Responsive */
   @media (max-width: 900px) {
     .grid {
       grid-template-columns: 1fr;
@@ -1117,6 +1516,10 @@
       width: 98vw;
       height: 90vh;
     }
+
+    .output-grid-view {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 480px) {
@@ -1125,7 +1528,7 @@
     }
 
     .header p {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
     }
 
     .stats-bar {
@@ -1156,25 +1559,30 @@
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <nav class="header-nav">
-          <a href="/" class="active">홈</a>
-          <a href="/editor">슬라이드 에디터</a>
-          <a href="/templates">템플릿 갤러리</a>
-          <a href="/presenter">발표자 모드</a>
+          <a href="/" class="active" aria-label="홈 페이지로 이동">홈</a>
+          <a href="/editor" aria-label="슬라이드 에디터 열기">슬라이드 에디터</a>
+          <a href="/templates" aria-label="템플릿 갤러리 보기">템플릿 갤러리</a>
+          <a href="/presenter" aria-label="발표자 모드 시작">발표자 모드</a>
         </nav>
-        <button class="theme-toggle" onclick="toggleTheme()">
-          <span id="themeIcon">🌙</span>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="테마 전환" data-tooltip="테마 전환">
+          <span id="themeIcon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </span>
           <span class="label" id="themeLabel">다크 모드</span>
         </button>
       </div>
     </div>
     <div class="create-section">
-      <button class="create-btn gradient" onclick="showCreateModal()">+ 새 발표자료 만들기</button>
-      <a href="/editor" class="create-btn outline">슬라이드 에디터 열기</a>
-      <a href="/templates" class="create-btn outline">템플릿 갤러리</a>
+      <button class="create-btn gradient" onclick="showCreateModal()" aria-label="새 발표자료 만들기" data-tooltip="새 발표자료 생성">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        새 발표자료 만들기
+      </button>
+      <a href="/editor" class="create-btn outline" aria-label="슬라이드 에디터 열기">슬라이드 에디터 열기</a>
+      <a href="/templates" class="create-btn outline" aria-label="템플릿 갤러리 보기">템플릿 갤러리</a>
     </div>
   </div>
 
-  <!-- 통계 대시보드 -->
+  <!-- Stats dashboard -->
   <div class="stats-bar">
     <div class="stat-item">
       <div>
@@ -1198,38 +1606,40 @@
     </div>
   </div>
 
-  <!-- 토스트 컨테이너 -->
+  <!-- Toast container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- 드래그 오버레이 -->
+  <!-- Drag overlay -->
   <div class="drag-overlay" id="dragOverlay">
-    <div class="drag-icon">📂</div>
+    <div class="drag-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/></svg>
+    </div>
     <div class="drag-text">파일을 놓으면 업로드됩니다</div>
   </div>
 
-  <!-- 새 발표자료 생성 모달 -->
+  <!-- Create modal -->
   <div class="modal-overlay" id="createModal" onclick="if(event.target===this)hideCreateModal()">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-label="새 발표자료 만들기">
       <h3>새 발표자료 만들기</h3>
       <div class="form-group">
-        <label>발표 제목</label>
+        <label for="newTitle">발표 제목</label>
         <input type="text" id="newTitle" placeholder="예: AI 시대의 디지털 전환 전략" value="">
       </div>
       <div class="form-group">
-        <label>부제목 (선택)</label>
+        <label for="newSubtitle">부제목 (선택)</label>
         <input type="text" id="newSubtitle" placeholder="예: 2024년 기업교육 가이드">
       </div>
       <div class="form-group">
-        <label>발표자 (선택)</label>
+        <label for="newPresenter">발표자 (선택)</label>
         <input type="text" id="newPresenter" placeholder="예: 홍길동">
       </div>
       <div class="form-group">
-        <label>주요 내용 (줄바꿈으로 구분)</label>
+        <label for="newTopics">주요 내용 (줄바꿈으로 구분)</label>
         <textarea id="newTopics" placeholder="예:&#10;AI 트렌드 분석&#10;디지털 전환 사례&#10;실행 전략 수립&#10;Q&A"></textarea>
       </div>
       <div style="display:flex;gap:12px;">
         <div class="form-group" style="flex:1">
-          <label>테마</label>
+          <label for="newTheme">테마</label>
           <select id="newTheme">
             <option value="modern">Modern Blue</option>
             <option value="light">Light</option>
@@ -1239,7 +1649,7 @@
           </select>
         </div>
         <div class="form-group" style="width:140px">
-          <label>주제당 슬라이드</label>
+          <label for="newSlidesPerTopic">주제당 슬라이드</label>
           <select id="newSlidesPerTopic">
             <option value="1">1장 (간결)</option>
             <option value="2" selected>2장 (기본)</option>
@@ -1250,36 +1660,44 @@
       <div class="form-group">
         <label>출력 형식</label>
         <div class="format-select">
-          <div class="format-option selected" onclick="selectFormat(this,'both')">
-            <div class="fmt-icon">📦</div>
+          <div class="format-option selected" onclick="selectFormat(this,'both')" role="button" aria-label="웹과 PPT 모두 생성" tabindex="0">
+            <div class="fmt-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
             <div class="fmt-name">둘 다</div>
             <div class="fmt-desc">웹 + PPT</div>
           </div>
-          <div class="format-option" onclick="selectFormat(this,'web')">
-            <div class="fmt-icon">🌐</div>
+          <div class="format-option" onclick="selectFormat(this,'web')" role="button" aria-label="웹 발표자료만 생성" tabindex="0">
+            <div class="fmt-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
             <div class="fmt-name">웹</div>
             <div class="fmt-desc">동적 발표</div>
           </div>
-          <div class="format-option" onclick="selectFormat(this,'pptx')">
-            <div class="fmt-icon">📑</div>
+          <div class="format-option" onclick="selectFormat(this,'pptx')" role="button" aria-label="PPT 파일만 생성" tabindex="0">
+            <div class="fmt-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
             <div class="fmt-name">PPT</div>
             <div class="fmt-desc">다운로드</div>
           </div>
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn-cancel" onclick="hideCreateModal()">취소</button>
-        <button class="btn-primary" onclick="generatePresentation()">생성하기</button>
+        <button class="btn-cancel" onclick="hideCreateModal()" aria-label="취소">취소</button>
+        <button class="btn-primary" onclick="generatePresentation()" aria-label="발표자료 생성하기">생성하기</button>
       </div>
     </div>
   </div>
 
-  <!-- 파일 미리보기 모달 -->
+  <!-- File preview modal -->
   <div class="preview-modal-overlay" id="previewModal" onclick="if(event.target===this)hidePreview()">
-    <div class="preview-modal">
+    <div class="preview-modal" role="dialog" aria-label="파일 미리보기">
       <div class="preview-header">
         <h3 id="previewTitle">파일 미리보기</h3>
-        <button class="preview-close" onclick="hidePreview()">✕</button>
+        <button class="preview-close" onclick="hidePreview()" aria-label="미리보기 닫기">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div class="preview-body" id="previewBody">
         로딩 중...
@@ -1287,7 +1705,7 @@
     </div>
   </div>
 
-  <!-- 생성 중 오버레이 -->
+  <!-- Generating overlay -->
   <div class="generating-overlay" id="generatingOverlay">
     <div class="spinner"></div>
     <div style="color:#e2e8f0;font-size:0.95rem;">발표자료 생성 중...</div>
@@ -1295,68 +1713,122 @@
 
   <div class="container">
     <div class="grid">
-      <!-- 입력 파일 -->
+      <!-- Input files panel -->
       <div class="panel">
         <div class="panel-header">
-          <h2>📂 교육자료</h2>
-          <span id="fileCount" style="font-size:0.8rem;color:var(--text-muted);">0개 파일</span>
+          <h2>
+            <span class="icon-svg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            교육자료
+          </h2>
+          <span id="fileCount" class="caption" style="color:var(--text-muted);">0개 파일</span>
         </div>
         <div class="panel-body">
-          <!-- 외부 폴더 추가 -->
+          <!-- External folder sources -->
           <div style="margin-bottom:15px;">
             <div id="sourceList" style="margin-bottom:10px;"></div>
             <div style="display:flex;gap:8px;">
-              <input type="text" id="sourcePath" placeholder="외부 폴더 경로 (예: D:\교육자료)" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:0.85rem;font-family:'Noto Sans KR',sans-serif;">
-              <button class="action-btn primary" onclick="addSource()" style="font-size:0.8rem;white-space:nowrap;">폴더 추가</button>
+              <input type="text" id="sourcePath" placeholder="외부 폴더 경로 (예: D:\교육자료)" aria-label="외부 폴더 경로 입력" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:0.85rem;font-family:'Noto Sans KR',sans-serif;">
+              <button class="action-btn primary" onclick="addSource()" aria-label="폴더 추가" data-tooltip="외부 폴더 연결" style="font-size:0.8rem;white-space:nowrap;">폴더 추가</button>
             </div>
           </div>
-          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-            <div class="icon">📄</div>
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" role="button" aria-label="파일 업로드 영역 - 클릭하여 파일 선택" tabindex="0">
+            <div class="icon-svg" style="width:40px;height:40px;margin:0 auto 10px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            </div>
             <p>파일을 드래그하거나 클릭하여 업로드 (input 폴더)</p>
             <div class="formats">PDF, DOCX, TXT, PPTX 지원</div>
           </div>
-          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md,.pptx">
-          <!-- 파일 검색 -->
+          <!-- Upload progress -->
+          <div class="upload-progress" id="uploadProgress">
+            <div class="upload-progress-inner">
+              <span class="upload-progress-text" id="uploadProgressText">0%</span>
+              <div class="upload-progress-bar-track">
+                <div class="upload-progress-bar-fill" id="uploadProgressBar"></div>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md,.pptx" aria-label="파일 선택">
+          <!-- File search -->
           <div class="search-wrapper">
-            <input type="text" class="search-input" id="fileSearch" placeholder="파일 검색..." oninput="filterFiles()">
+            <input type="text" class="search-input" id="fileSearch" placeholder="파일 검색..." oninput="filterFiles()" aria-label="파일 검색">
+          </div>
+          <!-- Skeleton loading -->
+          <div id="fileListSkeleton" style="display:none;">
+            <div class="skeleton-file"><div class="skeleton skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton skeleton-text w60"></div><div class="skeleton skeleton-text w40"></div></div></div>
+            <div class="skeleton-file"><div class="skeleton skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton skeleton-text w80"></div><div class="skeleton skeleton-text w40"></div></div></div>
+            <div class="skeleton-file"><div class="skeleton skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton skeleton-text w60"></div><div class="skeleton skeleton-text w40"></div></div></div>
           </div>
           <ul class="file-list" id="fileList"></ul>
         </div>
       </div>
 
-      <!-- 생성된 결과물 -->
+      <!-- Generated outputs panel -->
       <div class="panel">
         <div class="panel-header">
-          <h2>📊 생성된 발표자료</h2>
+          <h2>
+            <span class="icon-svg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </span>
+            생성된 발표자료
+          </h2>
           <div class="panel-header-actions">
-            <button class="sort-toggle" id="sortToggle" onclick="toggleSort()">이름순</button>
-            <button class="action-btn secondary" onclick="loadOutputs()" style="font-size:0.75rem;">새로고침</button>
+            <!-- View mode toggle -->
+            <div class="view-toggle">
+              <button class="view-toggle-btn active" id="listViewBtn" onclick="setViewMode('list')" aria-label="리스트 뷰" data-tooltip="리스트 뷰">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </button>
+              <button class="view-toggle-btn" id="gridViewBtn" onclick="setViewMode('grid')" aria-label="카드 뷰" data-tooltip="카드 뷰">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              </button>
+            </div>
+            <button class="sort-toggle" id="sortToggle" onclick="toggleSort()" aria-label="정렬 방식 변경" data-tooltip="정렬 전환">이름순</button>
+            <button class="action-btn secondary" onclick="loadOutputs()" aria-label="결과물 목록 새로고침" data-tooltip="새로고침" style="font-size:0.75rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              새로고침
+            </button>
           </div>
         </div>
         <div class="panel-body">
-          <!-- 결과물 검색 -->
+          <!-- Output search -->
           <div class="search-wrapper">
-            <input type="text" class="search-input" id="outputSearch" placeholder="결과물 검색..." oninput="filterOutputs()">
+            <input type="text" class="search-input" id="outputSearch" placeholder="결과물 검색..." oninput="filterOutputs()" aria-label="결과물 검색">
           </div>
-          <!-- 일괄 작업 바 -->
+          <!-- Batch action bar -->
           <div class="batch-bar" id="batchBar" style="display:none;">
             <span class="batch-info">선택: <strong id="batchCount">0</strong>개</span>
-            <button class="batch-btn" onclick="selectAllOutputs()">전체 선택</button>
-            <button class="batch-btn" onclick="deselectAllOutputs()">선택 해제</button>
-            <button class="batch-btn danger" onclick="deleteSelectedOutputs()">선택 삭제</button>
-            <button class="batch-btn" onclick="duplicateSelectedOutputs()">선택 복제</button>
+            <button class="batch-btn" onclick="selectAllOutputs()" aria-label="전체 선택">전체 선택</button>
+            <button class="batch-btn" onclick="deselectAllOutputs()" aria-label="선택 해제">선택 해제</button>
+            <button class="batch-btn danger" onclick="deleteSelectedOutputs()" aria-label="선택 항목 삭제">선택 삭제</button>
+            <button class="batch-btn" onclick="duplicateSelectedOutputs()" aria-label="선택 항목 복제">선택 복제</button>
+          </div>
+          <!-- Skeleton loading -->
+          <div id="outputListSkeleton" style="display:none;">
+            <div class="skeleton-file"><div class="skeleton" style="width:50px;height:24px;border-radius:6px;"></div><div class="skeleton-lines"><div class="skeleton skeleton-text w80"></div></div></div>
+            <div class="skeleton-file"><div class="skeleton" style="width:50px;height:24px;border-radius:6px;"></div><div class="skeleton-lines"><div class="skeleton skeleton-text w60"></div></div></div>
           </div>
           <div id="outputList">
             <div class="empty-state">
-              <div class="icon">✨</div>
+              <div class="empty-state-art">
+                <div class="doc"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+              </div>
               <p>아직 생성된 발표자료가 없습니다</p>
+              <div class="empty-sub">교육자료를 업로드하고 발표자료를 만들어보세요</div>
+              <button class="empty-cta" onclick="showCreateModal()" aria-label="새 발표자료 만들기">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                새 발표자료 만들기
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 사용 안내 -->
+    <!-- Usage guide -->
     <div class="guide-box">
       <h3>사용 방법</h3>
       <ol>
@@ -1370,11 +1842,16 @@
       </div>
     </div>
 
-    <!-- 최근 활동 로그 -->
+    <!-- Activity log -->
     <div class="panel activity-panel">
       <div class="panel-header">
-        <h2>최근 활동</h2>
-        <button class="action-btn secondary" onclick="clearActivityLog()" style="font-size:0.72rem;">로그 지우기</button>
+        <h2>
+          <span class="icon-svg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </span>
+          최근 활동
+        </h2>
+        <button class="action-btn secondary" onclick="clearActivityLog()" aria-label="활동 로그 지우기" data-tooltip="로그 지우기" style="font-size:0.72rem;">로그 지우기</button>
       </div>
       <div class="panel-body">
         <ul class="activity-timeline" id="activityLog">
@@ -1384,21 +1861,23 @@
     </div>
   </div>
 
-  <!-- 결과물 미리보기 iframe 모달 -->
+  <!-- Iframe preview modal -->
   <div class="iframe-modal-overlay" id="iframeModal" onclick="if(event.target===this)hideIframePreview()">
-    <div class="iframe-modal">
+    <div class="iframe-modal" role="dialog" aria-label="발표자료 미리보기">
       <div class="iframe-header">
         <h3 id="iframeTitle">미리보기</h3>
         <div style="display:flex;gap:8px;">
-          <a id="iframeOpenNew" href="#" target="_blank" class="action-btn secondary" style="font-size:0.75rem;">새 탭에서 열기</a>
-          <button class="preview-close" onclick="hideIframePreview()">✕</button>
+          <a id="iframeOpenNew" href="#" target="_blank" class="action-btn secondary" style="font-size:0.75rem;" aria-label="새 탭에서 열기">새 탭에서 열기</a>
+          <button class="preview-close" onclick="hideIframePreview()" aria-label="미리보기 닫기">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       </div>
-      <iframe id="iframeContent" src="about:blank"></iframe>
+      <iframe id="iframeContent" src="about:blank" title="발표자료 미리보기"></iframe>
     </div>
   </div>
 
-  <!-- 서버 상태 푸터 -->
+  <!-- Server footer -->
   <div class="server-footer" id="serverFooter">
     <div class="footer-item">
       <span class="status-dot" id="serverDot"></span>
@@ -1424,10 +1903,27 @@
       return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
-    // ============ 토스트 알림 ============
+    // ============ SVG Icon helpers ============
+    const SVG_ICONS = {
+      pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h0" stroke-width="3"/><path d="M7 16h10"/></svg>',
+      docx: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>',
+      txt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+      other: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'
+    };
+
+    function getFileIconSvg(ext) {
+      const iconClass = ['pdf','docx','txt'].includes(ext) ? ext : 'other';
+      return '<div class="file-icon-svg ' + iconClass + '">' + SVG_ICONS[iconClass] + '</div>';
+    }
+
+    // ============ Toast notifications ============
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
-      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+      const icons = {
+        success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
       const toast = document.createElement('div');
       toast.className = 'toast ' + type;
       toast.innerHTML = '<span>' + (icons[type] || '') + '</span><span>' + escHtml(message) + '</span>';
@@ -1438,7 +1934,7 @@
       }, 3000);
     }
 
-    // ============ 테마 토글 ============
+    // ============ Theme toggle ============
     function toggleTheme() {
       const html = document.documentElement;
       const isDark = html.getAttribute('data-theme') === 'dark';
@@ -1449,27 +1945,40 @@
     }
 
     function updateThemeButton(theme) {
-      document.getElementById('themeIcon').textContent = theme === 'dark' ? '🌙' : '☀️';
+      const icon = document.getElementById('themeIcon');
+      if (theme === 'dark') {
+        icon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      } else {
+        icon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+      }
       document.getElementById('themeLabel').textContent = theme === 'dark' ? '다크 모드' : '라이트 모드';
     }
 
-    // 저장된 테마 복원
+    // Restore saved theme
     (function() {
       const saved = localStorage.getItem('theme') || 'dark';
       document.documentElement.setAttribute('data-theme', saved);
       updateThemeButton(saved);
     })();
 
-    // ============ 데이터 캐시 ============
+    // ============ Data cache ============
     let cachedFiles = [];
     let cachedOutputs = [];
-    let outputSortMode = 'name'; // 'name' | 'date'
+    let outputSortMode = 'name';
+    let outputViewMode = 'list';
 
-    // ============ 통계 업데이트 ============
+    // ============ View mode toggle ============
+    function setViewMode(mode) {
+      outputViewMode = mode;
+      document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+      document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+      renderOutputs();
+    }
+
+    // ============ Stats update ============
     function updateStats() {
       document.getElementById('statFiles').textContent = cachedFiles.length;
       document.getElementById('statOutputs').textContent = cachedOutputs.length;
-      // 최근 생성일은 결과물 목록에서 추정 (이름 기준 또는 단순 존재)
       if (cachedOutputs.length > 0) {
         document.getElementById('statRecent').textContent = new Date().toLocaleDateString('ko-KR');
       } else {
@@ -1477,7 +1986,13 @@
       }
     }
 
-    // ============ 소스 관리 ============
+    // ============ Skeleton show/hide ============
+    function showFileSkeleton() { document.getElementById('fileListSkeleton').style.display = 'block'; document.getElementById('fileList').style.display = 'none'; }
+    function hideFileSkeleton() { document.getElementById('fileListSkeleton').style.display = 'none'; document.getElementById('fileList').style.display = 'block'; }
+    function showOutputSkeleton() { document.getElementById('outputListSkeleton').style.display = 'block'; document.getElementById('outputList').style.display = 'none'; }
+    function hideOutputSkeleton() { document.getElementById('outputListSkeleton').style.display = 'none'; document.getElementById('outputList').style.display = 'block'; }
+
+    // ============ Source management ============
     async function loadSources() {
       try {
         const res = await fetch('/api/sources');
@@ -1486,9 +2001,14 @@
         container.innerHTML = data.sources.map(s => {
           const escaped = escHtml(s);
           return `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(96,165,250,0.08);margin-bottom:4px;font-size:0.8rem;">
-            <span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escaped}">📁 ${escaped}</span>
-            <button class="delete-btn" data-source="${escaped}" onclick="removeSource(this.dataset.source)" style="font-size:0.75rem;">✕</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(59,130,246,0.08);margin-bottom:4px;font-size:0.8rem;">
+            <span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;" title="${escaped}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              ${escaped}
+            </span>
+            <button class="delete-btn" data-source="${escaped}" onclick="removeSource(this.dataset.source)" style="font-size:0.75rem;" aria-label="${escaped} 폴더 제거">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>`;
         }).join('');
       } catch(e) {}
@@ -1524,8 +2044,9 @@
       loadFiles();
     }
 
-    // ============ 파일 목록 ============
+    // ============ File list ============
     async function loadFiles() {
+      showFileSkeleton();
       try {
         const res = await fetch('/api/files');
         const data = await res.json();
@@ -1536,6 +2057,7 @@
       } catch(e) {
         console.error(e);
       }
+      hideFileSkeleton();
     }
 
     function renderFiles() {
@@ -1544,20 +2066,22 @@
       const filtered = cachedFiles.filter(f => f.name.toLowerCase().includes(query));
 
       if (filtered.length === 0) {
-        list.innerHTML = '<div class="empty-state"><p style="font-size:0.85rem;">' +
-          (cachedFiles.length === 0 ? '등록된 폴더에 지원 파일이 없습니다' : '검색 결과가 없습니다') + '</p></div>';
+        list.innerHTML = '<div class="empty-state">' +
+          '<div class="empty-state-art"><div class="doc"></div><div class="sparkle"></div><div class="sparkle"></div><div class="sparkle"></div></div>' +
+          '<p>' + (cachedFiles.length === 0 ? '등록된 폴더에 지원 파일이 없습니다' : '검색 결과가 없습니다') + '</p>' +
+          (cachedFiles.length === 0 ? '<div class="empty-sub">교육자료 파일을 업로드하거나 외부 폴더를 추가하세요</div><button class="empty-cta" onclick="document.getElementById(\'fileInput\').click()" aria-label="파일 업로드"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 파일 업로드</button>' : '') +
+          '</div>';
         return;
       }
 
       list.innerHTML = filtered.map(f => {
         const ext = f.type.replace('.', '');
-        const iconClass = ['pdf','docx','txt'].includes(ext) ? ext : 'other';
         const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(1)+'KB';
         const dirLabel = f.sourceDir ? f.sourceDir.split('\\').pop().split('/').pop() : '';
         return `
           <li class="file-item">
-            <div class="file-info" onclick="previewFile('${escHtml(f.name)}','${escHtml(f.sourceDir || '')}')">
-              <div class="file-icon ${iconClass}">${escHtml(ext.toUpperCase())}</div>
+            <div class="file-info" onclick="previewFile('${escHtml(f.name)}','${escHtml(f.sourceDir || '')}')" role="button" tabindex="0" aria-label="${escHtml(f.name)} 미리보기">
+              ${getFileIconSvg(ext)}
               <div>
                 <div class="file-name">${escHtml(f.name)}</div>
                 <div class="file-size">${size} · ${escHtml(dirLabel)}</div>
@@ -1571,7 +2095,7 @@
       renderFiles();
     }
 
-    // ============ 파일 미리보기 ============
+    // ============ File preview ============
     async function previewFile(name, sourceDir) {
       document.getElementById('previewTitle').textContent = name;
       document.getElementById('previewBody').textContent = '로딩 중...';
@@ -1599,8 +2123,9 @@
       document.getElementById('previewModal').classList.remove('show');
     }
 
-    // ============ 결과물 목록 ============
+    // ============ Output list ============
     async function loadOutputs() {
+      showOutputSkeleton();
       try {
         const res = await fetch('/api/outputs');
         const data = await res.json();
@@ -1610,6 +2135,7 @@
       } catch(e) {
         console.error(e);
       }
+      hideOutputSkeleton();
     }
 
     function renderOutputs() {
@@ -1617,39 +2143,46 @@
       const query = document.getElementById('outputSearch').value.toLowerCase();
       let filtered = cachedOutputs.filter(o => o.name.toLowerCase().includes(query));
 
-      // 정렬
       if (outputSortMode === 'name') {
         filtered.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
       } else {
-        // date 역순 (최신 먼저) - index 역순 사용
         filtered.reverse();
       }
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="icon">✨</div><p>' +
-          (cachedOutputs.length === 0 ? '아직 생성된 발표자료가 없습니다' : '검색 결과가 없습니다') + '</p></div>';
+        container.innerHTML = '<div class="empty-state">' +
+          '<div class="empty-state-art"><div class="doc"></div><div class="sparkle"></div><div class="sparkle"></div><div class="sparkle"></div></div>' +
+          '<p>' + (cachedOutputs.length === 0 ? '아직 생성된 발표자료가 없습니다' : '검색 결과가 없습니다') + '</p>' +
+          (cachedOutputs.length === 0 ? '<div class="empty-sub">교육자료를 업로드하고 발표자료를 만들어보세요</div><button class="empty-cta" onclick="showCreateModal()" aria-label="새 발표자료 만들기"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 새 발표자료 만들기</button>' : '') +
+          '</div>';
         document.getElementById('batchBar').style.display = 'none';
         return;
       }
 
-      // 일괄 작업 바 표시
       document.getElementById('batchBar').style.display = 'flex';
 
-      container.innerHTML = filtered.map(o => `
+      const isGrid = outputViewMode === 'grid';
+      const items = filtered.map(o => `
         <div class="output-item" data-name="${escHtml(o.name)}" data-type="${escHtml(o.type)}" data-path="${escHtml(o.path)}">
-          <input type="checkbox" class="output-checkbox" data-oname="${escHtml(o.name)}" data-otype="${escHtml(o.type)}" onchange="updateBatchCount()">
+          <input type="checkbox" class="output-checkbox" data-oname="${escHtml(o.name)}" data-otype="${escHtml(o.type)}" onchange="updateBatchCount()" aria-label="${escHtml(o.name)} 선택">
           <div class="output-info">
             <span class="output-badge ${escHtml(o.type)}">${escHtml(o.type)}</span>
             <span class="output-name" style="font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(o.name)}</span>
           </div>
           <div class="output-actions">
             ${o.type === 'web'
-              ? `<button class="action-btn secondary" data-path="${escHtml(o.path)}" data-oname="${escHtml(o.name)}" onclick="showIframePreview(this.dataset.path,this.dataset.oname)" style="font-size:0.75rem;">미리보기</button><a href="${escHtml(o.path)}" target="_blank" class="action-btn primary">발표 시작</a>`
-              : `<a href="${escHtml(o.path)}" download class="action-btn primary">다운로드</a>`}
-            <button class="action-btn secondary rename-btn" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="startRename(this.dataset.otype,this.dataset.oname)">이름변경</button>
-            <button class="action-btn secondary" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:#ef4444;">삭제</button>
+              ? `<button class="action-btn secondary" data-path="${escHtml(o.path)}" data-oname="${escHtml(o.name)}" onclick="showIframePreview(this.dataset.path,this.dataset.oname)" style="font-size:0.75rem;" aria-label="${escHtml(o.name)} 미리보기" data-tooltip="미리보기">미리보기</button><a href="${escHtml(o.path)}" target="_blank" class="action-btn primary" aria-label="${escHtml(o.name)} 발표 시작">발표 시작</a>`
+              : `<a href="${escHtml(o.path)}" download class="action-btn primary" aria-label="${escHtml(o.name)} 다운로드">다운로드</a>`}
+            <button class="action-btn secondary rename-btn" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="startRename(this.dataset.otype,this.dataset.oname)" aria-label="${escHtml(o.name)} 이름 변경" data-tooltip="이름 변경">이름변경</button>
+            <button class="action-btn secondary" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:var(--error);" aria-label="${escHtml(o.name)} 삭제" data-tooltip="삭제">삭제</button>
           </div>
         </div>`).join('');
+
+      if (isGrid) {
+        container.innerHTML = '<div class="output-grid-view">' + items + '</div>';
+      } else {
+        container.innerHTML = items;
+      }
 
       updateBatchCount();
     }
@@ -1658,14 +2191,14 @@
       renderOutputs();
     }
 
-    // ============ 정렬 토글 ============
+    // ============ Sort toggle ============
     function toggleSort() {
       outputSortMode = outputSortMode === 'name' ? 'date' : 'name';
       document.getElementById('sortToggle').textContent = outputSortMode === 'name' ? '이름순' : '날짜순';
       renderOutputs();
     }
 
-    // ============ 이름 변경 ============
+    // ============ Rename ============
     function startRename(type, name) {
       const item = document.querySelector(`.output-item[data-name="${CSS.escape(name)}"]`);
       if (!item) return;
@@ -1677,6 +2210,7 @@
       input.type = 'text';
       input.className = 'rename-input';
       input.value = baseName;
+      input.setAttribute('aria-label', '새 파일 이름 입력');
       nameSpan.replaceWith(input);
       input.focus();
       input.select();
@@ -1684,7 +2218,6 @@
       const doRename = async () => {
         const newBase = input.value.trim();
         if (!newBase || newBase === baseName) {
-          // 취소
           const span = document.createElement('span');
           span.className = 'output-name';
           span.style.cssText = 'font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
@@ -1715,13 +2248,13 @@
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
         if (e.key === 'Escape') {
-          input.value = baseName; // 원래 이름으로 되돌림
+          input.value = baseName;
           input.blur();
         }
       });
     }
 
-    // ============ 삭제 ============
+    // ============ Delete ============
     async function deleteFile(name) {
       if (!confirm(name + ' 파일을 삭제하시겠습니까?')) return;
       await fetch('/api/files/' + encodeURIComponent(name), { method: 'DELETE' });
@@ -1738,21 +2271,58 @@
       loadOutputs();
     }
 
-    // ============ 파일 업로드 ============
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
+    // ============ File upload with progress ============
+    function uploadFiles(files) {
       const formData = new FormData();
-      const count = e.target.files.length;
-      for (const file of e.target.files) {
+      const count = files.length;
+      for (const file of files) {
         formData.append('files', file);
       }
-      await fetch('/api/upload', { method: 'POST', body: formData });
-      e.target.value = '';
-      showToast(count + '개 파일이 업로드되었습니다', 'success');
-      addActivity('upload', count + '개 파일 업로드됨');
-      loadFiles();
+
+      const progressEl = document.getElementById('uploadProgress');
+      const progressBar = document.getElementById('uploadProgressBar');
+      const progressText = document.getElementById('uploadProgressText');
+
+      progressEl.classList.add('active');
+      progressBar.style.width = '0%';
+      progressText.textContent = '0%';
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          progressBar.style.width = pct + '%';
+          progressText.textContent = pct + '%';
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        progressBar.style.width = '100%';
+        progressText.textContent = '100%';
+        setTimeout(() => { progressEl.classList.remove('active'); }, 800);
+        showToast(count + '개 파일이 업로드되었습니다', 'success');
+        addActivity('upload', count + '개 파일 업로드됨');
+        loadFiles();
+      });
+
+      xhr.addEventListener('error', () => {
+        progressEl.classList.remove('active');
+        showToast('업로드 실패', 'error');
+      });
+
+      xhr.open('POST', '/api/upload');
+      xhr.send(formData);
+    }
+
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        uploadFiles(e.target.files);
+        e.target.value = '';
+      }
     });
 
-    // ============ 드래그 앤 드롭 (전체 화면) ============
+    // ============ Drag and drop ============
     let dragCounter = 0;
 
     document.addEventListener('dragenter', (e) => {
@@ -1774,46 +2344,35 @@
       e.preventDefault();
     });
 
-    document.addEventListener('drop', async (e) => {
+    document.addEventListener('drop', (e) => {
       e.preventDefault();
       dragCounter = 0;
       document.getElementById('dragOverlay').classList.remove('show');
 
       if (e.dataTransfer.files.length === 0) return;
-
-      const formData = new FormData();
-      const count = e.dataTransfer.files.length;
-      for (const file of e.dataTransfer.files) {
-        formData.append('files', file);
-      }
-      await fetch('/api/upload', { method: 'POST', body: formData });
-      showToast(count + '개 파일이 업로드되었습니다', 'success');
-      addActivity('upload', count + '개 파일 드래그 업로드됨');
-      loadFiles();
+      uploadFiles(e.dataTransfer.files);
     });
 
-    // ============ 키보드 단축키 ============
+    // ============ Keyboard shortcuts ============
     document.addEventListener('keydown', (e) => {
-      // Escape: 모달 닫기
       if (e.key === 'Escape') {
         hideCreateModal();
         hidePreview();
+        hideIframePreview();
       }
 
-      // Ctrl+N: 새 발표자료
       if (e.ctrlKey && e.key === 'n') {
         e.preventDefault();
         showCreateModal();
       }
 
-      // Ctrl+U: 파일 업로드
       if (e.ctrlKey && e.key === 'u') {
         e.preventDefault();
         document.getElementById('fileInput').click();
       }
     });
 
-    // ============ 새 발표자료 생성 ============
+    // ============ Create presentation ============
     let selectedFormat = 'both';
 
     function showCreateModal() { document.getElementById('createModal').classList.add('show'); document.getElementById('newTitle').focus(); }
@@ -1825,7 +2384,7 @@
       selectedFormat = format;
     }
 
-    // 슬라이드 템플릿 풀 (다양한 인포그래픽 타입)
+    // Slide template pool
     const SLIDE_POOL = [
       t => ({ type:'bullets', title:t, image:'illust', items:['핵심 포인트 1','핵심 포인트 2','핵심 포인트 3'] }),
       t => ({ type:'cards', title:t, cards:[{title:'핵심 1',body:'내용을 입력하세요'},{title:'핵심 2',body:'내용을 입력하세요'},{title:'핵심 3',body:'내용을 입력하세요'}] }),
@@ -1865,11 +2424,9 @@
         ending: { title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요' }
       };
 
-      // 타입 인덱스 셔플 (같은 타입 연속 방지)
       let typeIdx = 0;
 
       topics.forEach((topic, i) => {
-        // 섹션 구분
         slides.content.push({
           isSection: true,
           sectionNumber: String(i + 1).padStart(2, '0'),
@@ -1877,7 +2434,6 @@
           description: ''
         });
 
-        // 주제당 N장 슬라이드 생성
         for (let j = 0; j < slidesPerTopic; j++) {
           const template = SLIDE_POOL[typeIdx % SLIDE_POOL.length];
           slides.content.push(template(topic));
@@ -1925,13 +2481,11 @@
         addActivity('generate', '"' + title + '" 발표자료 생성됨');
         loadOutputs();
 
-        // 웹 발표자료 자동 열기
         const webResult = results.find(r => r.type === 'web');
         if (webResult) {
           window.open(webResult.path, '_blank');
         }
 
-        // PPT 자동 다운로드
         const pptResult = results.find(r => r.type === 'pptx');
         if (pptResult) {
           const a = document.createElement('a');
@@ -1946,7 +2500,7 @@
       }
     }
 
-    // Enter키로 생성
+    // Enter to generate
     document.getElementById('newTitle').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generatePresentation(); }
     });
@@ -1955,15 +2509,15 @@
     loadFiles();
     loadOutputs();
 
-    // Enter키로 폴더 추가
+    // Enter to add folder
     document.getElementById('sourcePath').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') addSource();
     });
 
-    // 30초마다 자동 새로고침
+    // Auto refresh every 30s
     setInterval(() => { loadFiles(); loadOutputs(); }, 30000);
 
-    // ============ 일괄 작업 ============
+    // ============ Batch operations ============
     function updateBatchCount() {
       const checked = document.querySelectorAll('.output-checkbox:checked');
       document.getElementById('batchCount').textContent = checked.length;
@@ -2017,7 +2571,7 @@
       }
     }
 
-    // ============ 결과물 미리보기 (iframe) ============
+    // ============ Output iframe preview ============
     function showIframePreview(path, name) {
       document.getElementById('iframeTitle').textContent = name || '미리보기';
       document.getElementById('iframeContent').src = path;
@@ -2030,7 +2584,7 @@
       document.getElementById('iframeContent').src = 'about:blank';
     }
 
-    // ============ 서버 상태 ============
+    // ============ Server health ============
     async function fetchServerHealth() {
       try {
         const res = await fetch('/api/health');
@@ -2060,7 +2614,7 @@
     fetchServerHealth();
     setInterval(fetchServerHealth, 30000);
 
-    // ============ 활동 로그 ============
+    // ============ Activity log ============
     const activityLogs = [];
 
     function addActivity(type, message) {
@@ -2090,9 +2644,22 @@
       renderActivityLog();
     }
 
-    // Escape키로 iframe 모달도 닫기
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { hideIframePreview(); }
+    // Format option keyboard support
+    document.querySelectorAll('.format-option').forEach(el => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          el.click();
+        }
+      });
+    });
+
+    // Upload zone keyboard support
+    document.getElementById('uploadZone').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        document.getElementById('fileInput').click();
+      }
     });
   </script>
 </body>
