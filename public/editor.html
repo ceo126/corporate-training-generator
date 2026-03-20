@@ -107,6 +107,52 @@
     margin: 0 4px;
   }
 
+  /* 템플릿 드롭다운 */
+  .template-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .template-dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #2d2d2d;
+    border: 1px solid #3e3e3e;
+    border-radius: 8px;
+    min-width: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    padding: 4px;
+  }
+
+  .template-dropdown-content::-webkit-scrollbar { width: 6px; }
+  .template-dropdown-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+  .template-dropdown.open .template-dropdown-content { display: block; }
+
+  .template-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #d4d4d4;
+    transition: background 0.1s;
+  }
+
+  .template-dropdown-item:hover {
+    background: rgba(37,99,235,0.15);
+    color: #60a5fa;
+  }
+
+  .template-dropdown-item .tpl-icon { font-size: 1rem; }
+
   /* 메인 레이아웃 */
   .main {
     flex: 1;
@@ -162,12 +208,21 @@
     border-radius: 6px;
     overflow: hidden;
     border: 2px solid transparent;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.3s;
   }
 
   .thumb-item:hover { border-color: #555; }
-  .thumb-item.active { border-color: #2563eb; }
+  .thumb-item.active {
+    border-color: #2563eb;
+    box-shadow: 0 0 12px rgba(37,99,235,0.5), 0 0 24px rgba(37,99,235,0.2);
+    animation: thumbPulse 2s ease-in-out infinite;
+  }
   .thumb-item.drag-over { border-color: #f59e0b; border-style: dashed; }
+
+  @keyframes thumbPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(37,99,235,0.5), 0 0 24px rgba(37,99,235,0.2); }
+    50% { box-shadow: 0 0 18px rgba(37,99,235,0.7), 0 0 36px rgba(37,99,235,0.3); }
+  }
 
   .thumb-preview {
     width: 100%;
@@ -195,6 +250,22 @@
     border-radius: 3px;
     font-size: 0.5rem;
     font-weight: 600;
+  }
+
+  .thumb-preview .thumb-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(37,99,235,0.85);
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    line-height: 1;
   }
 
   .thumb-preview .thumb-title {
@@ -271,6 +342,7 @@
     overflow: hidden;
     flex-direction: column;
     gap: 8px;
+    position: relative;
   }
 
   .slide-preview {
@@ -508,6 +580,49 @@
     border-color: #2563eb;
   }
 
+  /* 미니맵 */
+  .minimap {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 10;
+    padding: 4px;
+    background: rgba(37,37,37,0.8);
+    border-radius: 6px;
+    max-height: 70%;
+    overflow-y: auto;
+  }
+
+  .minimap::-webkit-scrollbar { width: 3px; }
+  .minimap::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
+
+  .minimap-item {
+    width: 40px;
+    aspect-ratio: 16/9;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid #444;
+    font-size: 0.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    overflow: hidden;
+    transition: border-color 0.15s;
+    background: #1a1a2e;
+  }
+
+  .minimap-item:hover { border-color: #666; }
+  .minimap-item.active { border-color: #2563eb; background: rgba(37,99,235,0.15); }
+  .minimap-item.cover-mm { background: linear-gradient(135deg,#2563eb,#7c3aed); }
+  .minimap-item.section-mm { background: linear-gradient(135deg,#1e40af,#2563eb); }
+  .minimap-item.ending-mm { background: linear-gradient(135deg,#2563eb,#7c3aed); }
+
   /* 우측 편집 패널 */
   .edit-panel {
     width: 340px;
@@ -525,6 +640,35 @@
     font-weight: 600;
     color: #fff;
   }
+
+  /* 프로퍼티 패널 탭 */
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid #3e3e3e;
+    background: #2a2a2a;
+  }
+
+  .panel-tab {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .panel-tab:hover { color: #bbb; }
+  .panel-tab.active { color: #60a5fa; border-bottom-color: #2563eb; }
+
+  .panel-tab-content { display: none; }
+  .panel-tab-content.active { display: block; }
 
   .edit-panel-body {
     flex: 1;
@@ -641,6 +785,96 @@
     height: 100%;
     color: #666;
     font-size: 0.9rem;
+  }
+
+  /* 컬러 피커 */
+  .color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .color-picker-row label {
+    font-size: 0.75rem;
+    color: #999;
+    min-width: 60px;
+    margin-bottom: 0;
+  }
+
+  .color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid #555;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .color-swatch input[type="color"] {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .color-preset-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .color-preset {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #555;
+    transition: transform 0.1s;
+  }
+
+  .color-preset:hover { transform: scale(1.2); }
+
+  /* 글자 크기 컨트롤 */
+  .font-size-control {
+    display: flex;
+    gap: 4px;
+  }
+
+  .font-size-btn {
+    flex: 1;
+    padding: 6px;
+    background: #1e1e1e;
+    border: 1px solid #3e3e3e;
+    color: #d4d4d4;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .font-size-btn:hover { background: #333; }
+  .font-size-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+  /* 레이아웃 변경 셀렉트 */
+  .layout-change-select {
+    width: 100%;
+    padding: 8px 10px;
+    background: #1e1e1e;
+    border: 1px solid #3e3e3e;
+    border-radius: 6px;
+    color: #d4d4d4;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    outline: none;
   }
 
   /* 슬라이드 추가 모달 */
@@ -782,10 +1016,36 @@
     color: #16a34a;
   }
 
+  /* 상태표시줄 */
+  .status-bar {
+    height: 28px;
+    background: #1e1e1e;
+    border-top: 1px solid #3e3e3e;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 20px;
+    font-size: 0.7rem;
+    color: #666;
+    flex-shrink: 0;
+  }
+
+  .status-bar .status-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-bar .status-sep {
+    width: 1px;
+    height: 14px;
+    background: #3e3e3e;
+  }
+
   /* Toast */
   .toast {
     position: fixed;
-    bottom: 20px;
+    bottom: 48px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
     background: #16a34a;
@@ -950,11 +1210,17 @@
     <option value="slide">슬라이드</option>
     <option value="zoom">줌</option>
   </select>
+  <div class="tb-divider"></div>
+  <!-- 템플릿 삽입 드롭다운 -->
+  <div class="template-dropdown" id="templateDropdown">
+    <button class="tb-btn" onclick="toggleTemplateDropdown()" title="템플릿 슬라이드 삽입">+ 템플릿 추가</button>
+    <div class="template-dropdown-content" id="templateDropdownContent"></div>
+  </div>
   <div class="tb-spacer"></div>
   <span class="autosave-indicator" id="autosaveIndicator"></span>
   <button class="tb-btn" onclick="saveToLocal()">저장</button>
   <button class="tb-btn" onclick="loadFromLocal()">불러오기</button>
-  <button class="tb-btn" onclick="exportJSON()">JSON 내보내기</button>
+  <button class="tb-btn" onclick="exportJSON()" title="Ctrl+E">JSON 내보내기</button>
   <button class="tb-btn" onclick="importJSON()">JSON 가져오기</button>
   <button class="tb-btn primary" onclick="generateWeb()">웹 발표자료</button>
   <button class="tb-btn success" onclick="generatePPTX()">PPT 다운로드</button>
@@ -981,15 +1247,33 @@
       <label>발표자 노트:</label>
       <textarea id="notesInput" placeholder="이 슬라이드의 발표자 노트를 입력하세요..." oninput="updateNotes(this.value)"></textarea>
     </div>
+    <!-- 미니맵 -->
+    <div class="minimap" id="minimap"></div>
   </div>
 
   <!-- 우측 편집 패널 -->
   <div class="edit-panel">
     <div class="edit-panel-header" id="editHeader">속성</div>
+    <div class="panel-tabs" id="panelTabs" style="display:none;">
+      <button class="panel-tab active" data-tab="content" onclick="switchPanelTab('content')">내용</button>
+      <button class="panel-tab" data-tab="style" onclick="switchPanelTab('style')">스타일</button>
+      <button class="panel-tab" data-tab="notes" onclick="switchPanelTab('notes')">노트</button>
+    </div>
     <div class="edit-panel-body" id="editBody">
       <div class="no-slide-msg">슬라이드를 선택하면 편집할 수 있습니다</div>
     </div>
   </div>
+</div>
+
+<!-- 상태표시줄 -->
+<div class="status-bar" id="statusBar">
+  <div class="status-item" id="statusSlideCount">슬라이드: 0개</div>
+  <div class="status-sep"></div>
+  <div class="status-item" id="statusTheme">테마: Modern Blue</div>
+  <div class="status-sep"></div>
+  <div class="status-item" id="statusLastSave">마지막 저장: -</div>
+  <div class="status-sep"></div>
+  <div class="status-item" id="statusShortcut">? 도움말 | Ctrl+S 저장 | Ctrl+D 복제 | Ctrl+E 내보내기</div>
 </div>
 
 <!-- 슬라이드 추가 모달 -->
@@ -1116,6 +1400,9 @@
       <li><span>실행 취소</span><span class="key">Ctrl + Z</span></li>
       <li><span>다시 실행</span><span class="key">Ctrl + Y</span></li>
       <li><span>새 슬라이드 추가</span><span class="key">Ctrl + N</span></li>
+      <li><span>JSON 내보내기</span><span class="key">Ctrl + E</span></li>
+      <li><span>슬라이드 위로 이동</span><span class="key">Ctrl + Shift + &#x2191;</span></li>
+      <li><span>슬라이드 아래로 이동</span><span class="key">Ctrl + Shift + &#x2193;</span></li>
       <li><span>이전 슬라이드</span><span class="key">&#x2191; (화살표 위)</span></li>
       <li><span>다음 슬라이드</span><span class="key">&#x2193; (화살표 아래)</span></li>
       <li><span>슬라이드 삭제</span><span class="key">Delete</span></li>
@@ -1144,6 +1431,37 @@
 // ============ 데이터 ============
 let slides = [];
 let selectedIndex = -1;
+let currentPanelTab = 'content';
+
+// ============ 타입 아이콘/라벨 맵 ============
+const TYPE_ICONS = {
+  cover:'\u{1F3AC}', section:'\u{1F4D1}', bullets:'\u{1F4DD}', cards:'\u{1F0CF}',
+  steps:'\u{1F522}', 'two-column':'\u{1F4CA}', stats:'\u{1F4C8}', text:'\u{1F4C4}',
+  timeline:'\u{1F4C5}', checklist:'\u2705', quote:'\u{1F4AC}', progress:'\u{1F4CA}',
+  pyramid:'\u{1F53A}', 'icon-grid':'\u{1F532}', donut:'\u{1F369}', matrix:'\u{1F533}',
+  cycle:'\u{1F504}', 'process-arrow':'\u27A1\uFE0F', 'bar-chart':'\u{1F4F6}',
+  highlight:'\u{1F4A1}', swot:'\u{1F9ED}', roadmap:'\u{1F5FA}\uFE0F', ending:'\u{1F3AF}'
+};
+
+const TYPE_LABELS = {
+  cover:'표지',section:'섹션',bullets:'불릿',cards:'카드',steps:'스텝',
+  'two-column':'2컬럼',stats:'통계',text:'텍스트',timeline:'타임라인',
+  checklist:'체크',quote:'인용구',progress:'진행률',pyramid:'피라미드',
+  'icon-grid':'그리드',donut:'도넛',matrix:'매트릭스',cycle:'순환도',
+  'process-arrow':'쉐브론','bar-chart':'막대',highlight:'강조',swot:'SWOT',
+  roadmap:'로드맵',ending:'마무리'
+};
+
+const TYPE_LABELS_FULL = {
+  cover:'표지',section:'섹션 구분',bullets:'불릿 포인트',cards:'카드',steps:'스텝',
+  'two-column':'2컬럼',stats:'통계 숫자',text:'텍스트',timeline:'타임라인',
+  checklist:'체크리스트',quote:'인용구',progress:'프로그레스',pyramid:'피라미드',
+  'icon-grid':'아이콘 그리드',donut:'도넛 차트',matrix:'매트릭스',cycle:'순환도',
+  'process-arrow':'쉐브론','bar-chart':'막대 차트',highlight:'강조',swot:'SWOT 분석',
+  roadmap:'로드맵',ending:'마무리'
+};
+
+const COLOR_PRESETS = ['#1e293b','#0f172a','#1e3a5f','#1a1a2e','#2d1b69','#1b2e1b','#3b1919','#3e3e3e','#ffffff','#f8fafc','#2563eb','#7c3aed','#dc2626','#16a34a','#f59e0b','#06b6d4'];
 
 // ============ 실행 취소/다시 실행 히스토리 ============
 let undoStack = [];
@@ -1168,6 +1486,8 @@ function undo() {
   renderPreview();
   renderEditPanel();
   updateNotesUI();
+  renderMinimap();
+  updateStatusBar();
   autoSave();
   updateUndoRedoButtons();
   showToast('실행 취소');
@@ -1182,6 +1502,8 @@ function redo() {
   renderPreview();
   renderEditPanel();
   updateNotesUI();
+  renderMinimap();
+  updateStatusBar();
   autoSave();
   updateUndoRedoButtons();
   showToast('다시 실행');
@@ -1195,6 +1517,7 @@ function updateUndoRedoButtons() {
 // ============ 자동저장 타이머 ============
 let autoSaveTimer = null;
 let lastAutoSaveTime = 0;
+let lastSaveTimeStr = '-';
 
 function scheduleAutoSave() {
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
@@ -1209,10 +1532,21 @@ function performAutoSave() {
   localStorage.setItem('slideEditorData', JSON.stringify({ slides, theme, transition }));
   localStorage.setItem('slideEditorBackup', JSON.stringify({ slides, theme, transition, timestamp: Date.now() }));
   lastAutoSaveTime = Date.now();
+  lastSaveTimeStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
   const indicator = document.getElementById('autosaveIndicator');
-  indicator.textContent = '자동저장됨 ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  indicator.textContent = '자동저장됨 ' + lastSaveTimeStr;
   indicator.classList.add('saved');
   setTimeout(() => indicator.classList.remove('saved'), 2000);
+  updateStatusBar();
+}
+
+// ============ 상태표시줄 ============
+function updateStatusBar() {
+  var themeNames = { modern: 'Modern Blue', light: 'Light', dark: 'Dark Mode', corporate: 'Corporate', warm: 'Warm Orange' };
+  var theme = document.getElementById('themeSelect').value;
+  document.getElementById('statusSlideCount').textContent = '슬라이드: ' + slides.length + '개';
+  document.getElementById('statusTheme').textContent = '테마: ' + (themeNames[theme] || theme);
+  document.getElementById('statusLastSave').textContent = '마지막 저장: ' + lastSaveTimeStr;
 }
 
 // ============ 삭제 확인 ============
@@ -1243,30 +1577,63 @@ function confirmDelete() {
 function showHelpModal() { document.getElementById('helpModal').classList.add('show'); }
 function hideHelpModal() { document.getElementById('helpModal').classList.remove('show'); }
 
+// ============ 템플릿 드롭다운 ============
+function toggleTemplateDropdown() {
+  var dd = document.getElementById('templateDropdown');
+  dd.classList.toggle('open');
+}
+
+function closeTemplateDropdown() {
+  document.getElementById('templateDropdown').classList.remove('open');
+}
+
+function initTemplateDropdown() {
+  var content = document.getElementById('templateDropdownContent');
+  var types = Object.keys(SLIDE_TEMPLATES);
+  content.innerHTML = types.map(function(type) {
+    var icon = TYPE_ICONS[type] || '';
+    var label = TYPE_LABELS_FULL[type] || type;
+    return '<div class="template-dropdown-item" onclick="insertTemplate(\'' + type + '\')">' +
+      '<span class="tpl-icon">' + icon + '</span>' +
+      '<span>' + escHtml(label) + '</span></div>';
+  }).join('');
+}
+
+function insertTemplate(type) {
+  closeTemplateDropdown();
+  addSlide(type);
+}
+
+// 클릭 외부 감지로 드롭다운 닫기
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('templateDropdown');
+  if (!dd.contains(e.target)) closeTemplateDropdown();
+});
+
 const SLIDE_TEMPLATES = {
-  cover: () => ({ _type: 'cover', title: '발표 제목', subtitle: '부제목을 입력하세요', presenter: '발표자', _notes: '' }),
-  section: () => ({ _type: 'section', isSection: true, sectionNumber: '01', title: '섹션 제목', description: '섹션 설명', _notes: '' }),
-  bullets: () => ({ _type: 'bullets', type: 'bullets', title: '슬라이드 제목', items: ['첫 번째 항목', '두 번째 항목', '세 번째 항목'], _notes: '' }),
-  cards: () => ({ _type: 'cards', type: 'cards', title: '슬라이드 제목', cards: [{ title: '카드 1', body: '카드 내용' }, { title: '카드 2', body: '카드 내용' }], _notes: '' }),
-  steps: () => ({ _type: 'steps', type: 'steps', title: '슬라이드 제목', steps: [{ title: '단계 1', desc: '설명' }, { title: '단계 2', desc: '설명' }], _notes: '' }),
-  'two-column': () => ({ _type: 'two-column', type: 'two-column', title: '슬라이드 제목', leftTitle: '왼쪽', rightTitle: '오른쪽', leftItems: ['항목 1'], rightItems: ['항목 1'], _notes: '' }),
-  stats: () => ({ _type: 'stats', type: 'stats', title: '슬라이드 제목', stats: [{ value: 100, suffix: '%', label: '라벨' }], _notes: '' }),
-  text: () => ({ _type: 'text', type: 'text', title: '슬라이드 제목', body: '여기에 내용을 입력하세요', _notes: '' }),
-  timeline: () => ({ _type: 'timeline', type: 'timeline', title: '타임라인', events: [{ year: '2020', desc: '시작' }, { year: '2022', desc: '성장' }, { year: '2024', desc: '확장' }], _notes: '' }),
-  checklist: () => ({ _type: 'checklist', type: 'checklist', title: '체크리스트', items: [{ text: '완료된 항목', done: true }, { text: '미완료 항목', done: false }], _notes: '' }),
-  quote: () => ({ _type: 'quote', type: 'quote', title: '인용구', quote: '변화의 시작은 작은 한 걸음입니다.', author: '발표자', _notes: '' }),
-  progress: () => ({ _type: 'progress', type: 'progress', title: '진행률', items: [{ label: '목표 달성률', value: 85, suffix: '%' }, { label: '고객 만족도', value: 92, suffix: '%' }], _notes: '' }),
-  pyramid: () => ({ _type: 'pyramid', type: 'pyramid', title: '피라미드', levels: [{ title: '비전', desc: '최상위 목표' }, { title: '전략', desc: '실행 방안' }, { title: '실행', desc: '구체적 행동' }], _notes: '' }),
-  'icon-grid': () => ({ _type: 'icon-grid', type: 'icon-grid', title: '핵심 요소', items: [{ title: '혁신', desc: '새로운 가치 창출' }, { title: '협업', desc: '팀워크 강화' }, { title: '성장', desc: '지속적 발전' }], _notes: '' }),
-  donut: () => ({ _type: 'donut', type: 'donut', title: '도넛 차트', items: [{ value: 85, suffix: '%', label: '완료율' }, { value: 92, suffix: '%', label: '만족도' }], _notes: '' }),
-  matrix: () => ({ _type: 'matrix', type: 'matrix', title: '매트릭스', cells: [{ title: '높은 영향 / 높은 긴급', body: '즉시 실행' }, { title: '높은 영향 / 낮은 긴급', body: '계획 수립' }, { title: '낮은 영향 / 높은 긴급', body: '위임' }, { title: '낮은 영향 / 낮은 긴급', body: '보류' }], _notes: '' }),
-  cycle: () => ({ _type: 'cycle', type: 'cycle', title: '순환 프로세스', nodes: [{ title: 'Plan', desc: '계획' }, { title: 'Do', desc: '실행' }, { title: 'Check', desc: '확인' }, { title: 'Act', desc: '개선' }], _notes: '' }),
-  'process-arrow': () => ({ _type: 'process-arrow', type: 'process-arrow', title: '프로세스', steps: [{ title: '분석', desc: '현황 파악' }, { title: '설계', desc: '방안 수립' }, { title: '실행', desc: '적용' }, { title: '평가', desc: '결과 확인' }], _notes: '' }),
-  'bar-chart': () => ({ _type: 'bar-chart', type: 'bar-chart', title: '막대 차트', items: [{ label: '1분기', value: 45 }, { label: '2분기', value: 72 }, { label: '3분기', value: 88 }, { label: '4분기', value: 95 }], _notes: '' }),
-  highlight: () => ({ _type: 'highlight', type: 'highlight', title: '핵심 메시지', body: '가장 중요한 메시지를 여기에', sub: '부가 설명', icon: '!', _notes: '' }),
-  swot: () => ({ _type: 'swot', type: 'swot', title: 'SWOT 분석', strengths: ['강점 1'], weaknesses: ['약점 1'], opportunities: ['기회 1'], threats: ['위협 1'], _notes: '' }),
-  roadmap: () => ({ _type: 'roadmap', type: 'roadmap', title: '로드맵', phases: [{ title: 'Phase 1', desc: '기반 구축', label: 'Q1' }, { title: 'Phase 2', desc: '확장', label: 'Q2' }, { title: 'Phase 3', desc: '안정화', label: 'Q3' }], _notes: '' }),
-  ending: () => ({ _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요', _notes: '' })
+  cover: () => ({ _type: 'cover', title: '발표 제목', subtitle: '부제목을 입력하세요', presenter: '발표자', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  section: () => ({ _type: 'section', isSection: true, sectionNumber: '01', title: '섹션 제목', description: '섹션 설명', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  bullets: () => ({ _type: 'bullets', type: 'bullets', title: '슬라이드 제목', items: ['첫 번째 항목', '두 번째 항목', '세 번째 항목'], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  cards: () => ({ _type: 'cards', type: 'cards', title: '슬라이드 제목', cards: [{ title: '카드 1', body: '카드 내용' }, { title: '카드 2', body: '카드 내용' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  steps: () => ({ _type: 'steps', type: 'steps', title: '슬라이드 제목', steps: [{ title: '단계 1', desc: '설명' }, { title: '단계 2', desc: '설명' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  'two-column': () => ({ _type: 'two-column', type: 'two-column', title: '슬라이드 제목', leftTitle: '왼쪽', rightTitle: '오른쪽', leftItems: ['항목 1'], rightItems: ['항목 1'], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  stats: () => ({ _type: 'stats', type: 'stats', title: '슬라이드 제목', stats: [{ value: 100, suffix: '%', label: '라벨' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  text: () => ({ _type: 'text', type: 'text', title: '슬라이드 제목', body: '여기에 내용을 입력하세요', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  timeline: () => ({ _type: 'timeline', type: 'timeline', title: '타임라인', events: [{ year: '2020', desc: '시작' }, { year: '2022', desc: '성장' }, { year: '2024', desc: '확장' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  checklist: () => ({ _type: 'checklist', type: 'checklist', title: '체크리스트', items: [{ text: '완료된 항목', done: true }, { text: '미완료 항목', done: false }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  quote: () => ({ _type: 'quote', type: 'quote', title: '인용구', quote: '변화의 시작은 작은 한 걸음입니다.', author: '발표자', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  progress: () => ({ _type: 'progress', type: 'progress', title: '진행률', items: [{ label: '목표 달성률', value: 85, suffix: '%' }, { label: '고객 만족도', value: 92, suffix: '%' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  pyramid: () => ({ _type: 'pyramid', type: 'pyramid', title: '피라미드', levels: [{ title: '비전', desc: '최상위 목표' }, { title: '전략', desc: '실행 방안' }, { title: '실행', desc: '구체적 행동' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  'icon-grid': () => ({ _type: 'icon-grid', type: 'icon-grid', title: '핵심 요소', items: [{ title: '혁신', desc: '새로운 가치 창출' }, { title: '협업', desc: '팀워크 강화' }, { title: '성장', desc: '지속적 발전' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  donut: () => ({ _type: 'donut', type: 'donut', title: '도넛 차트', items: [{ value: 85, suffix: '%', label: '완료율' }, { value: 92, suffix: '%', label: '만족도' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  matrix: () => ({ _type: 'matrix', type: 'matrix', title: '매트릭스', cells: [{ title: '높은 영향 / 높은 긴급', body: '즉시 실행' }, { title: '높은 영향 / 낮은 긴급', body: '계획 수립' }, { title: '낮은 영향 / 높은 긴급', body: '위임' }, { title: '낮은 영향 / 낮은 긴급', body: '보류' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  cycle: () => ({ _type: 'cycle', type: 'cycle', title: '순환 프로세스', nodes: [{ title: 'Plan', desc: '계획' }, { title: 'Do', desc: '실행' }, { title: 'Check', desc: '확인' }, { title: 'Act', desc: '개선' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  'process-arrow': () => ({ _type: 'process-arrow', type: 'process-arrow', title: '프로세스', steps: [{ title: '분석', desc: '현황 파악' }, { title: '설계', desc: '방안 수립' }, { title: '실행', desc: '적용' }, { title: '평가', desc: '결과 확인' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  'bar-chart': () => ({ _type: 'bar-chart', type: 'bar-chart', title: '막대 차트', items: [{ label: '1분기', value: 45 }, { label: '2분기', value: 72 }, { label: '3분기', value: 88 }, { label: '4분기', value: 95 }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  highlight: () => ({ _type: 'highlight', type: 'highlight', title: '핵심 메시지', body: '가장 중요한 메시지를 여기에', sub: '부가 설명', icon: '!', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  swot: () => ({ _type: 'swot', type: 'swot', title: 'SWOT 분석', strengths: ['강점 1'], weaknesses: ['약점 1'], opportunities: ['기회 1'], threats: ['위협 1'], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  roadmap: () => ({ _type: 'roadmap', type: 'roadmap', title: '로드맵', phases: [{ title: 'Phase 1', desc: '기반 구축', label: 'Q1' }, { title: 'Phase 2', desc: '확장', label: 'Q2' }, { title: 'Phase 3', desc: '안정화', label: 'Q3' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }),
+  ending: () => ({ _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' })
 };
 
 // ============ 초기화 ============
@@ -1281,10 +1648,9 @@ function init() {
     try {
       const backupData = JSON.parse(backup);
       const savedData = saved ? JSON.parse(saved) : null;
-      // 백업이 더 최신이면 복구 제안
       if (backupData.timestamp && (!savedData || backupData.slides.length > 0)) {
         const backupAge = Date.now() - backupData.timestamp;
-        if (backupAge < 86400000) { // 24시간 이내
+        if (backupAge < 86400000) {
           dataToLoad = backup;
         }
       }
@@ -1300,24 +1666,31 @@ function init() {
     } catch(e) {}
   }
 
-  // 슬라이드가 없으면 기본 세트
   if (slides.length === 0) {
     slides = [
-      { _type: 'cover', title: '기업교육 발표자료', subtitle: 'AI 시대의 디지털 전환', presenter: '발표자명', _notes: '' },
-      { _type: 'section', isSection: true, sectionNumber: '01', title: '첫 번째 섹션', description: '핵심 내용을 다룹니다', _notes: '' },
-      { _type: 'bullets', type: 'bullets', title: '주요 포인트', items: ['핵심 내용 1: 중요한 사항을 설명합니다', '핵심 내용 2: 구체적인 예시를 들어봅니다', '핵심 내용 3: 실행 방안을 제시합니다'], _notes: '' },
-      { _type: 'cards', type: 'cards', title: '핵심 전략', cards: [{ title: '전략 1', body: '구체적인 전략 내용을 작성합니다' }, { title: '전략 2', body: '두 번째 전략 내용입니다' }, { title: '전략 3', body: '세 번째 전략 내용입니다' }], _notes: '' },
-      { _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요', _notes: '' }
+      { _type: 'cover', title: '기업교육 발표자료', subtitle: 'AI 시대의 디지털 전환', presenter: '발표자명', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' },
+      { _type: 'section', isSection: true, sectionNumber: '01', title: '첫 번째 섹션', description: '핵심 내용을 다룹니다', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' },
+      { _type: 'bullets', type: 'bullets', title: '주요 포인트', items: ['핵심 내용 1: 중요한 사항을 설명합니다', '핵심 내용 2: 구체적인 예시를 들어봅니다', '핵심 내용 3: 실행 방안을 제시합니다'], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' },
+      { _type: 'cards', type: 'cards', title: '핵심 전략', cards: [{ title: '전략 1', body: '구체적인 전략 내용을 작성합니다' }, { title: '전략 2', body: '두 번째 전략 내용입니다' }, { title: '전략 3', body: '세 번째 전략 내용입니다' }], _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' },
+      { _type: 'ending', title: '감사합니다', subtitle: '질문이 있으시면 말씀해주세요', _notes: '', _bgColor: '', _textColor: '', _bgImage: '', _fontSize: 'normal' }
     ];
   }
 
-  // _notes 필드가 없는 슬라이드에 추가
-  slides.forEach(s => { if (s._notes === undefined) s._notes = ''; });
+  // 필수 필드 보장
+  slides.forEach(s => {
+    if (s._notes === undefined) s._notes = '';
+    if (s._bgColor === undefined) s._bgColor = '';
+    if (s._textColor === undefined) s._textColor = '';
+    if (s._bgImage === undefined) s._bgImage = '';
+    if (s._fontSize === undefined) s._fontSize = 'normal';
+  });
 
+  initTemplateDropdown();
   renderThumbs();
+  renderMinimap();
+  updateStatusBar();
   if (slides.length > 0) selectSlide(0);
 
-  // 자동저장 인터벌
   setInterval(() => {
     if (Date.now() - lastAutoSaveTime > 5000) {
       performAutoSave();
@@ -1327,19 +1700,44 @@ function init() {
   updateUndoRedoButtons();
 }
 
+// ============ 패널 탭 전환 ============
+function switchPanelTab(tab) {
+  currentPanelTab = tab;
+  document.querySelectorAll('.panel-tab').forEach(function(el) {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+  renderEditPanel();
+}
+
+// ============ 미니맵 ============
+function renderMinimap() {
+  var mm = document.getElementById('minimap');
+  if (slides.length === 0) { mm.innerHTML = ''; return; }
+  mm.innerHTML = slides.map(function(s, i) {
+    var type = s._type || 'content';
+    var cls = 'minimap-item';
+    if (i === selectedIndex) cls += ' active';
+    if (type === 'cover') cls += ' cover-mm';
+    else if (type === 'section') cls += ' section-mm';
+    else if (type === 'ending') cls += ' ending-mm';
+    return '<div class="' + cls + '" onclick="selectSlide(' + i + ')" title="#' + (i+1) + ' ' + escHtml(TYPE_LABELS[type]||type) + '">' + (i+1) + '</div>';
+  }).join('');
+}
+
 // ============ 렌더링 ============
 function renderThumbs() {
   const list = document.getElementById('thumbList');
   list.innerHTML = slides.map((s, i) => {
     const type = s._type || 'content';
     const title = s.title || '(제목 없음)';
-    const typeLabel = { cover:'표지',section:'섹션',bullets:'불릿',cards:'카드',steps:'스텝','two-column':'2컬럼',stats:'통계',text:'텍스트',timeline:'타임라인',checklist:'체크',quote:'인용구',progress:'진행률',pyramid:'피라미드','icon-grid':'그리드',donut:'도넛',matrix:'매트릭스',cycle:'순환도','process-arrow':'쉐브론','bar-chart':'막대',highlight:'강조',swot:'SWOT',roadmap:'로드맵',ending:'마무리' }[type] || type;
+    const typeLabel = TYPE_LABELS[type] || type;
+    const typeIcon = TYPE_ICONS[type] || '';
     const hasNotes = s._notes ? ' *' : '';
 
     return `
     <div class="thumb-item ${i === selectedIndex ? 'active' : ''}" onclick="selectSlide(${i})" draggable="true" data-index="${i}" oncontextmenu="onThumbContextMenu(event,${i})">
       <div class="thumb-preview">
-        <span class="thumb-type">${escHtml(typeLabel)}</span>
+        <span class="thumb-badge" title="${escHtml(typeLabel)}">${typeIcon}</span>
         <span class="thumb-title">${escHtml(title)}</span>
         <span class="thumb-num">${i + 1}${escHtml(hasNotes)}</span>
       </div>
@@ -1352,7 +1750,6 @@ function renderThumbs() {
     </div>`;
   }).join('');
 
-  // 드래그 이벤트 설정
   setupDragDrop();
 }
 
@@ -1392,6 +1789,7 @@ function setupDragDrop() {
       renderPreview();
       renderEditPanel();
       updateNotesUI();
+      renderMinimap();
       autoSave();
     });
   });
@@ -1403,10 +1801,21 @@ function onThumbContextMenu(e, i) {
   duplicateSlide(i);
 }
 
+function getSlideStyle(s) {
+  var style = '';
+  if (s._bgColor) style += 'background:' + s._bgColor + ' !important;';
+  if (s._bgImage) style += 'background-image:url(' + escAttr(s._bgImage) + ');background-size:cover;background-position:center;';
+  if (s._textColor) style += 'color:' + s._textColor + ';';
+  var scale = { small: 0.8, normal: 1, large: 1.2 }[s._fontSize || 'normal'] || 1;
+  if (scale !== 1) style += 'font-size:' + scale + 'em;';
+  return style;
+}
+
 function renderPreview() {
   const el = document.getElementById('slidePreview');
   if (selectedIndex < 0 || selectedIndex >= slides.length) {
     el.className = 'slide-preview';
+    el.removeAttribute('style');
     el.innerHTML = '<div class="no-slide-msg">슬라이드를 선택하세요</div>';
     return;
   }
@@ -1418,6 +1827,8 @@ function renderPreview() {
   if (type === 'cover') el.classList.add('cover');
   else if (type === 'section') el.classList.add('section');
   else if (type === 'ending') el.classList.add('ending');
+
+  el.setAttribute('style', getSlideStyle(s));
 
   let html = '';
 
@@ -1487,18 +1898,32 @@ function renderPreview() {
 function renderEditPanel() {
   const header = document.getElementById('editHeader');
   const body = document.getElementById('editBody');
+  const tabs = document.getElementById('panelTabs');
 
   if (selectedIndex < 0 || selectedIndex >= slides.length) {
     header.textContent = '속성';
+    tabs.style.display = 'none';
     body.innerHTML = '<div class="no-slide-msg">슬라이드를 선택하면 편집할 수 있습니다</div>';
     return;
   }
 
+  tabs.style.display = 'flex';
+
   const s = slides[selectedIndex];
   const type = s._type || 'content';
-  const typeLabel = { cover:'표지',section:'섹션 구분',bullets:'불릿 포인트',cards:'카드',steps:'스텝','two-column':'2컬럼',stats:'통계 숫자',text:'텍스트',timeline:'타임라인',checklist:'체크리스트',quote:'인용구',progress:'프로그레스',pyramid:'피라미드','icon-grid':'아이콘 그리드',donut:'도넛 차트',matrix:'매트릭스',cycle:'순환도','process-arrow':'쉐브론','bar-chart':'막대 차트',highlight:'강조',swot:'SWOT 분석',roadmap:'로드맵',ending:'마무리' }[type] || type;
+  const typeLabel = TYPE_LABELS_FULL[type] || type;
   header.textContent = '#' + (selectedIndex + 1) + ' ' + typeLabel;
 
+  if (currentPanelTab === 'style') {
+    renderStyleTab(s);
+    return;
+  }
+  if (currentPanelTab === 'notes') {
+    renderNotesTab(s);
+    return;
+  }
+
+  // 내용 탭
   let html = '';
 
   if (type === 'cover') {
@@ -1672,6 +2097,145 @@ function renderEditPanel() {
   body.innerHTML = html;
 }
 
+// ============ 스타일 탭 렌더링 ============
+function renderStyleTab(s) {
+  var body = document.getElementById('editBody');
+  var type = s._type || 'content';
+  var html = '';
+
+  // 레이아웃 변경
+  html += '<div class="form-group"><label>레이아웃 변경</label>' +
+    '<select class="layout-change-select" onchange="changeSlideLayout(this.value)">' +
+    '<option value="">현재: ' + escHtml(TYPE_LABELS_FULL[type]||type) + '</option>';
+  var allTypes = Object.keys(SLIDE_TEMPLATES);
+  allTypes.forEach(function(t) {
+    if (t !== type) {
+      html += '<option value="' + t + '">' + (TYPE_ICONS[t]||'') + ' ' + escHtml(TYPE_LABELS_FULL[t]||t) + '</option>';
+    }
+  });
+  html += '</select></div>';
+
+  // 배경색
+  html += '<div class="form-divider"></div>';
+  html += '<div class="form-group"><label>배경색</label>';
+  html += '<div class="color-picker-row">';
+  html += '<div class="color-swatch" style="background:' + (s._bgColor || '#1e293b') + '"><input type="color" value="' + (s._bgColor || '#1e293b') + '" onchange="updateStyleField(\'_bgColor\',this.value)"></div>';
+  html += '<button class="tb-btn" style="font-size:0.7rem;padding:4px 8px;" onclick="updateStyleField(\'_bgColor\',\'\')">초기화</button>';
+  html += '</div>';
+  html += '<div class="color-preset-row">';
+  COLOR_PRESETS.forEach(function(c) {
+    html += '<div class="color-preset" style="background:' + c + '" onclick="updateStyleField(\'_bgColor\',\'' + c + '\')"></div>';
+  });
+  html += '</div></div>';
+
+  // 텍스트색
+  html += '<div class="form-group"><label>텍스트색</label>';
+  html += '<div class="color-picker-row">';
+  html += '<div class="color-swatch" style="background:' + (s._textColor || '#d4d4d4') + '"><input type="color" value="' + (s._textColor || '#d4d4d4') + '" onchange="updateStyleField(\'_textColor\',this.value)"></div>';
+  html += '<button class="tb-btn" style="font-size:0.7rem;padding:4px 8px;" onclick="updateStyleField(\'_textColor\',\'\')">초기화</button>';
+  html += '</div>';
+  html += '<div class="color-preset-row">';
+  ['#ffffff','#f8fafc','#e2e8f0','#cbd5e1','#94a3b8','#64748b','#334155','#1e293b','#0f172a','#000000','#60a5fa','#f87171','#fbbf24','#4ade80','#a78bfa','#f472b6'].forEach(function(c) {
+    html += '<div class="color-preset" style="background:' + c + '" onclick="updateStyleField(\'_textColor\',\'' + c + '\')"></div>';
+  });
+  html += '</div></div>';
+
+  // 배경 이미지
+  html += '<div class="form-divider"></div>';
+  html += '<div class="form-group"><label>배경 이미지 URL</label>' +
+    '<input placeholder="https://... (비워두면 없음)" value="' + escAttr(s._bgImage || '') + '" onchange="updateStyleField(\'_bgImage\',this.value)">' +
+    '</div>';
+
+  // 글자 크기
+  html += '<div class="form-divider"></div>';
+  html += '<div class="form-group"><label>글자 크기</label>' +
+    '<div class="font-size-control">' +
+    '<button class="font-size-btn' + (s._fontSize==='small'?' active':'') + '" onclick="updateStyleField(\'_fontSize\',\'small\')">작게</button>' +
+    '<button class="font-size-btn' + ((s._fontSize||'normal')==='normal'?' active':'') + '" onclick="updateStyleField(\'_fontSize\',\'normal\')">보통</button>' +
+    '<button class="font-size-btn' + (s._fontSize==='large'?' active':'') + '" onclick="updateStyleField(\'_fontSize\',\'large\')">크게</button>' +
+    '</div></div>';
+
+  body.innerHTML = html;
+}
+
+function updateStyleField(field, value) {
+  if (selectedIndex < 0) return;
+  pushHistory();
+  slides[selectedIndex][field] = value;
+  renderPreview();
+  renderEditPanel();
+  autoSave();
+}
+
+// ============ 레이아웃 변경 ============
+function changeSlideLayout(newType) {
+  if (!newType || selectedIndex < 0) return;
+  var s = slides[selectedIndex];
+  var oldType = s._type || s.type || 'text';
+  if (newType === oldType) return;
+
+  pushHistory();
+
+  // 기존 내용 보존 시도
+  var title = s.title || '';
+  var body = s.body || '';
+  var notes = s._notes || '';
+  var bgColor = s._bgColor || '';
+  var textColor = s._textColor || '';
+  var bgImage = s._bgImage || '';
+  var fontSize = s._fontSize || 'normal';
+
+  var newSlide = SLIDE_TEMPLATES[newType]();
+  newSlide.title = title || newSlide.title;
+  newSlide._notes = notes;
+  newSlide._bgColor = bgColor;
+  newSlide._textColor = textColor;
+  newSlide._bgImage = bgImage;
+  newSlide._fontSize = fontSize;
+
+  // 텍스트 콘텐츠를 최대한 이전
+  if (body && newSlide.body !== undefined) newSlide.body = body;
+  if (s.subtitle && newSlide.subtitle !== undefined) newSlide.subtitle = s.subtitle;
+
+  // 리스트 아이템 이전 시도
+  var oldItems = s.items || s.cards || s.steps || s.stats || s.events || s.levels || s.nodes || s.phases || s.cells || [];
+  if (oldItems.length > 0) {
+    var plainTexts = oldItems.map(function(it) {
+      if (typeof it === 'string') return it;
+      return it.title || it.text || it.label || it.body || it.desc || String(it.value || '');
+    });
+
+    if (newSlide.items && Array.isArray(newSlide.items)) {
+      if (newType === 'bullets') newSlide.items = plainTexts;
+      else if (newType === 'checklist') newSlide.items = plainTexts.map(function(t) { return { text: t, done: false }; });
+    }
+    if (newSlide.cards) newSlide.cards = plainTexts.map(function(t) { return { title: t, body: '' }; });
+    if (newSlide.steps && newType === 'steps') newSlide.steps = plainTexts.map(function(t) { return { title: t, desc: '' }; });
+    if (newSlide.steps && newType === 'process-arrow') newSlide.steps = plainTexts.map(function(t) { return { title: t, desc: '' }; });
+    if (newSlide.nodes) newSlide.nodes = plainTexts.map(function(t) { return { title: t, desc: '' }; });
+    if (newSlide.levels) newSlide.levels = plainTexts.map(function(t) { return { title: t, desc: '' }; });
+    if (newSlide.phases) newSlide.phases = plainTexts.map(function(t) { return { title: t, desc: '', label: '' }; });
+    if (newSlide.events) newSlide.events = plainTexts.map(function(t) { return { year: '', desc: t }; });
+    if (newSlide.cells) newSlide.cells = plainTexts.slice(0,4).map(function(t) { return { title: t, body: '' }; });
+  }
+
+  slides[selectedIndex] = newSlide;
+  renderThumbs();
+  renderPreview();
+  renderEditPanel();
+  renderMinimap();
+  autoSave();
+  showToast('레이아웃 변경: ' + (TYPE_LABELS_FULL[newType] || newType));
+}
+
+// ============ 노트 탭 렌더링 ============
+function renderNotesTab(s) {
+  var body = document.getElementById('editBody');
+  body.innerHTML = '<div class="form-group"><label>발표자 노트</label>' +
+    '<textarea rows="12" style="min-height:200px" oninput="updateNotes(this.value)">' + escHtml(s._notes || '') + '</textarea></div>' +
+    '<div style="font-size:0.7rem;color:#666;margin-top:8px;">발표자 노트는 프레젠테이션 모드에서 N키로 표시할 수 있습니다.</div>';
+}
+
 // ============ 발표자 노트 ============
 function updateNotesUI() {
   var notesBar = document.getElementById('notesBar');
@@ -1687,6 +2251,9 @@ function updateNotesUI() {
 function updateNotes(value) {
   if (selectedIndex < 0) return;
   slides[selectedIndex]._notes = value;
+  // 노트바와 노트 탭 입력을 동기화
+  var notesInput = document.getElementById('notesInput');
+  if (notesInput && notesInput.value !== value) notesInput.value = value;
   renderThumbs();
   autoSave();
 }
@@ -1698,6 +2265,8 @@ function selectSlide(i) {
   renderPreview();
   renderEditPanel();
   updateNotesUI();
+  renderMinimap();
+  updateStatusBar();
 }
 
 function deleteSlide(i) {
@@ -1713,7 +2282,9 @@ function deleteSlide(i) {
     renderPreview();
     renderEditPanel();
     updateNotesUI();
+    renderMinimap();
   }
+  updateStatusBar();
   autoSave();
 }
 
@@ -1729,6 +2300,7 @@ function addSlide(type) {
   const insertAt = selectedIndex >= 0 ? selectedIndex + 1 : slides.length;
   slides.splice(insertAt, 0, newSlide);
   selectSlide(insertAt);
+  updateStatusBar();
   autoSave();
 }
 
@@ -1915,6 +2487,7 @@ function moveSlide(i, dir) {
   renderPreview();
   renderEditPanel();
   updateNotesUI();
+  renderMinimap();
   autoSave();
 }
 
@@ -1942,7 +2515,13 @@ function loadFromLocal() {
     const data = JSON.parse(saved);
     pushHistory();
     slides = data.slides || [];
-    slides.forEach(function(s) { if (s._notes === undefined) s._notes = ''; });
+    slides.forEach(function(s) {
+      if (s._notes === undefined) s._notes = '';
+      if (s._bgColor === undefined) s._bgColor = '';
+      if (s._textColor === undefined) s._textColor = '';
+      if (s._bgImage === undefined) s._bgImage = '';
+      if (s._fontSize === undefined) s._fontSize = 'normal';
+    });
     if (data.theme) document.getElementById('themeSelect').value = data.theme;
     if (data.transition) document.getElementById('transitionSelect').value = data.transition;
     selectedIndex = slides.length > 0 ? 0 : -1;
@@ -1950,6 +2529,8 @@ function loadFromLocal() {
     renderPreview();
     renderEditPanel();
     updateNotesUI();
+    renderMinimap();
+    updateStatusBar();
     showToast('불러왔습니다');
   } catch(e) { showToast('데이터 오류', true); }
 }
@@ -1989,15 +2570,12 @@ function loadFromJSON(data) {
   pushHistory();
   slides = [];
 
-  // flat array format (직접 슬라이드 배열)
   if (Array.isArray(data)) {
     slides = data;
   }
-  // { slides: [...] } 형식 (에디터 내보내기)
   else if (data.slides && Array.isArray(data.slides)) {
     slides = data.slides;
   }
-  // { cover, content, ending } 형식 (생성기 JSON)
   else {
     if (data.cover) {
       slides.push({ _type: 'cover', ...data.cover });
@@ -2018,14 +2596,21 @@ function loadFromJSON(data) {
     }
   }
 
-  // _notes 필드 보장
-  slides.forEach(function(s) { if (s._notes === undefined) s._notes = ''; });
+  slides.forEach(function(s) {
+    if (s._notes === undefined) s._notes = '';
+    if (s._bgColor === undefined) s._bgColor = '';
+    if (s._textColor === undefined) s._textColor = '';
+    if (s._bgImage === undefined) s._bgImage = '';
+    if (s._fontSize === undefined) s._fontSize = 'normal';
+  });
 
   selectedIndex = slides.length > 0 ? 0 : -1;
   renderThumbs();
   renderPreview();
   renderEditPanel();
   updateNotesUI();
+  renderMinimap();
+  updateStatusBar();
   autoSave();
 }
 
@@ -2113,7 +2698,6 @@ function exitPresentation() {
   presentationActive = false;
   document.getElementById('fullscreenOverlay').classList.remove('show');
   document.body.style.overflow = '';
-  // 프레젠테이션 종료 후 해당 슬라이드 선택
   selectSlide(presentationIndex);
 }
 
@@ -2128,6 +2712,15 @@ function renderFullscreenSlide() {
   else if (type === 'section') fsSlide.classList.add('section');
   else if (type === 'ending') fsSlide.classList.add('ending');
   else fsSlide.classList.add('content-slide');
+
+  // 커스텀 스타일 적용
+  var customStyle = '';
+  if (s._bgColor) customStyle += 'background:' + s._bgColor + ' !important;';
+  if (s._bgImage) customStyle += 'background-image:url(' + escAttr(s._bgImage) + ');background-size:cover;background-position:center;';
+  if (s._textColor) customStyle += 'color:' + s._textColor + ';';
+  var scale = { small: 0.85, normal: 1, large: 1.15 }[s._fontSize || 'normal'] || 1;
+  if (scale !== 1) customStyle += 'font-size:' + scale + 'em;';
+  fsSlide.setAttribute('style', customStyle);
 
   // 전환 효과 적용
   if (transition !== 'none') {
@@ -2169,10 +2762,8 @@ function renderFullscreenSlide() {
 
   fsSlide.innerHTML = html;
 
-  // 카운터
   document.getElementById('fsCounter').textContent = (presentationIndex + 1) + ' / ' + slides.length;
 
-  // 발표자 노트
   var notesEl = document.getElementById('fsNotes');
   if (showNotesInPresentation && s._notes) {
     notesEl.style.display = 'block';
@@ -2200,8 +2791,11 @@ function showToast(msg, isError) {
   setTimeout(function() { el.classList.remove('show'); }, 2500);
 }
 
-// 테마 변경 시 자동저장
-document.getElementById('themeSelect').addEventListener('change', autoSave);
+// 테마 변경 시 자동저장 + 상태표시줄 업데이트
+document.getElementById('themeSelect').addEventListener('change', function() {
+  autoSave();
+  updateStatusBar();
+});
 
 // 키보드 단축키
 document.addEventListener('keydown', function(e) {
@@ -2229,7 +2823,6 @@ document.addEventListener('keydown', function(e) {
       return;
     }
     if (e.key === 'n' || e.key === 'N') {
-      // 발표자 노트 토글
       showNotesInPresentation = !showNotesInPresentation;
       renderFullscreenSlide();
       return;
@@ -2237,7 +2830,6 @@ document.addEventListener('keydown', function(e) {
     return;
   }
 
-  // 입력 중일 때는 일부 단축키만 허용
   var tag = e.target.tagName;
   var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 
@@ -2261,6 +2853,21 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     showAddModal();
   }
+  // Ctrl+E: JSON 내보내기
+  if (e.ctrlKey && e.key === 'e') {
+    e.preventDefault();
+    exportJSON();
+  }
+  // Ctrl+Shift+ArrowUp: 슬라이드 위로 이동
+  if (e.ctrlKey && e.shiftKey && e.key === 'ArrowUp' && selectedIndex > 0) {
+    e.preventDefault();
+    moveSlide(selectedIndex, -1);
+  }
+  // Ctrl+Shift+ArrowDown: 슬라이드 아래로 이동
+  if (e.ctrlKey && e.shiftKey && e.key === 'ArrowDown' && selectedIndex < slides.length - 1) {
+    e.preventDefault();
+    moveSlide(selectedIndex, 1);
+  }
   if (e.key === 'F5') {
     e.preventDefault();
     startPresentation();
@@ -2269,12 +2876,13 @@ document.addEventListener('keydown', function(e) {
     hideAddModal();
     hideDeleteConfirm();
     hideHelpModal();
+    closeTemplateDropdown();
   }
-  if (!isTyping && e.key === 'ArrowUp' && selectedIndex > 0) {
+  if (!isTyping && e.key === 'ArrowUp' && !e.ctrlKey && selectedIndex > 0) {
     e.preventDefault();
     selectSlide(selectedIndex - 1);
   }
-  if (!isTyping && e.key === 'ArrowDown' && selectedIndex < slides.length - 1) {
+  if (!isTyping && e.key === 'ArrowDown' && !e.ctrlKey && selectedIndex < slides.length - 1) {
     e.preventDefault();
     selectSlide(selectedIndex + 1);
   }
