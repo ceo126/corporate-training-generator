@@ -244,12 +244,317 @@
     transition: all 0.25s;
     position: relative;
     overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: cardAppear 0.4s ease forwards;
+  }
+
+  @keyframes cardAppear {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .card:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  /* 미니 슬라이드 미리보기 */
+  .card-preview {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* bullets 미리보기: 줄 3개 */
+  .preview-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 80%;
+  }
+  .preview-bullets .line {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+  .preview-bullets .line:nth-child(1) { width: 90%; }
+  .preview-bullets .line:nth-child(2) { width: 70%; }
+  .preview-bullets .line:nth-child(3) { width: 80%; }
+
+  /* cards 미리보기: 사각형 3개 */
+  .preview-cards {
+    display: flex;
+    gap: 6px;
+    width: 80%;
+    justify-content: center;
+  }
+  .preview-cards .box {
+    width: 28%;
+    height: 40px;
+    border-radius: 4px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+  .preview-cards .box:nth-child(2) { opacity: 0.6; }
+  .preview-cards .box:nth-child(3) { opacity: 0.3; }
+
+  /* stats 미리보기: 숫자 3개 */
+  .preview-stats {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: flex-end;
+  }
+  .preview-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .preview-stats .stat-num {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.8;
+  }
+  .preview-stats .stat-bar {
+    width: 24px;
+    border-radius: 3px 3px 0 0;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+  .preview-stats .stat:nth-child(1) .stat-bar { height: 20px; }
+  .preview-stats .stat:nth-child(2) .stat-bar { height: 35px; opacity: 0.6; }
+  .preview-stats .stat:nth-child(3) .stat-bar { height: 26px; }
+
+  /* timeline 미리보기 */
+  .preview-timeline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 80%;
+  }
+  .preview-timeline .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+  .preview-timeline .connector {
+    flex: 1;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.3;
+  }
+
+  /* two-column 미리보기 */
+  .preview-twocol {
+    display: flex;
+    gap: 8px;
+    width: 80%;
+    height: 50px;
+  }
+  .preview-twocol .col {
+    flex: 1;
+    border-radius: 4px;
+    background: var(--accent);
+    opacity: 0.3;
+  }
+  .preview-twocol .col:first-child { opacity: 0.5; }
+
+  /* quote 미리보기 */
+  .preview-quote {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .preview-quote .q-mark {
+    font-size: 24px;
+    color: var(--accent);
+    opacity: 0.5;
+    line-height: 1;
+  }
+  .preview-quote .q-line {
+    width: 60px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.3;
+  }
+
+  /* steps/process 미리보기 */
+  .preview-steps {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    width: 80%;
+  }
+  .preview-steps .step {
+    flex: 1;
+    height: 28px;
+    border-radius: 4px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .preview-steps .step:nth-child(1) { opacity: 0.4; }
+  .preview-steps .step:nth-child(2) { opacity: 0.6; }
+  .preview-steps .step:nth-child(3) { opacity: 0.8; }
+  .preview-steps .arrow {
+    font-size: 10px;
+    color: var(--accent);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  /* generic preview */
+  .preview-generic {
+    font-size: 28px;
+    opacity: 0.3;
+  }
+
+  /* progress 미리보기 */
+  .preview-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 80%;
+  }
+  .preview-progress .bar-bg {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border-color);
+    overflow: hidden;
+  }
+  .preview-progress .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--accent);
+  }
+
+  /* donut 미리보기 */
+  .preview-donut {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 8px solid var(--accent);
+    opacity: 0.5;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    transform: rotate(-45deg);
+  }
+
+  /* pyramid 미리보기 */
+  .preview-pyramid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .preview-pyramid .layer {
+    height: 10px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .preview-pyramid .layer:nth-child(1) { width: 30px; opacity: 0.7; }
+  .preview-pyramid .layer:nth-child(2) { width: 50px; opacity: 0.5; }
+  .preview-pyramid .layer:nth-child(3) { width: 70px; opacity: 0.3; }
+
+  /* cycle 미리보기 */
+  .preview-cycle {
+    width: 44px;
+    height: 44px;
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    opacity: 0.5;
+    position: relative;
+  }
+  .preview-cycle::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: 8px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 7px solid var(--accent);
+    opacity: 0.7;
+  }
+
+  /* matrix/swot 미리보기 */
+  .preview-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    width: 60px;
+    height: 50px;
+  }
+  .preview-matrix .cell {
+    border-radius: 3px;
+    background: var(--accent);
+  }
+  .preview-matrix .cell:nth-child(1) { opacity: 0.5; }
+  .preview-matrix .cell:nth-child(2) { opacity: 0.4; }
+  .preview-matrix .cell:nth-child(3) { opacity: 0.3; }
+  .preview-matrix .cell:nth-child(4) { opacity: 0.6; }
+
+  /* funnel 미리보기 */
+  .preview-funnel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .preview-funnel .layer {
+    height: 10px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .preview-funnel .layer:nth-child(1) { width: 70px; opacity: 0.3; }
+  .preview-funnel .layer:nth-child(2) { width: 50px; opacity: 0.5; }
+  .preview-funnel .layer:nth-child(3) { width: 30px; opacity: 0.7; }
+
+  /* comparison 미리보기 */
+  .preview-comparison {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .preview-comparison .side {
+    width: 30px;
+    height: 40px;
+    border-radius: 4px;
+    background: var(--accent);
+  }
+  .preview-comparison .side:first-child { opacity: 0.5; }
+  .preview-comparison .side:last-child { opacity: 0.3; }
+  .preview-comparison .vs {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.6;
   }
 
   .card-icon {
@@ -263,6 +568,14 @@
     margin-bottom: 14px;
     background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
     border: 1px solid rgba(96,165,250,0.2);
+    display: none; /* hidden, replaced by preview */
+  }
+
+  .card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
   }
 
   .card-type {
@@ -271,7 +584,6 @@
     font-weight: 500;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    margin-bottom: 6px;
   }
 
   .card-name {
@@ -284,6 +596,14 @@
     font-size: 0.82rem;
     color: var(--text-secondary);
     line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .card-badge {
@@ -296,6 +616,49 @@
     background: rgba(96,165,250,0.12);
     color: var(--accent);
     border: 1px solid rgba(96,165,250,0.2);
+  }
+
+  /* 즐겨찾기 별 */
+  .card-fav {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    padding: 2px;
+    line-height: 1;
+    position: absolute;
+    top: 12px;
+    right: 80px;
+    z-index: 2;
+  }
+  .card-fav:hover { color: #fbbf24; transform: scale(1.2); }
+  .card-fav.active { color: #fbbf24; }
+
+  /* 사용 횟수 */
+  .card-usage {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  /* 빠른 생성 버튼 */
+  .card-quick-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .card-quick-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
   }
 
   /* Empty state */
@@ -525,6 +888,7 @@
 
   <div class="category-tabs" id="categoryTabs">
     <button class="tab-btn active" data-cat="all" onclick="setCategory('all')">전체</button>
+    <button class="tab-btn" data-cat="favorites" onclick="setCategory('favorites')">&#9733; 즐겨찾기</button>
     <button class="tab-btn" data-cat="text" onclick="setCategory('text')">텍스트</button>
     <button class="tab-btn" data-cat="chart" onclick="setCategory('chart')">차트 / 데이터</button>
     <button class="tab-btn" data-cat="layout" onclick="setCategory('layout')">레이아웃</button>
@@ -614,6 +978,96 @@
     special: '특수'
   };
 
+  // ============ 미니 미리보기 HTML 생성 ============
+
+  function getPreviewHtml(type) {
+    switch (type) {
+      case 'bullets':
+      case 'checklist':
+      case 'highlight':
+        return '<div class="preview-bullets"><div class="line"></div><div class="line"></div><div class="line"></div></div>';
+      case 'cards':
+      case 'icon-grid':
+        return '<div class="preview-cards"><div class="box"></div><div class="box"></div><div class="box"></div></div>';
+      case 'stats':
+      case 'bar-chart':
+        return '<div class="preview-stats">'
+          + '<div class="stat"><div class="stat-num">42</div><div class="stat-bar"></div></div>'
+          + '<div class="stat"><div class="stat-num">87</div><div class="stat-bar"></div></div>'
+          + '<div class="stat"><div class="stat-num">63</div><div class="stat-bar"></div></div>'
+          + '</div>';
+      case 'timeline':
+      case 'roadmap':
+        return '<div class="preview-timeline">'
+          + '<div class="dot"></div><div class="connector"></div>'
+          + '<div class="dot"></div><div class="connector"></div>'
+          + '<div class="dot"></div><div class="connector"></div>'
+          + '<div class="dot"></div></div>';
+      case 'two-column':
+      case 'comparison':
+        if (type === 'comparison') {
+          return '<div class="preview-comparison"><div class="side"></div><div class="vs">VS</div><div class="side"></div></div>';
+        }
+        return '<div class="preview-twocol"><div class="col"></div><div class="col"></div></div>';
+      case 'quote':
+        return '<div class="preview-quote"><div class="q-mark">"</div><div class="q-line"></div><div class="q-line" style="width:40px;"></div></div>';
+      case 'steps':
+      case 'process-arrow':
+        return '<div class="preview-steps">'
+          + '<div class="step">1</div><div class="arrow">&#9654;</div>'
+          + '<div class="step">2</div><div class="arrow">&#9654;</div>'
+          + '<div class="step">3</div></div>';
+      case 'progress':
+        return '<div class="preview-progress">'
+          + '<div class="bar-bg"><div class="bar-fill" style="width:75%;"></div></div>'
+          + '<div class="bar-bg"><div class="bar-fill" style="width:50%;opacity:0.7;"></div></div>'
+          + '<div class="bar-bg"><div class="bar-fill" style="width:90%;opacity:0.5;"></div></div></div>';
+      case 'donut':
+        return '<div class="preview-donut"></div>';
+      case 'pyramid':
+        return '<div class="preview-pyramid"><div class="layer"></div><div class="layer"></div><div class="layer"></div></div>';
+      case 'cycle':
+        return '<div class="preview-cycle"></div>';
+      case 'matrix':
+      case 'swot':
+        return '<div class="preview-matrix"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>';
+      case 'funnel':
+        return '<div class="preview-funnel"><div class="layer"></div><div class="layer"></div><div class="layer"></div></div>';
+      default:
+        return '<div class="preview-generic">' + (ICONS[type] || '&#9632;') + '</div>';
+    }
+  }
+
+  // ============ 즐겨찾기 / 사용횟수 (localStorage) ============
+
+  function getFavorites() {
+    try { return JSON.parse(localStorage.getItem('tpl-favorites') || '[]'); } catch(e) { return []; }
+  }
+  function setFavorites(arr) {
+    localStorage.setItem('tpl-favorites', JSON.stringify(arr));
+  }
+  function isFavorite(type) {
+    return getFavorites().includes(type);
+  }
+  function toggleFavorite(type, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var favs = getFavorites();
+    var idx = favs.indexOf(type);
+    if (idx >= 0) { favs.splice(idx, 1); } else { favs.push(type); }
+    setFavorites(favs);
+    renderGrid();
+    updateTabCounts();
+  }
+
+  function getUsageCounts() {
+    try { return JSON.parse(localStorage.getItem('tpl-usage') || '{}'); } catch(e) { return {}; }
+  }
+  function incrementUsage(type) {
+    var counts = getUsageCounts();
+    counts[type] = (counts[type] || 0) + 1;
+    localStorage.setItem('tpl-usage', JSON.stringify(counts));
+  }
+
   // ============ State ============
 
   let allTemplates = [];
@@ -665,6 +1119,9 @@
       let count;
       if (cat === 'all') {
         count = allTemplates.length;
+      } else if (cat === 'favorites') {
+        var favs = getFavorites();
+        count = allTemplates.filter(t => favs.includes(t.type)).length;
       } else {
         const types = CATEGORIES[cat] || [];
         count = allTemplates.filter(t => types.includes(t.type)).length;
@@ -697,7 +1154,10 @@
   function getFiltered() {
     let list = allTemplates;
 
-    if (currentCategory !== 'all') {
+    if (currentCategory === 'favorites') {
+      var favs = getFavorites();
+      list = list.filter(t => favs.includes(t.type));
+    } else if (currentCategory !== 'all') {
       const types = CATEGORIES[currentCategory] || [];
       list = list.filter(t => types.includes(t.type));
     }
@@ -718,23 +1178,43 @@
   function renderGrid() {
     const grid = document.getElementById('templateGrid');
     const filtered = getFiltered();
+    var usageCounts = getUsageCounts();
 
     if (filtered.length === 0) {
       grid.innerHTML = '<div class="empty-state"><div class="icon">&#128269;</div><p>검색 결과가 없습니다</p></div>';
       return;
     }
 
-    grid.innerHTML = filtered.map(t => {
-      const cat = getCategory(t.type);
-      const icon = ICONS[t.type] || '&#9632;';
-      return '<div class="card" onclick="openDetail(\'' + escHtml(t.type) + '\')">'
+    grid.innerHTML = filtered.map(function(t, idx) {
+      var cat = getCategory(t.type);
+      var fav = isFavorite(t.type);
+      var usage = usageCounts[t.type] || 0;
+      var delay = idx * 0.06;
+      return '<div class="card" style="animation-delay:' + delay + 's" onclick="openDetail(\'' + escHtml(t.type) + '\')">'
+        + '<button class="card-fav ' + (fav ? 'active' : '') + '" onclick="toggleFavorite(\'' + escHtml(t.type) + '\', event)" title="즐겨찾기">' + (fav ? '&#9733;' : '&#9734;') + '</button>'
         + '<div class="card-badge">' + escHtml(CAT_LABELS[cat] || cat) + '</div>'
-        + '<div class="card-icon">' + icon + '</div>'
-        + '<div class="card-type">' + escHtml(t.type) + '</div>'
+        + '<div class="card-preview">' + getPreviewHtml(t.type) + '</div>'
+        + '<div class="card-top-row"><div class="card-type">' + escHtml(t.type) + '</div></div>'
         + '<div class="card-name">' + escHtml(t.name) + '</div>'
         + '<div class="card-desc">' + escHtml(t.description) + '</div>'
+        + '<div class="card-footer">'
+        + '<span class="card-usage">' + (usage > 0 ? usage + '회 사용' : '') + '</span>'
+        + '<button class="card-quick-btn" onclick="quickCreate(\'' + escHtml(t.type) + '\', event)">이 템플릿으로 생성</button>'
+        + '</div>'
         + '</div>';
     }).join('');
+  }
+
+  // ============ 빠른 생성 ============
+
+  function quickCreate(type, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    incrementUsage(type);
+    var theme = document.getElementById('themeSelect').value;
+    var params = new URLSearchParams();
+    params.set('template', type);
+    if (theme) params.set('theme', theme);
+    window.location.href = '/editor?' + params.toString();
   }
 
   // ============ Detail Modal ============
@@ -751,6 +1231,7 @@
 
     const theme = document.getElementById('themeSelect').value;
     document.getElementById('modalOpenEditor').onclick = function() {
+      incrementUsage(tpl.type);
       const params = new URLSearchParams();
       params.set('template', tpl.type);
       if (theme) params.set('theme', theme);

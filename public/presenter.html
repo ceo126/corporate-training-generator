@@ -25,8 +25,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 16px;
-    background: #16162a;
-    border-bottom: 1px solid #2a2a4a;
+    background: rgba(22, 22, 42, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
     flex-shrink: 0;
   }
   .header-left {
@@ -49,10 +51,24 @@
     color: #666;
     font-weight: 400;
   }
+  .header-center {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
   .header-right {
     display: flex;
     align-items: center;
     gap: 20px;
+  }
+
+  /* 현재 시각 */
+  .clock-display {
+    font-size: 16px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: #94a3b8;
+    letter-spacing: 1px;
   }
 
   /* 타이머 */
@@ -73,8 +89,9 @@
     gap: 4px;
   }
   .timer-btn {
-    background: #2a2a4a;
-    border: 1px solid #3a3a5a;
+    background: rgba(42, 42, 74, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08);
     color: #ccc;
     padding: 4px 10px;
     border-radius: 4px;
@@ -83,7 +100,7 @@
     font-family: 'Noto Sans KR', sans-serif;
     transition: background 0.2s;
   }
-  .timer-btn:hover { background: #3a3a5a; }
+  .timer-btn:hover { background: rgba(58, 58, 90, 0.8); }
   .timer-btn.active { background: #4c1d95; border-color: #7c3aed; color: #fff; }
 
   /* 목표시간 설정 */
@@ -96,8 +113,8 @@
   }
   .target-input {
     width: 50px;
-    background: #2a2a4a;
-    border: 1px solid #3a3a5a;
+    background: rgba(42, 42, 74, 0.6);
+    border: 1px solid rgba(255,255,255,0.08);
     color: #fff;
     padding: 3px 6px;
     border-radius: 4px;
@@ -106,6 +123,19 @@
     font-family: 'Noto Sans KR', sans-serif;
   }
   .target-input:focus { outline: none; border-color: #7c3aed; }
+  .remaining-display {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: #888;
+    margin-left: 4px;
+  }
+  .remaining-display.warning { color: #f59e0b; font-weight: 600; }
+  .remaining-display.danger { color: #ef4444; font-weight: 700; animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
 
   /* 진행률 바 */
   .progress-bar-container {
@@ -122,6 +152,44 @@
   .progress-bar.warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
   .progress-bar.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
 
+  /* 시간 알림 토스트 */
+  .time-alert {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+  .time-alert.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .time-alert.info {
+    background: rgba(96, 165, 250, 0.9);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .time-alert.warn {
+    background: rgba(245, 158, 11, 0.9);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .time-alert.critical {
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
   /* 메인 레이아웃 */
   .main-layout {
     flex: 1;
@@ -132,11 +200,18 @@
     min-height: 0;
   }
 
+  /* 글래스모피즘 패널 공통 */
+  .glass-panel {
+    background: rgba(22, 22, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+
   /* 현재 슬라이드 패널 */
   .current-slide-panel {
-    background: #16162a;
-    border-radius: 12px;
-    border: 1px solid #2a2a4a;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -148,8 +223,11 @@
     color: #888;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-bottom: 1px solid #2a2a4a;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
   .current-slide-frame {
     flex: 1;
@@ -177,9 +255,6 @@
 
   /* 다음 슬라이드 패널 */
   .next-slide-panel {
-    background: #16162a;
-    border-radius: 12px;
-    border: 1px solid #2a2a4a;
     flex: 0 0 auto;
     height: 240px;
     display: flex;
@@ -210,9 +285,6 @@
 
   /* 발표자 노트 패널 */
   .notes-panel {
-    background: #16162a;
-    border-radius: 12px;
-    border: 1px solid #2a2a4a;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -223,11 +295,11 @@
     flex: 1;
     padding: 12px 14px;
     overflow-y: auto;
-    font-size: 15px;
     line-height: 1.8;
     color: #ccc;
     white-space: pre-wrap;
     word-break: break-word;
+    transition: font-size 0.2s;
   }
   .notes-content::-webkit-scrollbar { width: 6px; }
   .notes-content::-webkit-scrollbar-track { background: transparent; }
@@ -239,6 +311,35 @@
     justify-content: center;
     color: #555;
     font-size: 13px;
+  }
+
+  /* 폰트 크기 조절 버튼 */
+  .font-controls {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .font-btn {
+    background: rgba(42, 42, 74, 0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #aaa;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .font-btn:hover { background: rgba(58, 58, 90, 0.8); color: #fff; }
+  .font-size-label {
+    font-size: 10px;
+    color: #666;
+    min-width: 28px;
+    text-align: center;
   }
 
   /* 연결 상태 표시 */
@@ -282,6 +383,45 @@
     line-height: 1.6;
   }
 
+  /* 미니 슬라이드 도트 네비게이터 */
+  .slide-dots-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 16px;
+    background: rgba(18, 18, 42, 0.7);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    max-height: 40px;
+    overflow: hidden;
+  }
+  .slide-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .slide-dot:hover {
+    background: rgba(167, 139, 250, 0.5);
+    transform: scale(1.3);
+  }
+  .slide-dot.active {
+    background: #a78bfa;
+    border-color: #a78bfa;
+    transform: scale(1.3);
+    box-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
+  }
+  .slide-dot.visited {
+    background: rgba(167, 139, 250, 0.3);
+  }
+
   /* 키보드 단축키 도움말 */
   .shortcuts-bar {
     display: flex;
@@ -289,8 +429,9 @@
     justify-content: center;
     gap: 20px;
     padding: 6px 16px;
-    background: #12122a;
-    border-top: 1px solid #2a2a4a;
+    background: rgba(18, 18, 42, 0.7);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.06);
     flex-shrink: 0;
     font-size: 11px;
     color: #666;
@@ -301,8 +442,8 @@
     gap: 4px;
   }
   kbd {
-    background: #2a2a4a;
-    border: 1px solid #3a3a5a;
+    background: rgba(42, 42, 74, 0.6);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 3px;
     padding: 1px 5px;
     font-size: 10px;
@@ -313,6 +454,9 @@
 </head>
 <body>
 
+<!-- 시간 알림 토스트 -->
+<div class="time-alert" id="timeAlert"></div>
+
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
@@ -322,11 +466,15 @@
       <span class="total"> / <span id="totalNum">-</span></span>
     </div>
   </div>
+  <div class="header-center">
+    <span class="clock-display" id="clockDisplay">--:--:--</span>
+  </div>
   <div class="header-right">
     <div class="target-section">
       <span>목표</span>
       <input type="number" id="targetMinutes" class="target-input" value="30" min="1" max="999">
       <span>분</span>
+      <span class="remaining-display" id="remainingDisplay"></span>
     </div>
     <div class="timer-section">
       <span class="timer-display" id="timerDisplay">00:00:00</span>
@@ -360,7 +508,7 @@
   </div>
 
   <!-- 현재 슬라이드 (연결 후 표시) -->
-  <div class="current-slide-panel" id="currentSlidePanel" style="display:none;">
+  <div class="current-slide-panel glass-panel" id="currentSlidePanel" style="display:none;">
     <div class="panel-header">현재 슬라이드</div>
     <div class="current-slide-frame">
       <iframe id="currentSlideFrame" sandbox="allow-same-origin"></iframe>
@@ -369,18 +517,28 @@
 
   <!-- 오른쪽: 다음 슬라이드 + 노트 -->
   <div class="right-panels" id="rightPanels" style="display:none;">
-    <div class="next-slide-panel">
+    <div class="next-slide-panel glass-panel">
       <div class="panel-header">다음 슬라이드</div>
       <div class="next-slide-frame" id="nextSlideContainer">
         <iframe id="nextSlideFrame" sandbox="allow-same-origin"></iframe>
       </div>
     </div>
-    <div class="notes-panel">
-      <div class="panel-header">발표자 노트</div>
-      <div class="notes-content" id="notesContent"></div>
+    <div class="notes-panel glass-panel">
+      <div class="panel-header">
+        <span>발표자 노트</span>
+        <div class="font-controls">
+          <button class="font-btn" id="btnFontMinus" title="글꼴 축소">-</button>
+          <span class="font-size-label" id="fontSizeLabel">15px</span>
+          <button class="font-btn" id="btnFontPlus" title="글꼴 확대">+</button>
+        </div>
+      </div>
+      <div class="notes-content" id="notesContent" style="font-size: 15px;"></div>
     </div>
   </div>
 </div>
+
+<!-- 미니 슬라이드 도트 네비게이터 -->
+<div class="slide-dots-bar" id="slideDotsBar" style="display:none;"></div>
 
 <!-- 단축키 안내 -->
 <div class="shortcuts-bar">
@@ -389,6 +547,7 @@
   <span class="shortcut"><kbd>Home</kbd> 처음</span>
   <span class="shortcut"><kbd>End</kbd> 마지막</span>
   <span class="shortcut"><kbd>T</kbd> 타이머 시작/정지</span>
+  <span class="shortcut"><kbd>+</kbd> <kbd>-</kbd> 노트 크기</span>
 </div>
 
 <script>
@@ -407,19 +566,28 @@
   let totalSlides = 0;
   let slidesData = []; // { html, notes }[]
   let connected = false;
+  let visitedSlides = new Set();
 
   // 타이머
   let timerRunning = false;
   let timerSeconds = 0;
   let timerInterval = null;
 
+  // 시간 알림 상태
+  let alertShown = { 10: false, 5: false, 1: false };
+
+  // 노트 폰트 크기
+  let notesFontSize = 15;
+
   // DOM
   const currentNum = document.getElementById('currentNum');
   const totalNum = document.getElementById('totalNum');
+  const clockDisplay = document.getElementById('clockDisplay');
   const timerDisplay = document.getElementById('timerDisplay');
   const btnTimerToggle = document.getElementById('btnTimerToggle');
   const btnTimerReset = document.getElementById('btnTimerReset');
   const targetMinutes = document.getElementById('targetMinutes');
+  const remainingDisplay = document.getElementById('remainingDisplay');
   const progressBar = document.getElementById('progressBar');
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
@@ -430,6 +598,22 @@
   const nextSlideFrame = document.getElementById('nextSlideFrame');
   const nextSlideContainer = document.getElementById('nextSlideContainer');
   const notesContent = document.getElementById('notesContent');
+  const slideDotsBar = document.getElementById('slideDotsBar');
+  const timeAlert = document.getElementById('timeAlert');
+  const btnFontMinus = document.getElementById('btnFontMinus');
+  const btnFontPlus = document.getElementById('btnFontPlus');
+  const fontSizeLabel = document.getElementById('fontSizeLabel');
+
+  // === 현재 시각 표시 ===
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    clockDisplay.textContent = h + ':' + m + ':' + s;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
 
   // === BroadcastChannel ===
   const channel = new BroadcastChannel('presentation-sync');
@@ -440,13 +624,12 @@
 
     switch (msg.type) {
       case 'init':
-        // 발표 윈도우가 초기 데이터 전송
         handleInit(msg);
         break;
       case 'slideChange':
-        // 발표 윈도우에서 슬라이드 변경됨
         if (typeof msg.index === 'number') {
           currentSlide = msg.index;
+          visitedSlides.add(currentSlide);
           updateDisplay();
         }
         break;
@@ -475,8 +658,10 @@
       slidesData = msg.slides;
       totalSlides = slidesData.length;
       currentSlide = typeof msg.currentIndex === 'number' ? msg.currentIndex : 0;
+      visitedSlides.add(currentSlide);
       setConnected(true);
       showPresentation();
+      buildDots();
       updateDisplay();
     }
   }
@@ -492,12 +677,37 @@
     waitingScreen.style.gridColumn = '1 / -1';
     currentSlidePanel.style.display = 'none';
     rightPanels.style.display = 'none';
+    slideDotsBar.style.display = 'none';
   }
 
   function showPresentation() {
     waitingScreen.style.display = 'none';
     currentSlidePanel.style.display = '';
     rightPanels.style.display = '';
+    slideDotsBar.style.display = 'flex';
+  }
+
+  // === 미니 슬라이드 도트 네비게이터 ===
+  function buildDots() {
+    slideDotsBar.innerHTML = '';
+    for (let i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'slide-dot';
+      dot.title = '슬라이드 ' + (i + 1);
+      dot.addEventListener('click', (function(idx) {
+        return function() { goToSlide(idx); };
+      })(i));
+      slideDotsBar.appendChild(dot);
+    }
+    updateDots();
+  }
+
+  function updateDots() {
+    const dots = slideDotsBar.querySelectorAll('.slide-dot');
+    dots.forEach(function(dot, i) {
+      dot.classList.toggle('active', i === currentSlide);
+      dot.classList.toggle('visited', !dot.classList.contains('active') && visitedSlides.has(i));
+    });
   }
 
   // === 슬라이드 표시 ===
@@ -519,14 +729,12 @@
     if (nextIdx < totalSlides && slidesData[nextIdx]) {
       nextSlideFrame.style.display = '';
       renderSlideInFrame(nextSlideFrame, slidesData[nextIdx].html);
-      // "마지막 슬라이드" 메시지 제거
-      const emptyMsg = nextSlideContainer.querySelector('.next-slide-empty');
+      var emptyMsg = nextSlideContainer.querySelector('.next-slide-empty');
       if (emptyMsg) emptyMsg.remove();
       nextSlideFrame.style.display = '';
     } else {
       nextSlideFrame.style.display = 'none';
-      // "마지막 슬라이드" 표시
-      let emptyMsg = nextSlideContainer.querySelector('.next-slide-empty');
+      var emptyMsg = nextSlideContainer.querySelector('.next-slide-empty');
       if (!emptyMsg) {
         emptyMsg = document.createElement('div');
         emptyMsg.className = 'next-slide-empty';
@@ -536,7 +744,7 @@
     }
 
     // 발표자 노트
-    const notes = cur && cur.notes ? cur.notes : '';
+    var notes = cur && cur.notes ? cur.notes : '';
     if (notes) {
       notesContent.textContent = notes;
       notesContent.classList.remove('notes-empty');
@@ -544,16 +752,18 @@
       notesContent.textContent = '';
       notesContent.innerHTML = '<div class="notes-empty">이 슬라이드에 노트가 없습니다</div>';
     }
+
+    // 도트 업데이트
+    updateDots();
   }
 
   function renderSlideInFrame(iframe, html) {
     try {
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      var doc = iframe.contentDocument || iframe.contentWindow.document;
       doc.open();
       doc.write(html);
       doc.close();
     } catch (e) {
-      // sandbox 제한 시 srcdoc 사용
       iframe.srcdoc = html;
     }
   }
@@ -561,11 +771,11 @@
   // === 슬라이드 이동 ===
   function goToSlide(index) {
     if (totalSlides === 0) return;
-    const newIndex = Math.max(0, Math.min(index, totalSlides - 1));
+    var newIndex = Math.max(0, Math.min(index, totalSlides - 1));
     if (newIndex === currentSlide) return;
     currentSlide = newIndex;
+    visitedSlides.add(currentSlide);
     updateDisplay();
-    // 메인 윈도우에 동기화
     channel.postMessage({ type: 'goToSlide', index: currentSlide, from: 'presenter' });
   }
 
@@ -576,18 +786,18 @@
 
   // === 타이머 ===
   function updateTimerDisplay() {
-    const h = Math.floor(timerSeconds / 3600);
-    const m = Math.floor((timerSeconds % 3600) / 60);
-    const s = timerSeconds % 60;
+    var h = Math.floor(timerSeconds / 3600);
+    var m = Math.floor((timerSeconds % 3600) / 60);
+    var s = timerSeconds % 60;
     timerDisplay.textContent =
       String(h).padStart(2, '0') + ':' +
       String(m).padStart(2, '0') + ':' +
       String(s).padStart(2, '0');
 
     // 진행률 바 업데이트
-    const target = parseInt(targetMinutes.value, 10) || 30;
-    const targetSec = target * 60;
-    const pct = Math.min((timerSeconds / targetSec) * 100, 100);
+    var target = parseInt(targetMinutes.value, 10) || 30;
+    var targetSec = target * 60;
+    var pct = Math.min((timerSeconds / targetSec) * 100, 100);
     progressBar.style.width = pct + '%';
     progressBar.classList.remove('warning', 'danger');
     if (pct >= 100) {
@@ -595,6 +805,63 @@
     } else if (pct >= 80) {
       progressBar.classList.add('warning');
     }
+
+    // 남은 시간 표시
+    var remainSec = targetSec - timerSeconds;
+    if (timerRunning || timerSeconds > 0) {
+      if (remainSec <= 0) {
+        var overSec = Math.abs(remainSec);
+        var overM = Math.floor(overSec / 60);
+        var overS = overSec % 60;
+        remainingDisplay.textContent = '(초과 +' + String(overM).padStart(2, '0') + ':' + String(overS).padStart(2, '0') + ')';
+        remainingDisplay.className = 'remaining-display danger';
+      } else {
+        var remM = Math.floor(remainSec / 60);
+        var remS = remainSec % 60;
+        remainingDisplay.textContent = '(남은 시간 ' + String(remM).padStart(2, '0') + ':' + String(remS).padStart(2, '0') + ')';
+        if (remainSec <= 60) {
+          remainingDisplay.className = 'remaining-display danger';
+        } else if (remainSec <= 300) {
+          remainingDisplay.className = 'remaining-display warning';
+        } else {
+          remainingDisplay.className = 'remaining-display';
+        }
+      }
+    } else {
+      remainingDisplay.textContent = '';
+      remainingDisplay.className = 'remaining-display';
+    }
+
+    // 시간 알림 체크
+    checkTimeAlerts(remainSec);
+  }
+
+  // === 시간 경과 알림 ===
+  function checkTimeAlerts(remainSec) {
+    var remainMin = Math.floor(remainSec / 60);
+    // 10분 남음
+    if (!alertShown[10] && remainSec <= 600 && remainSec > 540 && timerRunning) {
+      showTimeAlert('10분 남았습니다', 'info');
+      alertShown[10] = true;
+    }
+    // 5분 남음
+    if (!alertShown[5] && remainSec <= 300 && remainSec > 240 && timerRunning) {
+      showTimeAlert('5분 남았습니다', 'warn');
+      alertShown[5] = true;
+    }
+    // 1분 남음
+    if (!alertShown[1] && remainSec <= 60 && remainSec > 0 && timerRunning) {
+      showTimeAlert('1분 남았습니다!', 'critical');
+      alertShown[1] = true;
+    }
+  }
+
+  function showTimeAlert(message, type) {
+    timeAlert.textContent = message;
+    timeAlert.className = 'time-alert ' + type + ' show';
+    setTimeout(function() {
+      timeAlert.classList.remove('show');
+    }, 3000);
   }
 
   function toggleTimer() {
@@ -620,11 +887,32 @@
     timerSeconds = 0;
     btnTimerToggle.textContent = '시작';
     btnTimerToggle.classList.remove('active');
+    alertShown = { 10: false, 5: false, 1: false };
     updateTimerDisplay();
   }
 
   btnTimerToggle.addEventListener('click', toggleTimer);
   btnTimerReset.addEventListener('click', resetTimer);
+
+  // === 폰트 크기 조절 ===
+  function updateFontSize() {
+    notesContent.style.fontSize = notesFontSize + 'px';
+    fontSizeLabel.textContent = notesFontSize + 'px';
+  }
+
+  btnFontPlus.addEventListener('click', function() {
+    if (notesFontSize < 32) {
+      notesFontSize += 2;
+      updateFontSize();
+    }
+  });
+
+  btnFontMinus.addEventListener('click', function() {
+    if (notesFontSize > 10) {
+      notesFontSize -= 2;
+      updateFontSize();
+    }
+  });
 
   // === 키보드 ===
   document.addEventListener('keydown', function(e) {
@@ -654,6 +942,16 @@
       case 'T':
         e.preventDefault();
         toggleTimer();
+        break;
+      case '+':
+      case '=':
+        e.preventDefault();
+        if (notesFontSize < 32) { notesFontSize += 2; updateFontSize(); }
+        break;
+      case '-':
+      case '_':
+        e.preventDefault();
+        if (notesFontSize > 10) { notesFontSize -= 2; updateFontSize(); }
         break;
     }
   });
