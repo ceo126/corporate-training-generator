@@ -565,43 +565,6 @@ app.post('/api/preview', (req, res) => {
   }
 });
 
-// ============ 결과물 복제 ============
-
-app.post('/api/duplicate-output/:type/:name', (req, res) => {
-  try {
-    const { type, name } = req.params;
-    if (type !== 'pptx' && type !== 'web') {
-      return res.status(400).json({ error: '잘못된 타입입니다 (pptx 또는 web)' });
-    }
-    const dir = path.join(__dirname, type === 'pptx' ? 'output/pptx' : 'output/web');
-    const safeName = path.basename(name);
-    const srcPath = path.join(dir, safeName);
-
-    // Path traversal 방지
-    if (!path.resolve(srcPath).startsWith(dir + path.sep) && path.resolve(srcPath) !== dir) {
-      return res.status(400).json({ error: '잘못된 경로입니다' });
-    }
-    if (!fs.existsSync(srcPath)) {
-      return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
-    }
-
-    // 복제 파일명 생성
-    const ext = path.extname(safeName);
-    const base = path.basename(safeName, ext);
-    let copyName = `${base}_복사본${ext}`;
-    let counter = 1;
-    while (fs.existsSync(path.join(dir, copyName))) {
-      counter++;
-      copyName = `${base}_복사본${counter}${ext}`;
-    }
-
-    fs.copyFileSync(srcPath, path.join(dir, copyName));
-    res.json({ success: true, newName: copyName, path: `/output/${type === 'pptx' ? 'pptx' : 'web'}/${encodeURIComponent(copyName)}` });
-  } catch (err) {
-    res.status(500).json({ error: '복제 실패: ' + err.message });
-  }
-});
-
 // ============ 파일 내용 미리보기 ============
 
 app.get('/api/files/:sourceDir/:filePath/preview', async (req, res) => {
@@ -755,10 +718,6 @@ app.get('/presenter', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/presenter.html'));
 });
 
-app.get('/templates', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/templates.html'));
-});
-
 // ============ API 문서 ============
 
 app.get('/api/docs', (req, res) => {
@@ -860,7 +819,7 @@ app.get('/api/docs', (req, res) => {
       response: '{ success: true, html: string }'
     },
     {
-      method: 'POST', path: '/api/duplicate-output/:type/:name',
+      method: 'POST', path: '/api/outputs/:type/:name/duplicate',
       description: '결과물 복제',
       requestBody: null,
       response: '{ success: true, newName: string, path: string }'
