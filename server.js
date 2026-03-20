@@ -883,6 +883,8 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
       default:
         slide = { title: sectionTitle, type: 'bullets', items: bodyLines.length > 0 ? bodyLines : [section] };
     }
+    // 모든 내용 슬라이드에 SVG 일러스트 배경 추가
+    slide.image = 'illust';
     slides.content.push(slide);
   }
 
