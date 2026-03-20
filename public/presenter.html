@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>발표자 모드 - 기업교육 발표자료</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 상단 헤더 */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #16162a;
+    border-bottom: 1px solid #2a2a4a;
+    flex-shrink: 0;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #a78bfa;
+  }
+  .slide-counter {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+  .slide-counter .total {
+    color: #666;
+    font-weight: 400;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* 타이머 */
+  .timer-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .timer-display {
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    letter-spacing: 2px;
+  }
+  .timer-controls {
+    display: flex;
+    gap: 4px;
+  }
+  .timer-btn {
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    color: #ccc;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: background 0.2s;
+  }
+  .timer-btn:hover { background: #3a3a5a; }
+  .timer-btn.active { background: #4c1d95; border-color: #7c3aed; color: #fff; }
+
+  /* 목표시간 설정 */
+  .target-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #888;
+  }
+  .target-input {
+    width: 50px;
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    color: #fff;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .target-input:focus { outline: none; border-color: #7c3aed; }
+
+  /* 진행률 바 */
+  .progress-bar-container {
+    height: 3px;
+    background: #2a2a4a;
+    flex-shrink: 0;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #a78bfa);
+    transition: width 0.3s ease;
+    border-radius: 0 2px 2px 0;
+  }
+  .progress-bar.warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .progress-bar.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+  /* 메인 레이아웃 */
+  .main-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 12px;
+    padding: 12px;
+    min-height: 0;
+  }
+
+  /* 현재 슬라이드 패널 */
+  .current-slide-panel {
+    background: #16162a;
+    border-radius: 12px;
+    border: 1px solid #2a2a4a;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #2a2a4a;
+    flex-shrink: 0;
+  }
+  .current-slide-frame {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    min-height: 0;
+  }
+  .current-slide-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+    background: #000;
+  }
+
+  /* 오른쪽 패널 */
+  .right-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  /* 다음 슬라이드 패널 */
+  .next-slide-panel {
+    background: #16162a;
+    border-radius: 12px;
+    border: 1px solid #2a2a4a;
+    flex: 0 0 auto;
+    height: 240px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .next-slide-frame {
+    flex: 1;
+    padding: 8px;
+    min-height: 0;
+  }
+  .next-slide-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 6px;
+    background: #000;
+    opacity: 0.7;
+  }
+  .next-slide-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 13px;
+  }
+
+  /* 발표자 노트 패널 */
+  .notes-panel {
+    background: #16162a;
+    border-radius: 12px;
+    border: 1px solid #2a2a4a;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .notes-content {
+    flex: 1;
+    padding: 12px 14px;
+    overflow-y: auto;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #ccc;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .notes-content::-webkit-scrollbar { width: 6px; }
+  .notes-content::-webkit-scrollbar-track { background: transparent; }
+  .notes-content::-webkit-scrollbar-thumb { background: #3a3a5a; border-radius: 3px; }
+  .notes-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 13px;
+  }
+
+  /* 연결 상태 표시 */
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+  }
+  .status-dot.connected { background: #22c55e; }
+  .status-text { color: #888; }
+
+  /* 대기 화면 */
+  .waiting-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 16px;
+    color: #666;
+  }
+  .waiting-screen .icon {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+  .waiting-screen .message {
+    font-size: 16px;
+  }
+  .waiting-screen .hint {
+    font-size: 12px;
+    color: #555;
+    max-width: 400px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* 키보드 단축키 도움말 */
+  .shortcuts-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 6px 16px;
+    background: #12122a;
+    border-top: 1px solid #2a2a4a;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: #666;
+  }
+  .shortcut {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  kbd {
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-family: monospace;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-left">
+    <span class="header-title">발표자 모드</span>
+    <div class="slide-counter">
+      <span id="currentNum">-</span>
+      <span class="total"> / <span id="totalNum">-</span></span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="target-section">
+      <span>목표</span>
+      <input type="number" id="targetMinutes" class="target-input" value="30" min="1" max="999">
+      <span>분</span>
+    </div>
+    <div class="timer-section">
+      <span class="timer-display" id="timerDisplay">00:00:00</span>
+      <div class="timer-controls">
+        <button class="timer-btn" id="btnTimerToggle" title="시작/일시정지">시작</button>
+        <button class="timer-btn" id="btnTimerReset" title="초기화">리셋</button>
+      </div>
+    </div>
+    <div class="connection-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">연결 대기</span>
+    </div>
+  </div>
+</div>
+
+<!-- 진행률 바 -->
+<div class="progress-bar-container">
+  <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+</div>
+
+<!-- 메인 영역 -->
+<div class="main-layout" id="mainLayout">
+  <!-- 대기 화면 (연결 전) -->
+  <div class="waiting-screen" id="waitingScreen" style="grid-column: 1 / -1;">
+    <div class="icon">&#128247;</div>
+    <div class="message">발표자료 윈도우를 열어주세요</div>
+    <div class="hint">
+      output/web 폴더의 HTML 발표자료를 브라우저에서 열면 자동으로 연결됩니다.<br>
+      연결 후 이 화면에서 슬라이드를 조작할 수 있습니다.
+    </div>
+  </div>
+
+  <!-- 현재 슬라이드 (연결 후 표시) -->
+  <div class="current-slide-panel" id="currentSlidePanel" style="display:none;">
+    <div class="panel-header">현재 슬라이드</div>
+    <div class="current-slide-frame">
+      <iframe id="currentSlideFrame" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 다음 슬라이드 + 노트 -->
+  <div class="right-panels" id="rightPanels" style="display:none;">
+    <div class="next-slide-panel">
+      <div class="panel-header">다음 슬라이드</div>
+      <div class="next-slide-frame" id="nextSlideContainer">
+        <iframe id="nextSlideFrame" sandbox="allow-same-origin"></iframe>
+      </div>
+    </div>
+    <div class="notes-panel">
+      <div class="panel-header">발표자 노트</div>
+      <div class="notes-content" id="notesContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 단축키 안내 -->
+<div class="shortcuts-bar">
+  <span class="shortcut"><kbd>&larr;</kbd> 이전</span>
+  <span class="shortcut"><kbd>&rarr;</kbd> <kbd>Space</kbd> <kbd>Enter</kbd> 다음</span>
+  <span class="shortcut"><kbd>Home</kbd> 처음</span>
+  <span class="shortcut"><kbd>End</kbd> 마지막</span>
+  <span class="shortcut"><kbd>T</kbd> 타이머 시작/정지</span>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // === XSS 방지 ===
+  function escHtml(str) {
+    if (typeof str !== 'string') return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' };
+    return str.replace(/[&<>"']/g, c => map[c]);
+  }
+
+  // === 상태 ===
+  let currentSlide = 0;
+  let totalSlides = 0;
+  let slidesData = []; // { html, notes }[]
+  let connected = false;
+
+  // 타이머
+  let timerRunning = false;
+  let timerSeconds = 0;
+  let timerInterval = null;
+
+  // DOM
+  const currentNum = document.getElementById('currentNum');
+  const totalNum = document.getElementById('totalNum');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const btnTimerToggle = document.getElementById('btnTimerToggle');
+  const btnTimerReset = document.getElementById('btnTimerReset');
+  const targetMinutes = document.getElementById('targetMinutes');
+  const progressBar = document.getElementById('progressBar');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const waitingScreen = document.getElementById('waitingScreen');
+  const currentSlidePanel = document.getElementById('currentSlidePanel');
+  const rightPanels = document.getElementById('rightPanels');
+  const currentSlideFrame = document.getElementById('currentSlideFrame');
+  const nextSlideFrame = document.getElementById('nextSlideFrame');
+  const nextSlideContainer = document.getElementById('nextSlideContainer');
+  const notesContent = document.getElementById('notesContent');
+
+  // === BroadcastChannel ===
+  const channel = new BroadcastChannel('presentation-sync');
+
+  channel.onmessage = function(event) {
+    const msg = event.data;
+    if (!msg || !msg.type) return;
+
+    switch (msg.type) {
+      case 'init':
+        // 발표 윈도우가 초기 데이터 전송
+        handleInit(msg);
+        break;
+      case 'slideChange':
+        // 발표 윈도우에서 슬라이드 변경됨
+        if (typeof msg.index === 'number') {
+          currentSlide = msg.index;
+          updateDisplay();
+        }
+        break;
+      case 'ping':
+        channel.postMessage({ type: 'pong', from: 'presenter' });
+        break;
+      case 'pong':
+        setConnected(true);
+        break;
+      case 'disconnect':
+        setConnected(false);
+        showWaiting();
+        break;
+    }
+  };
+
+  // 주기적으로 연결 요청
+  function requestConnection() {
+    channel.postMessage({ type: 'requestInit', from: 'presenter' });
+  }
+  setInterval(requestConnection, 2000);
+  requestConnection();
+
+  function handleInit(msg) {
+    if (msg.slides && Array.isArray(msg.slides)) {
+      slidesData = msg.slides;
+      totalSlides = slidesData.length;
+      currentSlide = typeof msg.currentIndex === 'number' ? msg.currentIndex : 0;
+      setConnected(true);
+      showPresentation();
+      updateDisplay();
+    }
+  }
+
+  function setConnected(state) {
+    connected = state;
+    statusDot.classList.toggle('connected', state);
+    statusText.textContent = state ? '연결됨' : '연결 대기';
+  }
+
+  function showWaiting() {
+    waitingScreen.style.display = '';
+    waitingScreen.style.gridColumn = '1 / -1';
+    currentSlidePanel.style.display = 'none';
+    rightPanels.style.display = 'none';
+  }
+
+  function showPresentation() {
+    waitingScreen.style.display = 'none';
+    currentSlidePanel.style.display = '';
+    rightPanels.style.display = '';
+  }
+
+  // === 슬라이드 표시 ===
+  function updateDisplay() {
+    // 슬라이드 번호
+    currentNum.textContent = totalSlides > 0 ? (currentSlide + 1) : '-';
+    totalNum.textContent = totalSlides > 0 ? totalSlides : '-';
+
+    if (totalSlides === 0) return;
+
+    // 현재 슬라이드 iframe
+    const cur = slidesData[currentSlide];
+    if (cur && cur.html) {
+      renderSlideInFrame(currentSlideFrame, cur.html);
+    }
+
+    // 다음 슬라이드
+    const nextIdx = currentSlide + 1;
+    if (nextIdx < totalSlides && slidesData[nextIdx]) {
+      nextSlideFrame.style.display = '';
+      renderSlideInFrame(nextSlideFrame, slidesData[nextIdx].html);
+      // "마지막 슬라이드" 메시지 제거
+      const emptyMsg = nextSlideContainer.querySelector('.next-slide-empty');
+      if (emptyMsg) emptyMsg.remove();
+      nextSlideFrame.style.display = '';
+    } else {
+      nextSlideFrame.style.display = 'none';
+      // "마지막 슬라이드" 표시
+      let emptyMsg = nextSlideContainer.querySelector('.next-slide-empty');
+      if (!emptyMsg) {
+        emptyMsg = document.createElement('div');
+        emptyMsg.className = 'next-slide-empty';
+        emptyMsg.textContent = '마지막 슬라이드입니다';
+        nextSlideContainer.appendChild(emptyMsg);
+      }
+    }
+
+    // 발표자 노트
+    const notes = cur && cur.notes ? cur.notes : '';
+    if (notes) {
+      notesContent.textContent = notes;
+      notesContent.classList.remove('notes-empty');
+    } else {
+      notesContent.textContent = '';
+      notesContent.innerHTML = '<div class="notes-empty">이 슬라이드에 노트가 없습니다</div>';
+    }
+  }
+
+  function renderSlideInFrame(iframe, html) {
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(html);
+      doc.close();
+    } catch (e) {
+      // sandbox 제한 시 srcdoc 사용
+      iframe.srcdoc = html;
+    }
+  }
+
+  // === 슬라이드 이동 ===
+  function goToSlide(index) {
+    if (totalSlides === 0) return;
+    const newIndex = Math.max(0, Math.min(index, totalSlides - 1));
+    if (newIndex === currentSlide) return;
+    currentSlide = newIndex;
+    updateDisplay();
+    // 메인 윈도우에 동기화
+    channel.postMessage({ type: 'goToSlide', index: currentSlide, from: 'presenter' });
+  }
+
+  function nextSlide() { goToSlide(currentSlide + 1); }
+  function prevSlide() { goToSlide(currentSlide - 1); }
+  function firstSlide() { goToSlide(0); }
+  function lastSlide() { goToSlide(totalSlides - 1); }
+
+  // === 타이머 ===
+  function updateTimerDisplay() {
+    const h = Math.floor(timerSeconds / 3600);
+    const m = Math.floor((timerSeconds % 3600) / 60);
+    const s = timerSeconds % 60;
+    timerDisplay.textContent =
+      String(h).padStart(2, '0') + ':' +
+      String(m).padStart(2, '0') + ':' +
+      String(s).padStart(2, '0');
+
+    // 진행률 바 업데이트
+    const target = parseInt(targetMinutes.value, 10) || 30;
+    const targetSec = target * 60;
+    const pct = Math.min((timerSeconds / targetSec) * 100, 100);
+    progressBar.style.width = pct + '%';
+    progressBar.classList.remove('warning', 'danger');
+    if (pct >= 100) {
+      progressBar.classList.add('danger');
+    } else if (pct >= 80) {
+      progressBar.classList.add('warning');
+    }
+  }
+
+  function toggleTimer() {
+    if (timerRunning) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      btnTimerToggle.textContent = '시작';
+      btnTimerToggle.classList.remove('active');
+    } else {
+      timerInterval = setInterval(function() {
+        timerSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+      timerRunning = true;
+      btnTimerToggle.textContent = '정지';
+      btnTimerToggle.classList.add('active');
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerSeconds = 0;
+    btnTimerToggle.textContent = '시작';
+    btnTimerToggle.classList.remove('active');
+    updateTimerDisplay();
+  }
+
+  btnTimerToggle.addEventListener('click', toggleTimer);
+  btnTimerReset.addEventListener('click', resetTimer);
+
+  // === 키보드 ===
+  document.addEventListener('keydown', function(e) {
+    // 입력 필드에 포커스 중이면 무시
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    switch (e.key) {
+      case 'ArrowRight':
+      case ' ':
+      case 'Enter':
+        e.preventDefault();
+        nextSlide();
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        prevSlide();
+        break;
+      case 'Home':
+        e.preventDefault();
+        firstSlide();
+        break;
+      case 'End':
+        e.preventDefault();
+        lastSlide();
+        break;
+      case 't':
+      case 'T':
+        e.preventDefault();
+        toggleTimer();
+        break;
+    }
+  });
+
+  // 초기 타이머 표시
+  updateTimerDisplay();
+
+})();
+</script>
+</body>
+</html>
