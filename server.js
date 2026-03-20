@@ -13,7 +13,7 @@ const PORT = 8220;
 let sourceDirs = [
   path.join(__dirname, 'input'),
   'D:/0000.유벤치/기업교육 자료'
-].filter(d => fs.existsSync(d));
+].map(d => path.resolve(d)).filter(d => fs.existsSync(d));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -193,10 +193,16 @@ app.post('/api/parse', async (req, res) => {
   try {
     const { filePath, sourceDir } = req.body;
     if (!filePath) return res.status(400).json({ error: '파일 경로가 필요합니다' });
-    const fullPath = path.join(sourceDir || path.join(__dirname, 'input'), filePath);
-    // 소스 디렉토리 내 파일인지 확인
+
+    // sourceDir이 등록된 소스 디렉토리인지 검증
     const resolvedDir = path.resolve(sourceDir || path.join(__dirname, 'input'));
-    if (!path.resolve(fullPath).startsWith(resolvedDir + path.sep) && path.resolve(fullPath) !== resolvedDir) {
+    if (!sourceDirs.includes(resolvedDir)) {
+      return res.status(403).json({ error: '등록되지 않은 소스 디렉토리입니다' });
+    }
+
+    const fullPath = path.join(resolvedDir, filePath);
+    // Path Traversal 방지
+    if (!path.resolve(fullPath).startsWith(resolvedDir + path.sep)) {
       return res.status(400).json({ error: '잘못된 파일 경로입니다' });
     }
     const result = await fileParser.parseFile(fullPath);
@@ -259,11 +265,26 @@ app.post('/api/generate/pptx', async (req, res) => {
   }
 });
 
+// ============ 글로벌 에러 핸들러 ============
+
+app.use((err, req, res, _next) => {
+  console.error('[서버 에러]', err.message);
+  res.status(500).json({ error: '서버 내부 오류가 발생했습니다' });
+});
+
 // ============ 시작 ============
 
 // 필요한 디렉토리 자동 생성
 ['input', 'output/pptx', 'output/web'].forEach(dir => {
   fs.mkdirSync(path.join(__dirname, dir), { recursive: true });
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[비정상 오류]', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[미처리 Promise]', reason);
 });
 
 app.listen(PORT, () => {
