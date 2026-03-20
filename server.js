@@ -265,6 +265,448 @@ app.post('/api/generate/pptx', async (req, res) => {
   }
 });
 
+// ============ 서버 상태 확인 ============
+
+const SERVER_START_TIME = Date.now();
+
+app.get('/api/health', (req, res) => {
+  try {
+    const mem = process.memoryUsage();
+    // 파일 수 카운트
+    let inputFileCount = 0;
+    let outputPptxCount = 0;
+    let outputWebCount = 0;
+
+    const inputDir = path.join(__dirname, 'input');
+    const pptxDir = path.join(__dirname, 'output/pptx');
+    const webDir = path.join(__dirname, 'output/web');
+
+    try { inputFileCount = fs.readdirSync(inputDir).filter(f => !f.startsWith('.')).length; } catch {}
+    try { outputPptxCount = fs.readdirSync(pptxDir).filter(f => f.endsWith('.pptx')).length; } catch {}
+    try { outputWebCount = fs.readdirSync(webDir).filter(f => f.endsWith('.html')).length; } catch {}
+
+    res.json({
+      status: 'ok',
+      uptime: Math.floor((Date.now() - SERVER_START_TIME) / 1000),
+      uptimeFormatted: formatUptime(Math.floor((Date.now() - SERVER_START_TIME) / 1000)),
+      memory: {
+        rss: Math.round(mem.rss / 1024 / 1024) + 'MB',
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024) + 'MB',
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024) + 'MB'
+      },
+      files: {
+        input: inputFileCount,
+        outputPptx: outputPptxCount,
+        outputWeb: outputWebCount,
+        totalOutput: outputPptxCount + outputWebCount
+      },
+      sourceDirs: sourceDirs.length,
+      nodeVersion: process.version
+    });
+  } catch (err) {
+    res.status(500).json({ error: '상태 확인 실패: ' + err.message });
+  }
+});
+
+function formatUptime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const parts = [];
+  if (d > 0) parts.push(d + '일');
+  if (h > 0) parts.push(h + '시간');
+  if (m > 0) parts.push(m + '분');
+  parts.push(s + '초');
+  return parts.join(' ');
+}
+
+// ============ 템플릿 목록 ============
+
+app.get('/api/templates', (req, res) => {
+  const templates = [
+    {
+      type: 'bullets',
+      name: '글머리 기호',
+      description: '핵심 포인트를 목록으로 정리',
+      example: { title: '주요 목표', type: 'bullets', items: ['첫 번째 핵심 포인트', '두 번째 핵심 포인트', '세 번째 핵심 포인트'] }
+    },
+    {
+      type: 'cards',
+      name: '카드 레이아웃',
+      description: '정보를 카드 형태로 나열',
+      example: { title: '핵심 가치', type: 'cards', cards: [{ title: '카드 1', body: '카드 내용 설명' }, { title: '카드 2', body: '카드 내용 설명' }, { title: '카드 3', body: '카드 내용 설명' }] }
+    },
+    {
+      type: 'steps',
+      name: '단계별 프로세스',
+      description: '순차적인 단계를 시각적으로 표현',
+      example: { title: '진행 단계', type: 'steps', steps: [{ title: '1단계: 준비', desc: '사전 준비 사항 확인' }, { title: '2단계: 실행', desc: '계획에 따라 실행' }, { title: '3단계: 검토', desc: '결과 확인 및 피드백' }] }
+    },
+    {
+      type: 'stats',
+      name: '통계/숫자 강조',
+      description: '주요 수치를 크게 표시',
+      example: { title: '성과 지표', type: 'stats', stats: [{ value: 95, suffix: '%', label: '고객 만족도' }, { value: 120, suffix: '명', label: '교육 이수자' }, { value: 30, suffix: '%', label: '생산성 향상' }] }
+    },
+    {
+      type: 'two-column',
+      name: '2단 비교',
+      description: '두 가지를 좌우로 비교',
+      example: { title: '비교 분석', type: 'two-column', leftTitle: 'Before', leftItems: ['기존 방식 1', '기존 방식 2'], rightTitle: 'After', rightItems: ['개선 방식 1', '개선 방식 2'] }
+    },
+    {
+      type: 'timeline',
+      name: '타임라인',
+      description: '시간순 이벤트 표시',
+      example: { title: '연혁', type: 'timeline', events: [{ year: '2020', desc: '설립' }, { year: '2022', desc: '성장' }, { year: '2024', desc: '도약' }] }
+    },
+    {
+      type: 'checklist',
+      name: '체크리스트',
+      description: '완료/미완료 항목 표시',
+      example: { title: '점검 사항', type: 'checklist', items: [{ text: '완료 항목', done: true }, { text: '미완료 항목', done: false }] }
+    },
+    {
+      type: 'quote',
+      name: '인용구',
+      description: '명언이나 핵심 메시지 강조',
+      example: { title: '명언', type: 'quote', quote: '배움에는 왕도가 없다', author: '유클리드' }
+    },
+    {
+      type: 'progress',
+      name: '프로그레스 바',
+      description: '진행률을 바 형태로 표시',
+      example: { title: '진행 현황', type: 'progress', items: [{ label: '프로젝트 A', value: 85 }, { label: '프로젝트 B', value: 60 }] }
+    },
+    {
+      type: 'pyramid',
+      name: '피라미드',
+      description: '계층 구조를 피라미드로 표현',
+      example: { title: '조직 구조', type: 'pyramid', levels: [{ title: '전략', desc: '최상위 목표' }, { title: '전술', desc: '실행 방안' }, { title: '운영', desc: '일상 업무' }] }
+    },
+    {
+      type: 'icon-grid',
+      name: '아이콘 그리드',
+      description: '아이콘과 함께 항목 나열',
+      example: { title: '서비스 소개', type: 'icon-grid', items: [{ title: '서비스 A', desc: '설명' }, { title: '서비스 B', desc: '설명' }, { title: '서비스 C', desc: '설명' }] }
+    },
+    {
+      type: 'donut',
+      name: '도넛 차트',
+      description: '비율을 도넛 그래프로 표시',
+      example: { title: '비율 분석', type: 'donut', items: [{ value: 75, suffix: '%', label: '달성률' }, { value: 90, suffix: '%', label: '참여율' }] }
+    },
+    {
+      type: 'matrix',
+      name: '2x2 매트릭스',
+      description: '4개 영역으로 분류',
+      example: { title: '분석 매트릭스', type: 'matrix', cells: [{ title: '영역 1', body: '설명' }, { title: '영역 2', body: '설명' }, { title: '영역 3', body: '설명' }, { title: '영역 4', body: '설명' }] }
+    },
+    {
+      type: 'cycle',
+      name: '순환 다이어그램',
+      description: '반복 프로세스를 원형으로 표현',
+      example: { title: 'PDCA 사이클', type: 'cycle', nodes: [{ title: 'Plan' }, { title: 'Do' }, { title: 'Check' }, { title: 'Act' }] }
+    },
+    {
+      type: 'process-arrow',
+      name: '프로세스 화살표',
+      description: '단계별 쉐브론 형태',
+      example: { title: '업무 프로세스', type: 'process-arrow', steps: [{ title: '입력', desc: '데이터 수집' }, { title: '처리', desc: '분석' }, { title: '출력', desc: '보고서' }] }
+    },
+    {
+      type: 'bar-chart',
+      name: '막대 차트',
+      description: '수치를 막대 그래프로 비교',
+      example: { title: '매출 비교', type: 'bar-chart', items: [{ label: '1분기', value: 80 }, { label: '2분기', value: 120 }, { label: '3분기', value: 95 }] }
+    },
+    {
+      type: 'highlight',
+      name: '강조 슬라이드',
+      description: '핵심 메시지를 크게 강조',
+      example: { title: '핵심 메시지', type: 'highlight', body: '변화가 곧 기회입니다', sub: '2024년 핵심 전략' }
+    },
+    {
+      type: 'swot',
+      name: 'SWOT 분석',
+      description: '강점/약점/기회/위협 분석',
+      example: { title: 'SWOT 분석', type: 'swot', strengths: ['강점 1'], weaknesses: ['약점 1'], opportunities: ['기회 1'], threats: ['위협 1'] }
+    },
+    {
+      type: 'roadmap',
+      name: '로드맵',
+      description: '단계별 계획을 타임라인으로 표시',
+      example: { title: '로드맵', type: 'roadmap', phases: [{ title: 'Phase 1', desc: '준비 단계', label: 'Q1' }, { title: 'Phase 2', desc: '실행 단계', label: 'Q2' }] }
+    }
+  ];
+  res.json({ templates });
+});
+
+// ============ 테마 목록 ============
+
+app.get('/api/themes', (req, res) => {
+  const { THEMES } = pptGenerator;
+  const themes = Object.entries(THEMES).map(([key, t]) => ({
+    id: key,
+    name: t.name,
+    colors: {
+      primary: '#' + t.primary,
+      secondary: '#' + t.secondary,
+      accent: '#' + t.accent,
+      bg: '#' + t.bg,
+      text: '#' + t.text,
+      gradient: t.gradient.map(c => '#' + c)
+    }
+  }));
+  res.json({ themes });
+});
+
+// ============ 웹 미리보기 HTML 생성 ============
+
+app.post('/api/preview', (req, res) => {
+  try {
+    const { slides, theme } = req.body;
+    if (!slides) {
+      return res.status(400).json({ error: '슬라이드 데이터가 필요합니다' });
+    }
+    const html = webGenerator.generateHTML(slides, { theme: theme || 'modern', title: slides.cover?.title || 'Preview' });
+    res.json({ success: true, html });
+  } catch (err) {
+    res.status(500).json({ error: '미리보기 생성 실패: ' + err.message });
+  }
+});
+
+// ============ 결과물 복제 ============
+
+app.post('/api/duplicate-output/:type/:name', (req, res) => {
+  try {
+    const { type, name } = req.params;
+    if (type !== 'pptx' && type !== 'web') {
+      return res.status(400).json({ error: '잘못된 타입입니다 (pptx 또는 web)' });
+    }
+    const dir = path.join(__dirname, type === 'pptx' ? 'output/pptx' : 'output/web');
+    const safeName = path.basename(name);
+    const srcPath = path.join(dir, safeName);
+
+    // Path traversal 방지
+    if (!path.resolve(srcPath).startsWith(dir + path.sep) && path.resolve(srcPath) !== dir) {
+      return res.status(400).json({ error: '잘못된 경로입니다' });
+    }
+    if (!fs.existsSync(srcPath)) {
+      return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+    }
+
+    // 복제 파일명 생성
+    const ext = path.extname(safeName);
+    const base = path.basename(safeName, ext);
+    let copyName = `${base}_복사본${ext}`;
+    let counter = 1;
+    while (fs.existsSync(path.join(dir, copyName))) {
+      counter++;
+      copyName = `${base}_복사본${counter}${ext}`;
+    }
+
+    fs.copyFileSync(srcPath, path.join(dir, copyName));
+    res.json({ success: true, newName: copyName, path: `/output/${type === 'pptx' ? 'pptx' : 'web'}/${encodeURIComponent(copyName)}` });
+  } catch (err) {
+    res.status(500).json({ error: '복제 실패: ' + err.message });
+  }
+});
+
+// ============ 결과물 이름 변경 ============
+
+app.post('/api/rename-output/:type/:name', (req, res) => {
+  try {
+    const { type, name } = req.params;
+    const { newName } = req.body;
+
+    if (type !== 'pptx' && type !== 'web') {
+      return res.status(400).json({ error: '잘못된 타입입니다 (pptx 또는 web)' });
+    }
+    if (!newName) {
+      return res.status(400).json({ error: '새 파일명이 필요합니다' });
+    }
+
+    const dir = path.join(__dirname, type === 'pptx' ? 'output/pptx' : 'output/web');
+    const safeName = path.basename(name);
+    const safeNewName = path.basename(newName);
+
+    if (!safeNewName || safeNewName.startsWith('.')) {
+      return res.status(400).json({ error: '잘못된 파일명입니다' });
+    }
+
+    const srcPath = path.join(dir, safeName);
+    const destPath = path.join(dir, safeNewName);
+
+    // Path traversal 방지
+    if (!path.resolve(srcPath).startsWith(dir + path.sep) && path.resolve(srcPath) !== dir) {
+      return res.status(400).json({ error: '잘못된 경로입니다' });
+    }
+    if (!path.resolve(destPath).startsWith(dir + path.sep) && path.resolve(destPath) !== dir) {
+      return res.status(400).json({ error: '잘못된 대상 경로입니다' });
+    }
+    if (!fs.existsSync(srcPath)) {
+      return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+    }
+    if (fs.existsSync(destPath)) {
+      return res.status(409).json({ error: '같은 이름의 파일이 이미 존재합니다' });
+    }
+
+    fs.renameSync(srcPath, destPath);
+    res.json({ success: true, newName: safeNewName, path: `/output/${type === 'pptx' ? 'pptx' : 'web'}/${encodeURIComponent(safeNewName)}` });
+  } catch (err) {
+    res.status(500).json({ error: '이름 변경 실패: ' + err.message });
+  }
+});
+
+// ============ 파일 내용 미리보기 ============
+
+app.get('/api/files/:sourceDir/:filePath/preview', async (req, res) => {
+  try {
+    const { sourceDir, filePath } = req.params;
+
+    // sourceDir은 base64로 인코딩되어 전달됨
+    let decodedDir;
+    try {
+      decodedDir = Buffer.from(sourceDir, 'base64').toString('utf8');
+    } catch {
+      return res.status(400).json({ error: '잘못된 소스 디렉토리 인코딩입니다' });
+    }
+
+    const resolvedDir = path.resolve(decodedDir);
+    if (!sourceDirs.includes(resolvedDir)) {
+      return res.status(403).json({ error: '등록되지 않은 소스 디렉토리입니다' });
+    }
+
+    let decodedPath;
+    try {
+      decodedPath = Buffer.from(filePath, 'base64').toString('utf8');
+    } catch {
+      return res.status(400).json({ error: '잘못된 파일 경로 인코딩입니다' });
+    }
+
+    const fullPath = path.join(resolvedDir, decodedPath);
+
+    // Path traversal 방지
+    if (!path.resolve(fullPath).startsWith(resolvedDir + path.sep) && path.resolve(fullPath) !== resolvedDir) {
+      return res.status(400).json({ error: '잘못된 파일 경로입니다' });
+    }
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+    }
+
+    const result = await fileParser.parseFile(fullPath);
+    const maxPreviewLength = 5000;
+    const preview = result.text ? result.text.substring(0, maxPreviewLength) : '';
+    const truncated = result.text && result.text.length > maxPreviewLength;
+
+    res.json({
+      name: result.name,
+      type: result.type,
+      preview,
+      truncated,
+      fullLength: result.text ? result.text.length : 0,
+      pages: result.pages || null,
+      error: result.error || null
+    });
+  } catch (err) {
+    res.status(500).json({ error: '파일 미리보기 실패: ' + err.message });
+  }
+});
+
+// ============ 일괄 생성 (Bulk) ============
+
+app.post('/api/generate/bulk', async (req, res) => {
+  try {
+    const { files, outputType, theme } = req.body;
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: '파일 목록이 필요합니다' });
+    }
+    if (!outputType || !['web', 'pptx'].includes(outputType)) {
+      return res.status(400).json({ error: 'outputType은 web 또는 pptx여야 합니다' });
+    }
+    if (files.length > 20) {
+      return res.status(400).json({ error: '한 번에 최대 20개 파일까지 처리 가능합니다' });
+    }
+
+    const results = [];
+
+    for (const file of files) {
+      const { filePath, sourceDir, slides, filename } = file;
+      const entry = { originalFile: filePath || filename, status: 'pending' };
+
+      try {
+        // slides가 직접 제공된 경우 (이미 파싱+구조화된 데이터)
+        if (slides) {
+          const safeName = path.basename(filename || 'presentation');
+
+          if (outputType === 'web') {
+            const html = webGenerator.generateHTML(slides, { theme: theme || 'modern', title: slides.cover?.title || 'Presentation' });
+            const outputDir = path.join(__dirname, 'output/web');
+            fs.mkdirSync(outputDir, { recursive: true });
+            const webName = safeName.endsWith('.html') ? safeName : safeName.replace(/\.[^.]+$/, '.html');
+            fs.writeFileSync(path.join(outputDir, webName), html, 'utf8');
+            entry.status = 'success';
+            entry.outputPath = `/output/web/${encodeURIComponent(webName)}`;
+          } else {
+            const pptxName = safeName.endsWith('.pptx') ? safeName : safeName.replace(/\.[^.]+$/, '.pptx');
+            const outputPath = await pptGenerator.generate(slides, theme || 'modern', pptxName);
+            entry.status = 'success';
+            entry.outputPath = outputPath;
+          }
+        }
+        // filePath가 제공된 경우 (파싱만 수행 후 결과 반환)
+        else if (filePath && sourceDir) {
+          const resolvedDir = path.resolve(sourceDir);
+          if (!sourceDirs.includes(resolvedDir)) {
+            entry.status = 'error';
+            entry.error = '등록되지 않은 소스 디렉토리';
+            results.push(entry);
+            continue;
+          }
+
+          const fullPath = path.join(resolvedDir, filePath);
+          if (!path.resolve(fullPath).startsWith(resolvedDir + path.sep)) {
+            entry.status = 'error';
+            entry.error = '잘못된 파일 경로';
+            results.push(entry);
+            continue;
+          }
+
+          const parsed = await fileParser.parseFile(fullPath);
+          entry.status = 'parsed';
+          entry.parsed = { name: parsed.name, type: parsed.type, textLength: parsed.text ? parsed.text.length : 0 };
+          entry.note = '슬라이드 데이터(slides)를 함께 전달해야 최종 생성이 가능합니다';
+        } else {
+          entry.status = 'error';
+          entry.error = 'slides 또는 filePath+sourceDir 조합이 필요합니다';
+        }
+      } catch (err) {
+        entry.status = 'error';
+        entry.error = err.message;
+      }
+
+      results.push(entry);
+    }
+
+    const successCount = results.filter(r => r.status === 'success').length;
+    const errorCount = results.filter(r => r.status === 'error').length;
+
+    res.json({
+      success: true,
+      total: files.length,
+      successCount,
+      errorCount,
+      results
+    });
+  } catch (err) {
+    res.status(500).json({ error: '일괄 생성 실패: ' + err.message });
+  }
+});
+
 // ============ 글로벌 에러 핸들러 ============
 
 app.use((err, req, res, _next) => {
