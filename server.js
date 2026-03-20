@@ -187,6 +187,39 @@ app.delete('/api/outputs/:type/:name', (req, res) => {
   }
 });
 
+// ============ 결과물 이름 변경 ============
+
+app.post('/api/outputs/:type/:name/rename', (req, res) => {
+  const { type, name } = req.params;
+  const { newName } = req.body;
+  if (type !== 'pptx' && type !== 'web') {
+    return res.status(400).json({ error: '잘못된 타입입니다' });
+  }
+  if (!newName || typeof newName !== 'string' || newName.includes('/') || newName.includes('\\') || newName.includes('..')) {
+    return res.status(400).json({ error: '잘못된 파일명입니다' });
+  }
+  const dir = type === 'pptx' ? 'output/pptx' : 'output/web';
+  const outputDir = path.join(__dirname, dir);
+  const oldPath = path.join(outputDir, name);
+  const newPath = path.join(outputDir, newName);
+  // Path Traversal 방지
+  if (!oldPath.startsWith(outputDir + path.sep) || !newPath.startsWith(outputDir + path.sep)) {
+    return res.status(400).json({ error: '잘못된 경로입니다' });
+  }
+  if (!fs.existsSync(oldPath)) {
+    return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+  }
+  if (fs.existsSync(newPath)) {
+    return res.status(409).json({ error: '같은 이름의 파일이 이미 존재합니다' });
+  }
+  try {
+    fs.renameSync(oldPath, newPath);
+    res.json({ success: true, newName });
+  } catch(e) {
+    res.status(500).json({ error: '이름 변경 실패: ' + e.message });
+  }
+});
+
 // ============ 파일 파싱 ============
 
 app.post('/api/parse', async (req, res) => {

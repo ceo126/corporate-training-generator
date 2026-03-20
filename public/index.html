@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,17 +9,57 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-hover: rgba(255,255,255,0.06);
+    --bg-card: rgba(255,255,255,0.03);
+    --border-color: rgba(255,255,255,0.08);
+    --border-light: rgba(255,255,255,0.06);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent: #60a5fa;
+    --accent-purple: #a78bfa;
+    --accent-blue: #2563eb;
+    --modal-bg: rgba(0,0,0,0.6);
+  }
+
+  [data-theme="light"] {
+    --bg-primary: #f1f5f9;
+    --bg-secondary: #ffffff;
+    --bg-hover: rgba(0,0,0,0.04);
+    --bg-card: rgba(0,0,0,0.02);
+    --border-color: rgba(0,0,0,0.1);
+    --border-light: rgba(0,0,0,0.06);
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-blue: #2563eb;
+    --modal-bg: rgba(0,0,0,0.4);
+  }
+
   body {
     font-family: 'Noto Sans KR', sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
   }
 
   .header {
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+    border-bottom: 1px solid var(--border-color);
     padding: 25px 40px;
+    position: relative;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .header h1 {
@@ -32,8 +72,66 @@
 
   .header p {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     margin-top: 5px;
+  }
+
+  .theme-toggle {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Noto Sans KR', sans-serif;
+    white-space: nowrap;
+  }
+
+  .theme-toggle:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+  }
+
+  .theme-toggle .label {
+    font-size: 0.8rem;
+  }
+
+  /* 통계 대시보드 */
+  .stats-bar {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 14px 40px;
+    display: flex;
+    gap: 30px;
+    align-items: center;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .stat-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
   }
 
   .container {
@@ -49,15 +147,15 @@
   }
 
   .panel {
-    background: #1e293b;
+    background: var(--bg-secondary);
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--border-color);
     overflow: hidden;
   }
 
   .panel-header {
     padding: 18px 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid var(--border-light);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -68,8 +166,45 @@
     font-weight: 600;
   }
 
+  .panel-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .panel-body {
     padding: 20px 24px;
+  }
+
+  /* 검색 입력란 */
+  .search-input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 12px;
+  }
+
+  .search-input:focus { border-color: var(--accent-blue); }
+
+  .search-wrapper {
+    position: relative;
+  }
+
+  .search-wrapper::before {
+    content: '🔍';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    pointer-events: none;
   }
 
   /* 파일 업로드 */
@@ -94,13 +229,13 @@
   }
 
   .upload-zone p {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.9rem;
   }
 
   .upload-zone .formats {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-muted);
     margin-top: 8px;
   }
 
@@ -115,19 +250,22 @@
     justify-content: space-between;
     padding: 12px 16px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.03);
+    background: var(--bg-card);
     margin-bottom: 8px;
     transition: all 0.2s;
   }
 
   .file-item:hover {
-    background: rgba(255,255,255,0.06);
+    background: var(--bg-hover);
   }
 
   .file-info {
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
+    flex: 1;
+    min-width: 0;
   }
 
   .file-icon {
@@ -139,6 +277,7 @@
     justify-content: center;
     font-size: 0.8rem;
     font-weight: 700;
+    flex-shrink: 0;
   }
 
   .file-icon.pdf { background: rgba(239,68,68,0.15); color: #ef4444; }
@@ -149,17 +288,20 @@
   .file-name {
     font-size: 0.9rem;
     font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .file-size {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-muted);
   }
 
   .delete-btn {
     background: none;
     border: none;
-    color: #64748b;
+    color: var(--text-muted);
     cursor: pointer;
     padding: 5px;
     border-radius: 5px;
@@ -179,7 +321,7 @@
     justify-content: space-between;
     padding: 14px 16px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.03);
+    background: var(--bg-card);
     margin-bottom: 8px;
   }
 
@@ -187,6 +329,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex: 1;
   }
 
   .output-badge {
@@ -195,6 +339,7 @@
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
+    flex-shrink: 0;
   }
 
   .output-badge.pptx {
@@ -210,6 +355,7 @@
   .output-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .action-btn {
@@ -237,11 +383,34 @@
 
   .action-btn.secondary {
     background: rgba(255,255,255,0.08);
-    color: #e2e8f0;
+    color: var(--text-primary);
   }
 
   .action-btn.secondary:hover {
     background: rgba(255,255,255,0.12);
+  }
+
+  .action-btn.rename-btn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+
+  /* 정렬 토글 */
+  .sort-toggle {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .sort-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   /* 안내 */
@@ -265,7 +434,7 @@
 
   .guide-box li {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     margin-bottom: 6px;
     line-height: 1.6;
   }
@@ -278,10 +447,24 @@
     color: #a78bfa;
   }
 
+  .shortcut-hint {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .shortcut-hint kbd {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+  }
+
   .empty-state {
     text-align: center;
     padding: 30px;
-    color: #64748b;
+    color: var(--text-muted);
   }
 
   .empty-state .icon {
@@ -339,7 +522,7 @@
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6);
+    background: var(--modal-bg);
     display: none;
     align-items: center;
     justify-content: center;
@@ -350,19 +533,21 @@
   .modal-overlay.show { display: flex; }
 
   .modal {
-    background: #1e293b;
+    background: var(--bg-secondary);
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--border-color);
     padding: 30px;
     width: 520px;
     max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
   .modal h3 {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 20px;
   }
 
@@ -373,7 +558,7 @@
   .modal .form-group label {
     display: block;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     margin-bottom: 6px;
     font-weight: 500;
   }
@@ -381,10 +566,10 @@
   .modal input, .modal select, .modal textarea {
     width: 100%;
     padding: 10px 14px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 0.9rem;
     outline: none;
@@ -424,7 +609,7 @@
 
   .modal-actions .btn-cancel {
     background: rgba(255,255,255,0.08);
-    color: #94a3b8;
+    color: var(--text-secondary);
   }
 
   .modal-actions .btn-cancel:hover { background: rgba(255,255,255,0.12); }
@@ -438,8 +623,8 @@
     flex: 1;
     padding: 14px;
     border-radius: 10px;
-    border: 2px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.03);
+    border: 2px solid var(--border-color);
+    background: var(--bg-card);
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
@@ -448,8 +633,8 @@
   .format-option:hover { border-color: rgba(96,165,250,0.3); }
   .format-option.selected { border-color: #2563eb; background: rgba(37,99,235,0.1); }
   .format-option .fmt-icon { font-size: 1.5rem; margin-bottom: 4px; }
-  .format-option .fmt-name { font-size: 0.8rem; color: #e2e8f0; font-weight: 600; }
-  .format-option .fmt-desc { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+  .format-option .fmt-name { font-size: 0.8rem; color: var(--text-primary); font-weight: 600; }
+  .format-option .fmt-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
 
   .generating-overlay {
     position: fixed;
@@ -475,16 +660,281 @@
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 토스트 알림 */
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+    animation: toastIn 0.3s ease-out;
+    max-width: 360px;
+  }
+
+  .toast.success { border-left: 3px solid #22c55e; }
+  .toast.error { border-left: 3px solid #ef4444; }
+  .toast.info { border-left: 3px solid #3b82f6; }
+
+  .toast.removing {
+    animation: toastOut 0.3s ease-in forwards;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(60px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(60px); }
+  }
+
+  /* 드래그 앤 드롭 전체화면 오버레이 */
+  .drag-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(37,99,235,0.12);
+    border: 3px dashed #60a5fa;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+  }
+
+  .drag-overlay.show { display: flex; }
+
+  .drag-overlay .drag-icon { font-size: 3rem; }
+  .drag-overlay .drag-text { font-size: 1.1rem; color: var(--accent); font-weight: 600; }
+
+  /* 파일 미리보기 모달 */
+  .preview-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--modal-bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    backdrop-filter: blur(4px);
+  }
+
+  .preview-modal-overlay.show { display: flex; }
+
+  .preview-modal {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    width: 700px;
+    max-width: 92vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .preview-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .preview-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .preview-close:hover {
+    color: #ef4444;
+    background: rgba(239,68,68,0.1);
+  }
+
+  .preview-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text-secondary);
+  }
+
+  /* 이름 변경 인라인 입력 */
+  .rename-input {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--accent-blue);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    width: 180px;
+  }
+
+  /* 반응형 */
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+
+    .header {
+      padding: 18px 16px;
+    }
+
+    .stats-bar {
+      padding: 12px 16px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .create-section {
+      flex-direction: column;
+    }
+
+    .create-btn {
+      justify-content: center;
+    }
+
+    .output-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .output-actions {
+      width: 100%;
+    }
+
+    .output-actions .action-btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .format-select {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .header h1 {
+      font-size: 1.2rem;
+    }
+
+    .header p {
+      font-size: 0.78rem;
+    }
+
+    .stats-bar {
+      gap: 12px;
+    }
+
+    .stat-value {
+      font-size: 1rem;
+    }
+
+    .theme-toggle .label {
+      display: none;
+    }
+
+    .modal {
+      padding: 20px;
+      margin: 10px;
+    }
+  }
 </style>
 </head>
 <body>
   <div class="header">
-    <h1>기업교육 발표자료 생성기</h1>
-    <p>교육자료를 넣고 Claude Code에게 요청하면 PPT + 동적 웹 발표자료를 자동 생성합니다</p>
+    <div class="header-top">
+      <div>
+        <h1>기업교육 발표자료 생성기</h1>
+        <p>교육자료를 넣고 Claude Code에게 요청하면 PPT + 동적 웹 발표자료를 자동 생성합니다</p>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="themeIcon">🌙</span>
+        <span class="label" id="themeLabel">다크 모드</span>
+      </button>
+    </div>
     <div class="create-section">
       <button class="create-btn gradient" onclick="showCreateModal()">+ 새 발표자료 만들기</button>
       <a href="/editor" class="create-btn outline">슬라이드 에디터 열기</a>
     </div>
+  </div>
+
+  <!-- 통계 대시보드 -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div>
+        <div class="stat-value" id="statFiles">0</div>
+        <div class="stat-label">총 파일 수</div>
+      </div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div>
+        <div class="stat-value" id="statOutputs">0</div>
+        <div class="stat-label">총 결과물 수</div>
+      </div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div>
+        <div class="stat-value" id="statRecent" style="font-size:0.9rem;">-</div>
+        <div class="stat-label">최근 생성일</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 컨테이너 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 드래그 오버레이 -->
+  <div class="drag-overlay" id="dragOverlay">
+    <div class="drag-icon">📂</div>
+    <div class="drag-text">파일을 놓으면 업로드됩니다</div>
   </div>
 
   <!-- 새 발표자료 생성 모달 -->
@@ -554,6 +1004,19 @@
     </div>
   </div>
 
+  <!-- 파일 미리보기 모달 -->
+  <div class="preview-modal-overlay" id="previewModal" onclick="if(event.target===this)hidePreview()">
+    <div class="preview-modal">
+      <div class="preview-header">
+        <h3 id="previewTitle">파일 미리보기</h3>
+        <button class="preview-close" onclick="hidePreview()">✕</button>
+      </div>
+      <div class="preview-body" id="previewBody">
+        로딩 중...
+      </div>
+    </div>
+  </div>
+
   <!-- 생성 중 오버레이 -->
   <div class="generating-overlay" id="generatingOverlay">
     <div class="spinner"></div>
@@ -566,23 +1029,27 @@
       <div class="panel">
         <div class="panel-header">
           <h2>📂 교육자료</h2>
-          <span id="fileCount" style="font-size:0.8rem;color:#64748b;">0개 파일</span>
+          <span id="fileCount" style="font-size:0.8rem;color:var(--text-muted);">0개 파일</span>
         </div>
         <div class="panel-body">
           <!-- 외부 폴더 추가 -->
           <div style="margin-bottom:15px;">
             <div id="sourceList" style="margin-bottom:10px;"></div>
             <div style="display:flex;gap:8px;">
-              <input type="text" id="sourcePath" placeholder="외부 폴더 경로 (예: D:\교육자료)" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:0.85rem;font-family:'Noto Sans KR',sans-serif;">
+              <input type="text" id="sourcePath" placeholder="외부 폴더 경로 (예: D:\교육자료)" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:0.85rem;font-family:'Noto Sans KR',sans-serif;">
               <button class="action-btn primary" onclick="addSource()" style="font-size:0.8rem;white-space:nowrap;">폴더 추가</button>
             </div>
           </div>
-          <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
             <div class="icon">📄</div>
             <p>파일을 드래그하거나 클릭하여 업로드 (input 폴더)</p>
             <div class="formats">PDF, DOCX, TXT, PPTX 지원</div>
           </div>
           <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md,.pptx">
+          <!-- 파일 검색 -->
+          <div class="search-wrapper">
+            <input type="text" class="search-input" id="fileSearch" placeholder="파일 검색..." oninput="filterFiles()">
+          </div>
           <ul class="file-list" id="fileList"></ul>
         </div>
       </div>
@@ -591,9 +1058,16 @@
       <div class="panel">
         <div class="panel-header">
           <h2>📊 생성된 발표자료</h2>
-          <button class="action-btn secondary" onclick="loadOutputs()" style="font-size:0.75rem;">새로고침</button>
+          <div class="panel-header-actions">
+            <button class="sort-toggle" id="sortToggle" onclick="toggleSort()">이름순</button>
+            <button class="action-btn secondary" onclick="loadOutputs()" style="font-size:0.75rem;">새로고침</button>
+          </div>
         </div>
         <div class="panel-body">
+          <!-- 결과물 검색 -->
+          <div class="search-wrapper">
+            <input type="text" class="search-input" id="outputSearch" placeholder="결과물 검색..." oninput="filterOutputs()">
+          </div>
           <div id="outputList">
             <div class="empty-state">
               <div class="icon">✨</div>
@@ -613,6 +1087,9 @@
         <li><strong>결과물 확인</strong> — PPT 다운로드 또는 웹 발표자료 미리보기</li>
         <li><strong>웹 발표자료</strong> — 키보드 ←→, 스페이스, F(전체화면) 으로 조작</li>
       </ol>
+      <div class="shortcut-hint">
+        키보드 단축키: <kbd>Ctrl+N</kbd> 새 발표자료 &nbsp; <kbd>Ctrl+U</kbd> 파일 업로드
+      </div>
     </div>
   </div>
 
@@ -622,6 +1099,60 @@
       return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
+    // ============ 토스트 알림 ============
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.innerHTML = '<span>' + (icons[type] || '') + '</span><span>' + escHtml(message) + '</span>';
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ============ 테마 토글 ============
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      const newTheme = isDark ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeButton(newTheme);
+    }
+
+    function updateThemeButton(theme) {
+      document.getElementById('themeIcon').textContent = theme === 'dark' ? '🌙' : '☀️';
+      document.getElementById('themeLabel').textContent = theme === 'dark' ? '다크 모드' : '라이트 모드';
+    }
+
+    // 저장된 테마 복원
+    (function() {
+      const saved = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeButton(saved);
+    })();
+
+    // ============ 데이터 캐시 ============
+    let cachedFiles = [];
+    let cachedOutputs = [];
+    let outputSortMode = 'name'; // 'name' | 'date'
+
+    // ============ 통계 업데이트 ============
+    function updateStats() {
+      document.getElementById('statFiles').textContent = cachedFiles.length;
+      document.getElementById('statOutputs').textContent = cachedOutputs.length;
+      // 최근 생성일은 결과물 목록에서 추정 (이름 기준 또는 단순 존재)
+      if (cachedOutputs.length > 0) {
+        document.getElementById('statRecent').textContent = new Date().toLocaleDateString('ko-KR');
+      } else {
+        document.getElementById('statRecent').textContent = '-';
+      }
+    }
+
+    // ============ 소스 관리 ============
     async function loadSources() {
       try {
         const res = await fetch('/api/sources');
@@ -631,7 +1162,7 @@
           const escaped = escHtml(s);
           return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(96,165,250,0.08);margin-bottom:4px;font-size:0.8rem;">
-            <span style="color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escaped}">📁 ${escaped}</span>
+            <span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escaped}">📁 ${escaped}</span>
             <button class="delete-btn" data-source="${escaped}" onclick="removeSource(this.dataset.source)" style="font-size:0.75rem;">✕</button>
           </div>`;
         }).join('');
@@ -649,11 +1180,12 @@
           body: JSON.stringify({ dirPath })
         });
         const data = await res.json();
-        if (data.error) { alert(data.error); return; }
+        if (data.error) { showToast(data.error, 'error'); return; }
         input.value = '';
+        showToast('폴더가 추가되었습니다', 'success');
         loadSources();
         loadFiles();
-      } catch(e) { alert('오류: ' + e.message); }
+      } catch(e) { showToast('오류: ' + e.message, 'error'); }
     }
 
     async function removeSource(dirPath) {
@@ -662,118 +1194,287 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dirPath })
       });
+      showToast('폴더가 제거되었습니다', 'info');
       loadSources();
       loadFiles();
     }
 
+    // ============ 파일 목록 ============
     async function loadFiles() {
       try {
         const res = await fetch('/api/files');
         const data = await res.json();
-        const list = document.getElementById('fileList');
-        const count = document.getElementById('fileCount');
-
-        count.textContent = data.files.length + '개 파일';
-
-        if (data.files.length === 0) {
-          list.innerHTML = '<div class="empty-state"><p style="font-size:0.85rem;">등록된 폴더에 지원 파일이 없습니다</p></div>';
-          return;
-        }
-
-        list.innerHTML = data.files.map(f => {
-          const ext = f.type.replace('.', '');
-          const iconClass = ['pdf','docx','txt'].includes(ext) ? ext : 'other';
-          const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(1)+'KB';
-          const dirLabel = f.sourceDir ? f.sourceDir.split('\\').pop().split('/').pop() : '';
-          return `
-            <li class="file-item">
-              <div class="file-info">
-                <div class="file-icon ${iconClass}">${escHtml(ext.toUpperCase())}</div>
-                <div>
-                  <div class="file-name">${escHtml(f.name)}</div>
-                  <div class="file-size">${size} · ${escHtml(dirLabel)}</div>
-                </div>
-              </div>
-            </li>`;
-        }).join('');
+        cachedFiles = data.files;
+        document.getElementById('fileCount').textContent = data.files.length + '개 파일';
+        renderFiles();
+        updateStats();
       } catch(e) {
         console.error(e);
       }
     }
 
+    function renderFiles() {
+      const list = document.getElementById('fileList');
+      const query = document.getElementById('fileSearch').value.toLowerCase();
+      const filtered = cachedFiles.filter(f => f.name.toLowerCase().includes(query));
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state"><p style="font-size:0.85rem;">' +
+          (cachedFiles.length === 0 ? '등록된 폴더에 지원 파일이 없습니다' : '검색 결과가 없습니다') + '</p></div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(f => {
+        const ext = f.type.replace('.', '');
+        const iconClass = ['pdf','docx','txt'].includes(ext) ? ext : 'other';
+        const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(1)+'KB';
+        const dirLabel = f.sourceDir ? f.sourceDir.split('\\').pop().split('/').pop() : '';
+        return `
+          <li class="file-item">
+            <div class="file-info" onclick="previewFile('${escHtml(f.name)}','${escHtml(f.sourceDir || '')}')">
+              <div class="file-icon ${iconClass}">${escHtml(ext.toUpperCase())}</div>
+              <div>
+                <div class="file-name">${escHtml(f.name)}</div>
+                <div class="file-size">${size} · ${escHtml(dirLabel)}</div>
+              </div>
+            </div>
+          </li>`;
+      }).join('');
+    }
+
+    function filterFiles() {
+      renderFiles();
+    }
+
+    // ============ 파일 미리보기 ============
+    async function previewFile(name, sourceDir) {
+      document.getElementById('previewTitle').textContent = name;
+      document.getElementById('previewBody').textContent = '로딩 중...';
+      document.getElementById('previewModal').classList.add('show');
+
+      try {
+        const res = await fetch('/api/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filePath: name, sourceDir: sourceDir || undefined })
+        });
+        const data = await res.json();
+        if (data.error) {
+          document.getElementById('previewBody').textContent = '미리보기 실패: ' + data.error;
+        } else {
+          const text = data.text || data.content || JSON.stringify(data, null, 2);
+          document.getElementById('previewBody').textContent = text.substring(0, 10000) + (text.length > 10000 ? '\n\n... (10,000자까지 표시)' : '');
+        }
+      } catch(e) {
+        document.getElementById('previewBody').textContent = '미리보기 실패: ' + e.message;
+      }
+    }
+
+    function hidePreview() {
+      document.getElementById('previewModal').classList.remove('show');
+    }
+
+    // ============ 결과물 목록 ============
     async function loadOutputs() {
       try {
         const res = await fetch('/api/outputs');
         const data = await res.json();
-        const container = document.getElementById('outputList');
-
-        if (data.outputs.length === 0) {
-          container.innerHTML = '<div class="empty-state"><div class="icon">✨</div><p>아직 생성된 발표자료가 없습니다</p></div>';
-          return;
-        }
-
-        container.innerHTML = data.outputs.map(o => `
-          <div class="output-item">
-            <div class="output-info">
-              <span class="output-badge ${escHtml(o.type)}">${escHtml(o.type)}</span>
-              <span style="font-size:0.9rem;">${escHtml(o.name)}</span>
-            </div>
-            <div class="output-actions">
-              ${o.type === 'web'
-                ? `<a href="${escHtml(o.path)}" target="_blank" class="action-btn primary">발표 시작</a>`
-                : `<a href="${escHtml(o.path)}" download class="action-btn primary">다운로드</a>`}
-              <button class="action-btn secondary" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:#ef4444;">삭제</button>
-            </div>
-          </div>`).join('');
+        cachedOutputs = data.outputs;
+        renderOutputs();
+        updateStats();
       } catch(e) {
         console.error(e);
       }
     }
 
+    function renderOutputs() {
+      const container = document.getElementById('outputList');
+      const query = document.getElementById('outputSearch').value.toLowerCase();
+      let filtered = cachedOutputs.filter(o => o.name.toLowerCase().includes(query));
+
+      // 정렬
+      if (outputSortMode === 'name') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      } else {
+        // date 역순 (최신 먼저) - index 역순 사용
+        filtered.reverse();
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">✨</div><p>' +
+          (cachedOutputs.length === 0 ? '아직 생성된 발표자료가 없습니다' : '검색 결과가 없습니다') + '</p></div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(o => `
+        <div class="output-item" data-name="${escHtml(o.name)}">
+          <div class="output-info">
+            <span class="output-badge ${escHtml(o.type)}">${escHtml(o.type)}</span>
+            <span class="output-name" style="font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(o.name)}</span>
+          </div>
+          <div class="output-actions">
+            ${o.type === 'web'
+              ? `<a href="${escHtml(o.path)}" target="_blank" class="action-btn primary">발표 시작</a>`
+              : `<a href="${escHtml(o.path)}" download class="action-btn primary">다운로드</a>`}
+            <button class="action-btn secondary rename-btn" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="startRename(this.dataset.otype,this.dataset.oname)">이름변경</button>
+            <button class="action-btn secondary" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:#ef4444;">삭제</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function filterOutputs() {
+      renderOutputs();
+    }
+
+    // ============ 정렬 토글 ============
+    function toggleSort() {
+      outputSortMode = outputSortMode === 'name' ? 'date' : 'name';
+      document.getElementById('sortToggle').textContent = outputSortMode === 'name' ? '이름순' : '날짜순';
+      renderOutputs();
+    }
+
+    // ============ 이름 변경 ============
+    function startRename(type, name) {
+      const item = document.querySelector(`.output-item[data-name="${CSS.escape(name)}"]`);
+      if (!item) return;
+      const nameSpan = item.querySelector('.output-name');
+      const ext = name.includes('.') ? '.' + name.split('.').pop() : '';
+      const baseName = name.includes('.') ? name.substring(0, name.lastIndexOf('.')) : name;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'rename-input';
+      input.value = baseName;
+      nameSpan.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const doRename = async () => {
+        const newBase = input.value.trim();
+        if (!newBase || newBase === baseName) {
+          // 취소
+          const span = document.createElement('span');
+          span.className = 'output-name';
+          span.style.cssText = 'font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+          span.textContent = name;
+          input.replaceWith(span);
+          return;
+        }
+        const newName = newBase + ext;
+        try {
+          const res = await fetch('/api/outputs/' + encodeURIComponent(type) + '/' + encodeURIComponent(name) + '/rename', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newName })
+          });
+          const data = await res.json();
+          if (data.error) {
+            showToast('이름 변경 실패: ' + data.error, 'error');
+          } else {
+            showToast('이름이 변경되었습니다', 'success');
+          }
+        } catch(e) {
+          showToast('이름 변경 실패', 'error');
+        }
+        loadOutputs();
+      };
+
+      input.addEventListener('blur', doRename);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if (e.key === 'Escape') {
+          input.value = baseName; // 원래 이름으로 되돌림
+          input.blur();
+        }
+      });
+    }
+
+    // ============ 삭제 ============
     async function deleteFile(name) {
       if (!confirm(name + ' 파일을 삭제하시겠습니까?')) return;
       await fetch('/api/files/' + encodeURIComponent(name), { method: 'DELETE' });
+      showToast(name + ' 파일이 삭제되었습니다', 'info');
       loadFiles();
     }
 
     async function deleteOutput(type, name) {
       if (!confirm(name + ' 결과물을 삭제하시겠습니까?')) return;
       await fetch('/api/outputs/' + encodeURIComponent(type) + '/' + encodeURIComponent(name), { method: 'DELETE' });
+      showToast(name + ' 결과물이 삭제되었습니다', 'info');
       loadOutputs();
     }
 
-    // 파일 업로드
+    // ============ 파일 업로드 ============
     document.getElementById('fileInput').addEventListener('change', async (e) => {
       const formData = new FormData();
+      const count = e.target.files.length;
       for (const file of e.target.files) {
         formData.append('files', file);
       }
       await fetch('/api/upload', { method: 'POST', body: formData });
       e.target.value = '';
+      showToast(count + '개 파일이 업로드되었습니다', 'success');
       loadFiles();
     });
 
-    // 드래그 앤 드롭
-    const uploadZone = document.querySelector('.upload-zone');
-    uploadZone.addEventListener('dragover', (e) => {
+    // ============ 드래그 앤 드롭 (전체 화면) ============
+    let dragCounter = 0;
+
+    document.addEventListener('dragenter', (e) => {
       e.preventDefault();
-      uploadZone.style.borderColor = '#60a5fa';
-      uploadZone.style.background = 'rgba(96,165,250,0.1)';
+      dragCounter++;
+      document.getElementById('dragOverlay').classList.add('show');
     });
-    uploadZone.addEventListener('dragleave', () => {
-      uploadZone.style.borderColor = '';
-      uploadZone.style.background = '';
-    });
-    uploadZone.addEventListener('drop', async (e) => {
+
+    document.addEventListener('dragleave', (e) => {
       e.preventDefault();
-      uploadZone.style.borderColor = '';
-      uploadZone.style.background = '';
+      dragCounter--;
+      if (dragCounter <= 0) {
+        dragCounter = 0;
+        document.getElementById('dragOverlay').classList.remove('show');
+      }
+    });
+
+    document.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+
+    document.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dragCounter = 0;
+      document.getElementById('dragOverlay').classList.remove('show');
+
+      if (e.dataTransfer.files.length === 0) return;
+
       const formData = new FormData();
+      const count = e.dataTransfer.files.length;
       for (const file of e.dataTransfer.files) {
         formData.append('files', file);
       }
       await fetch('/api/upload', { method: 'POST', body: formData });
+      showToast(count + '개 파일이 업로드되었습니다', 'success');
       loadFiles();
+    });
+
+    // ============ 키보드 단축키 ============
+    document.addEventListener('keydown', (e) => {
+      // Escape: 모달 닫기
+      if (e.key === 'Escape') {
+        hideCreateModal();
+        hidePreview();
+      }
+
+      // Ctrl+N: 새 발표자료
+      if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        showCreateModal();
+      }
+
+      // Ctrl+U: 파일 업로드
+      if (e.ctrlKey && e.key === 'u') {
+        e.preventDefault();
+        document.getElementById('fileInput').click();
+      }
     });
 
     // ============ 새 발표자료 생성 ============
@@ -812,7 +1513,7 @@
 
     async function generatePresentation() {
       const title = document.getElementById('newTitle').value.trim();
-      if (!title) { alert('발표 제목을 입력해주세요'); return; }
+      if (!title) { showToast('발표 제목을 입력해주세요', 'error'); return; }
 
       const subtitle = document.getElementById('newSubtitle').value.trim();
       const presenter = document.getElementById('newPresenter').value.trim();
@@ -884,6 +1585,7 @@
         }
 
         overlay.classList.remove('show');
+        showToast('발표자료가 생성되었습니다!', 'success');
         loadOutputs();
 
         // 웹 발표자료 자동 열기
@@ -903,18 +1605,13 @@
 
       } catch(e) {
         overlay.classList.remove('show');
-        alert('생성 실패: ' + e.message);
+        showToast('생성 실패: ' + e.message, 'error');
       }
     }
 
     // Enter키로 생성
     document.getElementById('newTitle').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generatePresentation(); }
-    });
-
-    // ESC로 모달 닫기
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') hideCreateModal();
     });
 
     loadSources();
