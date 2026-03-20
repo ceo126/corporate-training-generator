@@ -740,22 +740,71 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
   // 텍스트를 섹션으로 분리
   const sections = text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
 
+  /** 제목에서 번호 접두사 제거: "1. 제목" → "제목", "제1장 제목" → "제목" */
+  function stripNumberPrefix(str) {
+    return str
+      .replace(/^(?:\d+[.\)]\s*|제\d+[장절편]\s*|Chapter\s+\d+[:\s]*|[①-⑳]\s*|[❶-❿]\s*|[■▶●◆]\s*)/i, '')
+      .trim() || str;
+  }
+
+  /** 내용 기반 최적 슬라이드 타입 선택 */
+  function chooseBestType(bodyLines, sectionIdx, totalSections) {
+    const lineCount = bodyLines.length;
+    const avgLen = bodyLines.reduce((s, l) => s + l.length, 0) / (lineCount || 1);
+    const hasNumbers = bodyLines.some(l => /\d+[%명건원개]/.test(l));
+    const isSequential = bodyLines.every(l => /^[\d]+[.\)단계]|→|->/.test(l.trim()));
+
+    // 숫자/통계가 많으면 stats
+    if (hasNumbers && lineCount <= 4) return 'stats';
+    // 순차적 내용이면 steps
+    if (isSequential || lineCount === 3) return 'steps';
+    // 항목이 2개면 two-column 비교
+    if (lineCount === 2 && avgLen > 15) return 'two-column';
+    // 항목이 4개면 cards (2x2 그리드)
+    if (lineCount === 4) return 'cards';
+    // 긴 텍스트 1줄이면 highlight
+    if (lineCount === 1 && avgLen > 20) return 'highlight';
+    // 항목이 많으면 bullets
+    if (lineCount >= 5) return 'bullets';
+    // 짝수 인덱스는 cards, 홀수는 bullets (단조로움 방지)
+    return lineCount <= 3 ? 'bullets' : 'cards';
+  }
+
   // 슬라이드 구조 자동 생성
   const slideTitle = title || '발표자료';
+  const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   const slides = {
-    cover: { title: slideTitle, subtitle: `총 ${sections.length}개 섹션` },
+    cover: { title: slideTitle, subtitle: today },
+    toc: [],
     content: []
   };
 
-  const slideTypes = ['bullets', 'cards', 'steps', 'highlight', 'two-column'];
+  // 목차 생성 (섹션이 2개 이상일 때)
+  const sectionTitles = sections.map(s => {
+    const firstLine = s.split('\n')[0].trim();
+    return stripNumberPrefix(firstLine);
+  });
+  if (sections.length >= 2) {
+    slides.toc = sectionTitles;
+  }
 
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i];
     const lines = section.split('\n').map(l => l.trim()).filter(Boolean);
-    const sectionTitle = lines[0] || `섹션 ${i + 1}`;
+    const rawTitle = lines[0] || `섹션 ${i + 1}`;
+    const sectionTitle = stripNumberPrefix(rawTitle);
     const bodyLines = lines.slice(1);
-    const typeIndex = i % slideTypes.length;
-    const slideType = slideTypes[typeIndex];
+
+    // 섹션 구분 슬라이드 삽입 (각 섹션 앞에)
+    slides.content.push({
+      isSection: true,
+      sectionNumber: String(i + 1).padStart(2, '0'),
+      title: sectionTitle,
+      description: bodyLines.length > 0 ? bodyLines[0] : ''
+    });
+
+    // 내용 기반 슬라이드 타입 자동 선택
+    const slideType = chooseBestType(bodyLines, i, sections.length);
 
     let slide;
     switch (slideType) {
@@ -770,50 +819,78 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
         slide = {
           title: sectionTitle,
           type: 'cards',
-          cards: bodyLines.map((line, j) => ({ title: `포인트 ${j + 1}`, body: line }))
+          cards: bodyLines.map(line => {
+            // "핵심 키워드: 설명" 형태 파싱 시도
+            const colonIdx = line.indexOf(':');
+            const dashIdx = line.indexOf(' - ');
+            if (colonIdx > 0 && colonIdx < 20) {
+              return { title: line.substring(0, colonIdx).trim(), body: line.substring(colonIdx + 1).trim() };
+            } else if (dashIdx > 0 && dashIdx < 25) {
+              return { title: line.substring(0, dashIdx).trim(), body: line.substring(dashIdx + 3).trim() };
+            }
+            // 앞 2~4단어를 제목으로 사용
+            const words = line.split(/\s+/);
+            const titleWords = words.slice(0, Math.min(3, Math.ceil(words.length / 2)));
+            const restWords = words.slice(titleWords.length);
+            return { title: titleWords.join(' '), body: restWords.join(' ') || line };
+          })
         };
-        if (slide.cards.length === 0) slide.cards = [{ title: '내용', body: section }];
+        if (slide.cards.length === 0) slide.cards = [{ title: sectionTitle, body: section }];
         break;
       case 'steps':
         slide = {
           title: sectionTitle,
           type: 'steps',
-          steps: bodyLines.map((line, j) => ({ title: `${j + 1}단계`, desc: line }))
+          steps: bodyLines.map((line, j) => {
+            const stepTitle = stripNumberPrefix(line);
+            return { title: `STEP ${j + 1}`, desc: stepTitle };
+          })
         };
-        if (slide.steps.length === 0) slide.steps = [{ title: '1단계', desc: section }];
+        if (slide.steps.length === 0) slide.steps = [{ title: 'STEP 1', desc: section }];
         break;
+      case 'stats': {
+        const stats = bodyLines.map(line => {
+          const numMatch = line.match(/(\d[\d,.]*)\s*([%명건원개만억조]?)/);
+          if (numMatch) {
+            const label = line.replace(numMatch[0], '').replace(/[:\-]/g, '').trim() || line;
+            return { value: parseInt(numMatch[1].replace(/[,.]/g, '')), suffix: numMatch[2] || '', label };
+          }
+          return { value: 0, suffix: '', label: line };
+        });
+        slide = { title: sectionTitle, type: 'stats', stats };
+        break;
+      }
       case 'highlight':
         slide = {
           title: sectionTitle,
           type: 'highlight',
           body: bodyLines.join(' ') || section,
-          sub: ''
+          sub: sectionTitle
         };
         break;
-      case 'two-column':
+      case 'two-column': {
         const mid = Math.ceil(bodyLines.length / 2);
         slide = {
           title: sectionTitle,
           type: 'two-column',
-          leftTitle: '핵심 내용',
-          leftItems: bodyLines.slice(0, mid).length > 0 ? bodyLines.slice(0, mid) : [section],
-          rightTitle: '상세 내용',
-          rightItems: bodyLines.slice(mid).length > 0 ? bodyLines.slice(mid) : ['']
+          leftTitle: '현황',
+          leftItems: bodyLines.slice(0, mid),
+          rightTitle: '방향',
+          rightItems: bodyLines.slice(mid)
         };
         break;
+      }
       default:
         slide = { title: sectionTitle, type: 'bullets', items: bodyLines.length > 0 ? bodyLines : [section] };
     }
     slides.content.push(slide);
   }
 
-  // 마지막에 마무리 슬라이드 추가
-  slides.content.push({
+  // 엔딩 슬라이드 (ending 구조 사용)
+  slides.ending = {
     title: '감사합니다',
-    type: 'highlight',
-    body: slideTitle,
-    sub: 'Q&A'
-  });
+    subtitle: slideTitle
+  };
 
   const type = outputType || 'web';
   const safeName = path.basename(filename || (slideTitle + (type === 'pptx' ? '.pptx' : '.html')));
