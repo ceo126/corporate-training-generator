@@ -547,52 +547,6 @@ app.post('/api/duplicate-output/:type/:name', (req, res) => {
   }
 });
 
-// ============ 결과물 이름 변경 ============
-
-app.post('/api/rename-output/:type/:name', (req, res) => {
-  try {
-    const { type, name } = req.params;
-    const { newName } = req.body;
-
-    if (type !== 'pptx' && type !== 'web') {
-      return res.status(400).json({ error: '잘못된 타입입니다 (pptx 또는 web)' });
-    }
-    if (!newName) {
-      return res.status(400).json({ error: '새 파일명이 필요합니다' });
-    }
-
-    const dir = path.join(__dirname, type === 'pptx' ? 'output/pptx' : 'output/web');
-    const safeName = path.basename(name);
-    const safeNewName = path.basename(newName);
-
-    if (!safeNewName || safeNewName.startsWith('.')) {
-      return res.status(400).json({ error: '잘못된 파일명입니다' });
-    }
-
-    const srcPath = path.join(dir, safeName);
-    const destPath = path.join(dir, safeNewName);
-
-    // Path traversal 방지
-    if (!path.resolve(srcPath).startsWith(dir + path.sep) && path.resolve(srcPath) !== dir) {
-      return res.status(400).json({ error: '잘못된 경로입니다' });
-    }
-    if (!path.resolve(destPath).startsWith(dir + path.sep) && path.resolve(destPath) !== dir) {
-      return res.status(400).json({ error: '잘못된 대상 경로입니다' });
-    }
-    if (!fs.existsSync(srcPath)) {
-      return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
-    }
-    if (fs.existsSync(destPath)) {
-      return res.status(409).json({ error: '같은 이름의 파일이 이미 존재합니다' });
-    }
-
-    fs.renameSync(srcPath, destPath);
-    res.json({ success: true, newName: safeNewName, path: `/output/${type === 'pptx' ? 'pptx' : 'web'}/${encodeURIComponent(safeNewName)}` });
-  } catch (err) {
-    res.status(500).json({ error: '이름 변경 실패: ' + err.message });
-  }
-});
-
 // ============ 파일 내용 미리보기 ============
 
 app.get('/api/files/:sourceDir/:filePath/preview', async (req, res) => {
