@@ -732,7 +732,7 @@ app.post('/api/generate/pptx', asyncHandler(async (req, res) => {
 // ============================================================
 
 app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
-  const { text, title, outputType, theme, filename } = req.body;
+  const { text, title, outputType, theme, template, filename } = req.body;
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return errorResponse(res, 400, '텍스트가 필요합니다', 'MISSING_TEXT');
   }
@@ -899,21 +899,17 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     const sectionTitle = stripNumberPrefix(rawTitle);
     const bodyLines = lines.slice(1);
 
-    // 섹션별 악센트 컬러 (시각적 다양성)
-    const sectionColorIdx = i % 5;
-
     // 섹션 구분 슬라이드
     slides.content.push({
       isSection: true,
       sectionNumber: String(i + 1).padStart(2, '0'),
       title: sectionTitle,
-      description: bodyLines.length > 0 ? bodyLines[0] : '',
-      colorIndex: sectionColorIdx
+      description: bodyLines.length > 0 ? bodyLines[0] : ''
     });
 
     // 항목을 간결한 슬라이드들로 분할 (슬라이드당 최대 3개)
     const contentSlides = splitIntoSlides(sectionTitle, bodyLines);
-    contentSlides.forEach(s => { s.colorIndex = sectionColorIdx; slides.content.push(s); });
+    contentSlides.forEach(s => slides.content.push(s));
   }
 
   // 엔딩 슬라이드 (ending 구조 사용)
@@ -927,7 +923,7 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
   const selectedTheme = theme || 'modern';
 
   if (type === 'web') {
-    const html = webGenerator.generateHTML(slides, { theme: selectedTheme, title: slideTitle });
+    const html = webGenerator.generateHTML(slides, { theme: selectedTheme, title: slideTitle, template: template || '' });
     const outputDir = path.join(__dirname, 'output/web');
     fs.mkdirSync(outputDir, { recursive: true });
     const webName = safeName.endsWith('.html') ? safeName : safeName.replace(/\.[^.]+$/, '.html');
@@ -1108,6 +1104,23 @@ app.get('/api/templates', (req, res) => {
     }
   ];
   res.json({ templates });
+});
+
+// ============================================================
+//  API: 디자인 템플릿 목록
+// ============================================================
+
+app.get('/api/design-templates', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.json({
+    templates: [
+      { id: '', name: '기본', description: '클린한 기본 스타일 (그라데이션 악센트, 둥근 카드)', preview: 'default' },
+      { id: 'glass', name: '글래스모피즘', description: '반투명 유리 효과 + 블러 배경 (모던 트렌드)', preview: 'glass' },
+      { id: 'editorial', name: '에디토리얼', description: '매거진/잡지 스타일 (이탤릭 제목, 넓은 여백, 깔끔한 선)', preview: 'editorial' },
+      { id: 'geometric', name: '기하학', description: '직선과 각진 도형 (컷 코너 카드, 삼각 패턴)', preview: 'geometric' },
+      { id: 'neon', name: '네온 글로우', description: '빛나는 테두리와 그림자 (사이버펑크 느낌)', preview: 'neon' }
+    ]
+  });
 });
 
 // ============================================================
