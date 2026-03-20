@@ -810,6 +810,253 @@
     width: 180px;
   }
 
+  /* 네비게이션 링크 */
+  .header-nav {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .header-nav a {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .header-nav a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(96,165,250,0.08);
+  }
+
+  .header-nav a.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(96,165,250,0.1);
+  }
+
+  /* 일괄 작업 바 */
+  .batch-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: rgba(96,165,250,0.06);
+    border: 1px solid rgba(96,165,250,0.15);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .batch-bar .batch-info {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  .batch-bar .batch-info strong {
+    color: var(--accent);
+  }
+
+  .batch-btn {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .batch-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .batch-btn.danger:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+
+  .output-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* 서버 상태 푸터 */
+  .server-footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 30px;
+    flex-wrap: wrap;
+  }
+
+  .server-footer .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse-dot 2s infinite;
+  }
+
+  .server-footer .status-dot.offline {
+    background: #ef4444;
+    animation: none;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .footer-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .footer-item .footer-label {
+    color: var(--text-muted);
+  }
+
+  .footer-item .footer-value {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* 결과물 미리보기 iframe 모달 */
+  .iframe-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--modal-bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    backdrop-filter: blur(4px);
+  }
+
+  .iframe-modal-overlay.show { display: flex; }
+
+  .iframe-modal {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    width: 90vw;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+
+  .iframe-modal .iframe-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+  }
+
+  .iframe-modal .iframe-header h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .iframe-modal iframe {
+    flex: 1;
+    border: none;
+    width: 100%;
+  }
+
+  /* 활동 로그 */
+  .activity-panel {
+    margin-top: 24px;
+  }
+
+  .activity-panel .panel-body {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .activity-timeline {
+    list-style: none;
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .activity-timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+  }
+
+  .activity-item {
+    position: relative;
+    padding: 8px 0;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .activity-item::before {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: 14px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-secondary);
+  }
+
+  .activity-item.upload::before { background: #22c55e; }
+  .activity-item.generate::before { background: #a78bfa; }
+  .activity-item.delete::before { background: #ef4444; }
+
+  .activity-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 50px;
+  }
+
+  .activity-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
   /* 반응형 */
   @media (max-width: 900px) {
     .grid {
@@ -893,14 +1140,23 @@
         <h1>기업교육 발표자료 생성기</h1>
         <p>교육자료를 넣고 Claude Code에게 요청하면 PPT + 동적 웹 발표자료를 자동 생성합니다</p>
       </div>
-      <button class="theme-toggle" onclick="toggleTheme()">
-        <span id="themeIcon">🌙</span>
-        <span class="label" id="themeLabel">다크 모드</span>
-      </button>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <nav class="header-nav">
+          <a href="/" class="active">홈</a>
+          <a href="/editor">슬라이드 에디터</a>
+          <a href="/templates">템플릿 갤러리</a>
+          <a href="/presenter">발표자 모드</a>
+        </nav>
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <span id="themeIcon">🌙</span>
+          <span class="label" id="themeLabel">다크 모드</span>
+        </button>
+      </div>
     </div>
     <div class="create-section">
       <button class="create-btn gradient" onclick="showCreateModal()">+ 새 발표자료 만들기</button>
       <a href="/editor" class="create-btn outline">슬라이드 에디터 열기</a>
+      <a href="/templates" class="create-btn outline">템플릿 갤러리</a>
     </div>
   </div>
 
@@ -1067,6 +1323,14 @@
           <!-- 결과물 검색 -->
           <div class="search-wrapper">
             <input type="text" class="search-input" id="outputSearch" placeholder="결과물 검색..." oninput="filterOutputs()">
+          </div>
+          <!-- 일괄 작업 바 -->
+          <div class="batch-bar" id="batchBar" style="display:none;">
+            <span class="batch-info">선택: <strong id="batchCount">0</strong>개</span>
+            <button class="batch-btn" onclick="selectAllOutputs()">전체 선택</button>
+            <button class="batch-btn" onclick="deselectAllOutputs()">선택 해제</button>
+            <button class="batch-btn danger" onclick="deleteSelectedOutputs()">선택 삭제</button>
+            <button class="batch-btn" onclick="duplicateSelectedOutputs()">선택 복제</button>
           </div>
           <div id="outputList">
             <div class="empty-state">

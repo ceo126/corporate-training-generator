@@ -270,6 +270,10 @@ app.get('/editor', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/editor.html'));
 });
 
+app.get('/templates', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/templates.html'));
+});
+
 app.post('/api/generate/web-from-data', (req, res) => {
   try {
     const { filename, slides, theme } = req.body;
