@@ -58,6 +58,35 @@
     --glass-blur: 12px;
   }
 
+  /* ===== #9 Splash screen ===== */
+  .splash-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg-primary);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    transition: opacity 0.4s ease;
+  }
+  .splash-screen.fade-out { opacity: 0; pointer-events: none; }
+  .splash-logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .splash-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(59,130,246,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
   /* Animated gradient background */
   body {
     font-family: 'Noto Sans KR', sans-serif;
@@ -105,7 +134,7 @@
     border-radius: 4px;
   }
 
-  /* Glassmorphism panels */
+  /* Glassmorphism panels - #8 card shadow depth */
   .panel {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -113,15 +142,21 @@
     border-radius: 16px;
     border: 1px solid var(--glass-border);
     overflow: hidden;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition: transform 0.25s ease, box-shadow 0.35s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
 
   .panel:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   }
 
-  /* CSS-only tooltips */
+  .panel:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+  }
+
+  /* ===== #10 Balloon tooltip (arrow) ===== */
   [data-tooltip] {
     position: relative;
   }
@@ -129,7 +164,7 @@
   [data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
-    bottom: calc(100% + 8px);
+    bottom: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%) scale(0.9);
     background: var(--text-primary);
@@ -145,15 +180,30 @@
     z-index: 100;
   }
 
-  [data-tooltip]:hover::after {
+  [data-tooltip]::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    border: 5px solid transparent;
+    border-top-color: var(--text-primary);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 100;
+  }
+
+  [data-tooltip]:hover::after,
+  [data-tooltip]:hover::before {
     opacity: 1;
     transform: translateX(-50%) scale(1);
   }
 
-  /* Rich tooltip for output details (#5) */
+  /* Rich tooltip for output details */
   .rich-tooltip {
     position: absolute;
-    bottom: calc(100% + 8px);
+    bottom: calc(100% + 12px);
     left: 50%;
     transform: translateX(-50%) scale(0.95);
     background: var(--glass-bg);
@@ -172,6 +222,16 @@
     line-height: 1.6;
   }
 
+  .rich-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--glass-border);
+  }
+
   .output-item:hover .rich-tooltip {
     opacity: 1;
     transform: translateX(-50%) scale(1);
@@ -181,14 +241,37 @@
   .rich-tooltip .tt-label { color: var(--text-muted); }
   .rich-tooltip .tt-value { color: var(--text-primary); font-weight: 500; }
 
-  .header {
+  /* ===== #7 Hero section ===== */
+  .hero {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border-bottom: 1px solid var(--glass-border);
-    padding: 25px 40px;
+    padding: 40px 40px 30px;
     position: relative;
+    overflow: hidden;
   }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.10) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(34,197,94,0.06) 0%, transparent 50%);
+    animation: meshFloat 12s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes meshFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, -1%) rotate(1deg); }
+    66% { transform: translate(-1%, 1%) rotate(-0.5deg); }
+  }
+
+  .hero-content { position: relative; z-index: 1; }
 
   .header-top {
     display: flex;
@@ -196,17 +279,18 @@
     justify-content: space-between;
   }
 
-  .header h1 {
+  .hero h1 {
     font-weight: 700;
     background: linear-gradient(135deg, #3b82f6, #60a5fa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
   }
 
-  .header p {
-    font-size: 0.85rem;
+  .hero p {
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    margin-top: 5px;
+    margin-top: 6px;
   }
 
   .theme-toggle {
@@ -234,6 +318,62 @@
   .theme-toggle .label {
     font-size: 0.8rem;
   }
+
+  /* ===== #5 Recent quick access bar ===== */
+  .recent-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 40px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
+    overflow-x: auto;
+    font-size: 0.78rem;
+  }
+
+  .recent-bar:empty { display: none; }
+
+  .recent-bar-label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .recent-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .recent-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(59,130,246,0.08);
+  }
+
+  .recent-chip .rc-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .recent-chip .rc-badge.web { background: rgba(34,197,94,0.15); color: var(--success); }
+  .recent-chip .rc-badge.pptx { background: rgba(249,115,22,0.15); color: #f97316; }
 
   /* Stats dashboard glassmorphism */
   .stats-bar {
@@ -268,6 +408,118 @@
     width: 1px;
     height: 24px;
     background: var(--border-color);
+  }
+
+  /* ===== #1 Dashboard mini charts ===== */
+  .chart-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
+    padding: 16px 40px;
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .chart-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 160px;
+  }
+
+  .chart-card-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Donut chart (CSS conic-gradient) */
+  .donut-chart {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .donut-chart::after {
+    content: '';
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+  }
+
+  .donut-center {
+    position: relative;
+    z-index: 1;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+  }
+
+  .donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .donut-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Bar chart (CSS) */
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+  }
+
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 24px;
+  }
+
+  .bar-fill {
+    width: 20px;
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, var(--accent), rgba(59,130,246,0.5));
+    transition: height 0.5s ease;
+    min-height: 2px;
+  }
+
+  .bar-label {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .bar-value {
+    font-size: 0.55rem;
+    color: var(--text-secondary);
+    font-weight: 600;
   }
 
   .container {
@@ -459,7 +711,7 @@
     text-align: right;
   }
 
-  /* #8 File type color bar */
+  /* File type color bar */
   .file-item {
     display: flex;
     align-items: center;
@@ -485,7 +737,7 @@
     transform: translateX(2px);
   }
 
-  /* #2 File checkbox */
+  /* File checkbox */
   .file-checkbox {
     width: 16px;
     height: 16px;
@@ -533,7 +785,7 @@
     background: rgba(239,68,68,0.1);
   }
 
-  /* #1 Sort dropdown */
+  /* Sort dropdown */
   .sort-dropdown {
     padding: 4px 10px;
     border-radius: 6px;
@@ -552,7 +804,7 @@
     color: var(--accent);
   }
 
-  /* #2 File batch bar */
+  /* File batch bar */
   .file-batch-bar {
     display: none;
     align-items: center;
@@ -588,7 +840,7 @@
     transform: translateX(2px);
   }
 
-  /* #7 Favorite star */
+  /* Favorite star */
   .fav-btn {
     background: none;
     border: none;
@@ -630,7 +882,7 @@
     color: var(--success);
   }
 
-  /* #9 Output thumbnail */
+  /* Output thumbnail */
   .output-thumb {
     width: 48px;
     height: 36px;
@@ -656,6 +908,85 @@
     display: flex;
     gap: 8px;
     flex-shrink: 0;
+  }
+
+  /* ===== #4 Tags ===== */
+  .tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 0.62rem;
+    font-weight: 500;
+    background: rgba(59,130,246,0.12);
+    color: var(--accent);
+    cursor: default;
+    border: 1px solid rgba(59,130,246,0.2);
+  }
+
+  .tag .tag-remove {
+    cursor: pointer;
+    font-size: 0.7rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .tag .tag-remove:hover { opacity: 1; }
+
+  .tag-add-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.62rem;
+    background: none;
+    border: 1px dashed var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tag-add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .tag-filter-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .tag-filter-btn {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.68rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tag-filter-btn:hover, .tag-filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(59,130,246,0.08);
   }
 
   /* Buttons - micro animations */
@@ -788,6 +1119,104 @@
     flex: 1;
     justify-content: center;
     font-size: 0.72rem;
+  }
+
+  /* ===== #3 Quick generate widget ===== */
+  .quick-gen-widget {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 30px;
+  }
+
+  .quick-gen-widget h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+  }
+
+  .quick-gen-form {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .quick-gen-form textarea {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.85rem;
+    resize: vertical;
+    min-height: 60px;
+    max-height: 200px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .quick-gen-form textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .quick-gen-form .qg-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* ===== #2 File compare ===== */
+  .compare-modal-content {
+    display: flex;
+    gap: 16px;
+    height: 60vh;
+  }
+
+  .compare-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .compare-pane select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.82rem;
+    margin-bottom: 8px;
+    outline: none;
+  }
+
+  .compare-pane select:focus {
+    border-color: var(--accent);
+  }
+
+  .compare-text {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text-secondary);
   }
 
   /* Guide box */
@@ -1012,6 +1441,8 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
+  .modal.wide { width: 900px; }
+
   .modal h3 {
     font-size: 1.2rem;
     font-weight: 700;
@@ -1135,7 +1566,7 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Toast notifications - now feeds notification center (#14) */
+  /* Toast notifications */
   .toast-container {
     position: fixed;
     top: 20px;
@@ -1584,7 +2015,7 @@
     flex: 1;
   }
 
-  /* #10 Animations for add/remove */
+  /* Animations for add/remove */
   @keyframes slideDownFadeIn {
     from { opacity: 0; max-height: 0; transform: translateY(-10px); }
     to { opacity: 1; max-height: 200px; transform: translateY(0); }
@@ -1605,7 +2036,7 @@
     overflow: hidden;
   }
 
-  /* #11 Custom scrollbar */
+  /* Custom scrollbar */
   .panel-body::-webkit-scrollbar,
   .modal::-webkit-scrollbar,
   .preview-body::-webkit-scrollbar,
@@ -1641,7 +2072,7 @@
     scrollbar-color: var(--border-color) transparent;
   }
 
-  /* #6 Custom context menu */
+  /* Custom context menu */
   .ctx-menu {
     position: fixed;
     background: var(--glass-bg);
@@ -1687,7 +2118,7 @@
     margin: 4px 8px;
   }
 
-  /* #12 Onboarding tour */
+  /* Onboarding tour */
   .tour-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -1764,7 +2195,7 @@
   .tour-btn.skip { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
   .tour-btn.skip:hover { background: rgba(255,255,255,0.12); }
 
-  /* #14 Notification center */
+  /* Notification center */
   .notif-toggle {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1871,9 +2302,232 @@
     font-size: 0.85rem;
   }
 
-  /* #13 Keyboard nav focus ring for panels */
+  /* Keyboard nav focus ring for panels */
   .panel:focus-within {
     box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+
+  /* ===== #11 Settings side panel ===== */
+  .settings-panel {
+    position: fixed;
+    top: 0;
+    right: -380px;
+    width: 380px;
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-left: 1px solid var(--glass-border);
+    z-index: 4500;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+    box-shadow: -4px 0 30px rgba(0,0,0,0.3);
+  }
+
+  .settings-panel.open { right: 0; }
+
+  .settings-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .settings-panel-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .settings-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  .settings-group {
+    margin-bottom: 20px;
+  }
+
+  .settings-group-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .settings-row:last-child { border-bottom: none; }
+
+  .settings-label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+  }
+
+  .settings-control select,
+  .settings-control input[type="number"] {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    min-width: 100px;
+  }
+
+  .settings-control select:focus,
+  .settings-control input[type="number"]:focus {
+    border-color: var(--accent);
+  }
+
+  /* ===== #13 Keyboard help overlay ===== */
+  .kbd-help-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--modal-bg);
+    backdrop-filter: blur(4px);
+    z-index: 8000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .kbd-help-overlay.show { display: flex; }
+
+  .kbd-help-box {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .kbd-help-box h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+
+  .kbd-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+  }
+
+  .kbd-row:last-child { border-bottom: none; }
+
+  .kbd-row kbd {
+    background: rgba(255,255,255,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    font-family: 'Noto Sans KR', monospace;
+    color: var(--text-primary);
+  }
+
+  /* ===== #6 Server log viewer ===== */
+  .log-viewer {
+    margin-top: 24px;
+  }
+
+  .log-viewer .panel-body {
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+
+  .log-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 70px;
+  }
+
+  .log-action {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .log-action.upload { background: rgba(34,197,94,0.15); color: var(--success); }
+  .log-action.generate { background: rgba(99,102,241,0.15); color: #6366f1; }
+  .log-action.delete { background: rgba(239,68,68,0.15); color: var(--error); }
+  .log-action.settings { background: rgba(245,158,11,0.15); color: var(--warning); }
+  .log-action.default { background: var(--bg-card); color: var(--text-muted); }
+
+  /* ===== #12 Export modal ===== */
+  .export-file-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 12px;
+  }
+
+  .export-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    margin-bottom: 4px;
+    font-size: 0.82rem;
+  }
+
+  .export-file-item .efi-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .export-file-item .efi-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary);
+  }
+
+  .export-file-item .efi-size {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
   }
 
   /* Responsive */
@@ -1882,14 +2536,23 @@
       grid-template-columns: 1fr;
     }
 
-    .header {
-      padding: 18px 16px;
+    .hero {
+      padding: 24px 16px 18px;
     }
 
     .stats-bar {
       padding: 12px 16px;
       gap: 16px;
       flex-wrap: wrap;
+    }
+
+    .chart-section {
+      padding: 12px 16px;
+      gap: 20px;
+    }
+
+    .recent-bar {
+      padding: 8px 16px;
     }
 
     .container {
@@ -1945,14 +2608,28 @@
       width: 100vw;
       right: -100vw;
     }
+
+    .settings-panel {
+      width: 100vw;
+      right: -100vw;
+    }
+
+    .quick-gen-form {
+      flex-direction: column;
+    }
+
+    .compare-modal-content {
+      flex-direction: column;
+      height: 70vh;
+    }
   }
 
   @media (max-width: 480px) {
-    .header h1 {
+    .hero h1 {
       font-size: 1.2rem;
     }
 
-    .header p {
+    .hero p {
       font-size: 0.75rem;
     }
 
@@ -1976,41 +2653,62 @@
 </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-top">
-      <div>
-        <h1>기업교육 발표자료 생성기</h1>
-        <p>교육자료를 넣고 Claude Code에게 요청하면 PPT + 동적 웹 발표자료를 자동 생성합니다</p>
+  <!-- #9 Splash screen -->
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-logo">기업교육 발표자료 생성기</div>
+    <div class="splash-spinner"></div>
+  </div>
+
+  <!-- #7 Hero section -->
+  <div class="hero">
+    <div class="hero-content">
+      <div class="header-top">
+        <div>
+          <h1>기업교육 발표자료 생성기</h1>
+          <p>교육자료를 넣고 Claude Code에게 요청하면 PPT + 동적 웹 발표자료를 자동 생성합니다</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <nav class="header-nav">
+            <a href="/" class="active" aria-label="홈 페이지로 이동">홈</a>
+            <a href="/editor" aria-label="슬라이드 에디터 열기">슬라이드 에디터</a>
+            <a href="/templates" aria-label="템플릿 갤러리 보기">템플릿 갤러리</a>
+            <a href="/presenter" aria-label="발표자 모드 시작">발표자 모드</a>
+          </nav>
+          <!-- #11 Settings toggle -->
+          <button class="notif-toggle" onclick="toggleSettingsPanel()" aria-label="설정" data-tooltip="설정">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <!-- Notification toggle -->
+          <button class="notif-toggle" onclick="toggleNotifDrawer()" aria-label="알림 센터 열기" data-tooltip="알림 센터">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-badge hidden" id="notifBadge">0</span>
+          </button>
+          <button class="theme-toggle" onclick="toggleTheme()" aria-label="테마 전환" data-tooltip="테마 전환">
+            <span id="themeIcon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </span>
+            <span class="label" id="themeLabel">다크 모드</span>
+          </button>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <nav class="header-nav">
-          <a href="/" class="active" aria-label="홈 페이지로 이동">홈</a>
-          <a href="/editor" aria-label="슬라이드 에디터 열기">슬라이드 에디터</a>
-          <a href="/templates" aria-label="템플릿 갤러리 보기">템플릿 갤러리</a>
-          <a href="/presenter" aria-label="발표자 모드 시작">발표자 모드</a>
-        </nav>
-        <!-- #14 Notification toggle -->
-        <button class="notif-toggle" onclick="toggleNotifDrawer()" aria-label="알림 센터 열기" data-tooltip="알림 센터">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="notif-badge hidden" id="notifBadge">0</span>
+      <div class="create-section">
+        <button class="create-btn gradient" onclick="showCreateModal()" aria-label="새 발표자료 만들기" data-tooltip="새 발표자료 생성">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          새 발표자료 만들기
         </button>
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="테마 전환" data-tooltip="테마 전환">
-          <span id="themeIcon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </span>
-          <span class="label" id="themeLabel">다크 모드</span>
+        <a href="/editor" class="create-btn outline" aria-label="슬라이드 에디터 열기">슬라이드 에디터 열기</a>
+        <a href="/templates" class="create-btn outline" aria-label="템플릿 갤러리 보기">템플릿 갤러리</a>
+        <!-- #12 Export all -->
+        <button class="create-btn outline" onclick="showExportModal()" aria-label="전체 내보내기" data-tooltip="결과물 전체 내보내기">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          내보내기
         </button>
       </div>
-    </div>
-    <div class="create-section">
-      <button class="create-btn gradient" onclick="showCreateModal()" aria-label="새 발표자료 만들기" data-tooltip="새 발표자료 생성">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        새 발표자료 만들기
-      </button>
-      <a href="/editor" class="create-btn outline" aria-label="슬라이드 에디터 열기">슬라이드 에디터 열기</a>
-      <a href="/templates" class="create-btn outline" aria-label="템플릿 갤러리 보기">템플릿 갤러리</a>
     </div>
   </div>
+
+  <!-- #5 Recent quick access bar -->
+  <div class="recent-bar" id="recentBar"></div>
 
   <!-- Stats dashboard -->
   <div class="stats-bar">
@@ -2036,10 +2734,27 @@
     </div>
   </div>
 
+  <!-- #1 Dashboard charts -->
+  <div class="chart-section" id="chartSection" style="display:none;">
+    <div class="chart-card">
+      <div class="chart-card-title">PPT vs WEB 비율</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="donut-chart" id="donutChart">
+          <span class="donut-center" id="donutCenter">0</span>
+        </div>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">최근 7일 생성 추이</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+  </div>
+
   <!-- Toast container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Drag overlay (#3 supports folder drag) -->
+  <!-- Drag overlay -->
   <div class="drag-overlay" id="dragOverlay">
     <div class="drag-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/></svg>
@@ -2047,7 +2762,7 @@
     <div class="drag-text">파일 또는 폴더를 놓으면 업로드됩니다</div>
   </div>
 
-  <!-- #6 Custom context menu -->
+  <!-- Custom context menu -->
   <div class="ctx-menu" id="ctxMenu">
     <button class="ctx-menu-item" id="ctxOpen">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -2077,7 +2792,7 @@
     </button>
   </div>
 
-  <!-- #14 Notification drawer -->
+  <!-- Notification drawer -->
   <div class="notif-drawer" id="notifDrawer">
     <div class="notif-drawer-header">
       <h3>알림 센터</h3>
@@ -2093,7 +2808,104 @@
     </div>
   </div>
 
-  <!-- #12 Onboarding tour -->
+  <!-- #11 Settings side panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-panel-header">
+      <h3>설정</h3>
+      <button class="preview-close" onclick="toggleSettingsPanel()" aria-label="설정 닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-group">
+        <div class="settings-group-title">외관</div>
+        <div class="settings-row">
+          <span class="settings-label">기본 테마</span>
+          <div class="settings-control">
+            <select id="settingTheme" onchange="applySettingTheme(this.value)">
+              <option value="dark">다크 모드</option>
+              <option value="light">라이트 모드</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-group-title">생성 기본값</div>
+        <div class="settings-row">
+          <span class="settings-label">기본 슬라이드 수</span>
+          <div class="settings-control">
+            <select id="settingSlides" onchange="saveLocalSettings()">
+              <option value="1">1장 (간결)</option>
+              <option value="2" selected>2장 (기본)</option>
+              <option value="3">3장 (상세)</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">기본 출력 형식</span>
+          <div class="settings-control">
+            <select id="settingFormat" onchange="saveLocalSettings()">
+              <option value="both">웹 + PPT</option>
+              <option value="web">웹만</option>
+              <option value="pptx">PPT만</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-group-title">자동화</div>
+        <div class="settings-row">
+          <span class="settings-label">자동 새로고침 간격</span>
+          <div class="settings-control">
+            <select id="settingRefresh" onchange="applyRefreshInterval()">
+              <option value="15">15초</option>
+              <option value="30" selected>30초</option>
+              <option value="60">60초</option>
+              <option value="0">끄기</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-group-title">서버 설정</div>
+        <div class="settings-row">
+          <span class="settings-label">생성 테마</span>
+          <div class="settings-control">
+            <select id="settingGenTheme" onchange="saveServerSettings()">
+              <option value="modern">Modern Blue</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark Mode</option>
+              <option value="corporate">Corporate</option>
+              <option value="warm">Warm Orange</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;">
+        <button class="action-btn primary" onclick="saveServerSettings()" style="width:100%;justify-content:center;">서버에 설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- #13 Keyboard help overlay -->
+  <div class="kbd-help-overlay" id="kbdHelpOverlay" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="kbd-help-box">
+      <h3>단축키 안내</h3>
+      <div class="kbd-row"><span>새 발표자료 만들기</span><kbd>Ctrl+N</kbd></div>
+      <div class="kbd-row"><span>파일 업로드</span><kbd>Ctrl+U</kbd></div>
+      <div class="kbd-row"><span>파일 비교</span><kbd>Ctrl+D</kbd></div>
+      <div class="kbd-row"><span>설정 열기</span><kbd>Ctrl+,</kbd></div>
+      <div class="kbd-row"><span>전체 내보내기</span><kbd>Ctrl+E</kbd></div>
+      <div class="kbd-row"><span>패널 이동</span><kbd>Tab</kbd></div>
+      <div class="kbd-row"><span>모달/패널 닫기</span><kbd>Esc</kbd></div>
+      <div class="kbd-row"><span>이 도움말 열기/닫기</span><kbd>?</kbd></div>
+      <div style="margin-top:16px;text-align:center;">
+        <button class="action-btn secondary" onclick="document.getElementById('kbdHelpOverlay').classList.remove('show')" style="font-size:0.82rem;">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding tour -->
   <div class="tour-overlay" id="tourOverlay"></div>
   <div class="tour-highlight" id="tourHighlight" style="display:none;"></div>
   <div class="tour-popover" id="tourPopover">
@@ -2179,6 +2991,47 @@
     </div>
   </div>
 
+  <!-- #2 File compare modal -->
+  <div class="modal-overlay" id="compareModal" onclick="if(event.target===this)hideCompareModal()">
+    <div class="modal wide" role="dialog" aria-label="파일 비교">
+      <h3>파일 비교</h3>
+      <div class="compare-modal-content">
+        <div class="compare-pane">
+          <select id="compareFileA" onchange="loadCompareFile('A')">
+            <option value="">-- 파일 선택 --</option>
+          </select>
+          <div class="compare-text" id="compareTextA">파일을 선택하세요</div>
+        </div>
+        <div class="compare-pane">
+          <select id="compareFileB" onchange="loadCompareFile('B')">
+            <option value="">-- 파일 선택 --</option>
+          </select>
+          <div class="compare-text" id="compareTextB">파일을 선택하세요</div>
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-cancel" onclick="hideCompareModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- #12 Export modal -->
+  <div class="modal-overlay" id="exportModal" onclick="if(event.target===this)hideExportModal()">
+    <div class="modal" role="dialog" aria-label="전체 내보내기">
+      <h3>결과물 내보내기</h3>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="batch-btn" onclick="loadExportList('all')" id="exportAll" style="border-color:var(--accent);color:var(--accent);">전체</button>
+        <button class="batch-btn" onclick="loadExportList('pptx')" id="exportPptx">PPT만</button>
+        <button class="batch-btn" onclick="loadExportList('web')" id="exportWeb">웹만</button>
+      </div>
+      <div id="exportSummary" style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;"></div>
+      <div class="export-file-list" id="exportFileList"></div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-cancel" onclick="hideExportModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- File preview modal -->
   <div class="preview-modal-overlay" id="previewModal" onclick="if(event.target===this)hidePreview()">
     <div class="preview-modal" role="dialog" aria-label="파일 미리보기">
@@ -2201,6 +3054,27 @@
   </div>
 
   <div class="container">
+    <!-- #3 Quick generate widget -->
+    <div class="quick-gen-widget">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        빠른 발표자료 생성
+      </h3>
+      <div class="quick-gen-form">
+        <textarea id="quickGenText" placeholder="텍스트를 입력하면 바로 발표자료가 생성됩니다. 빈 줄로 섹션을 구분하세요.&#10;&#10;예:&#10;AI 트렌드 분석&#10;최신 인공지능 기술 동향을 살펴봅니다&#10;&#10;디지털 전환 사례&#10;글로벌 기업의 성공 사례"></textarea>
+        <div class="qg-actions">
+          <button class="action-btn primary" onclick="quickGenerate()" style="white-space:nowrap;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            생성
+          </button>
+          <button class="action-btn secondary" onclick="showCompareModal()" data-tooltip="파일 비교" style="white-space:nowrap;font-size:0.75rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+            비교
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="grid">
       <!-- Input files panel -->
       <div class="panel" tabindex="0" id="panelFiles">
@@ -2212,7 +3086,6 @@
             교육자료
           </h2>
           <div class="panel-header-actions">
-            <!-- #1 Sort dropdown -->
             <select class="sort-dropdown" id="fileSortDropdown" onchange="renderFiles()" aria-label="파일 정렬">
               <option value="name">이름순</option>
               <option value="size">크기순</option>
@@ -2251,7 +3124,7 @@
           <div class="search-wrapper">
             <input type="text" class="search-input" id="fileSearch" placeholder="파일 검색..." oninput="filterFiles()" aria-label="파일 검색">
           </div>
-          <!-- #2 File batch bar -->
+          <!-- File batch bar -->
           <div class="file-batch-bar" id="fileBatchBar">
             <span class="batch-info">선택: <strong id="fileBatchCount">0</strong>개</span>
             <button class="batch-btn" onclick="selectAllFiles()">전체 선택</button>
@@ -2299,6 +3172,8 @@
           <div class="search-wrapper">
             <input type="text" class="search-input" id="outputSearch" placeholder="결과물 검색..." oninput="filterOutputs()" aria-label="결과물 검색">
           </div>
+          <!-- #4 Tag filter bar -->
+          <div class="tag-filter-bar" id="tagFilterBar" style="display:none;"></div>
           <!-- Batch action bar -->
           <div class="batch-bar" id="batchBar" style="display:none;">
             <span class="batch-info">선택: <strong id="batchCount">0</strong>개</span>
@@ -2336,13 +3211,29 @@
     <div class="guide-box">
       <h3>사용 방법</h3>
       <ol>
-        <li><strong>교육자료 넣기</strong> — 위에서 업로드하거나 <code>input/</code> 폴더에 직접 넣기</li>
-        <li><strong>Claude Code에 요청</strong> — "발표자료 만들어줘" 또는 "AI 교육 PPT 만들어줘"</li>
-        <li><strong>결과물 확인</strong> — PPT 다운로드 또는 웹 발표자료 미리보기</li>
-        <li><strong>웹 발표자료</strong> — 키보드 ←→, 스페이스, F(전체화면) 으로 조작</li>
+        <li><strong>교육자료 넣기</strong> -- 위에서 업로드하거나 <code>input/</code> 폴더에 직접 넣기</li>
+        <li><strong>Claude Code에 요청</strong> -- "발표자료 만들어줘" 또는 "AI 교육 PPT 만들어줘"</li>
+        <li><strong>결과물 확인</strong> -- PPT 다운로드 또는 웹 발표자료 미리보기</li>
+        <li><strong>웹 발표자료</strong> -- 키보드 방향키, 스페이스, F(전체화면) 으로 조작</li>
       </ol>
       <div class="shortcut-hint">
-        키보드 단축키: <kbd>Ctrl+N</kbd> 새 발표자료 &nbsp; <kbd>Ctrl+U</kbd> 파일 업로드 &nbsp; <kbd>Tab</kbd> 패널 이동
+        키보드 단축키: <kbd>Ctrl+N</kbd> 새 발표자료 &nbsp; <kbd>Ctrl+U</kbd> 파일 업로드 &nbsp; <kbd>Ctrl+D</kbd> 파일 비교 &nbsp; <kbd>?</kbd> 전체 단축키
+      </div>
+    </div>
+
+    <!-- #6 Server log viewer -->
+    <div class="panel log-viewer" id="logViewerPanel">
+      <div class="panel-header">
+        <h2>
+          <span class="icon-svg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </span>
+          서버 API 로그
+        </h2>
+        <button class="action-btn secondary" onclick="loadServerLogs()" aria-label="로그 새로고침" data-tooltip="새로고침" style="font-size:0.72rem;">새로고침</button>
+      </div>
+      <div class="panel-body" id="serverLogBody">
+        <div class="activity-empty">로그를 불러오는 중...</div>
       </div>
     </div>
 
@@ -2407,6 +3298,13 @@
       return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
+    // ============ #9 Splash screen ============
+    setTimeout(() => {
+      const splash = document.getElementById('splashScreen');
+      splash.classList.add('fade-out');
+      setTimeout(() => splash.remove(), 500);
+    }, 1000);
+
     // ============ SVG Icon helpers ============
     const SVG_ICONS = {
       pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h0" stroke-width="3"/><path d="M7 16h10"/></svg>',
@@ -2421,7 +3319,7 @@
       return '<div class="file-icon-svg ' + iconClass + '">' + SVG_ICONS[iconClass] + '</div>';
     }
 
-    // ============ #14 Notification Center ============
+    // ============ Notification Center ============
     let notifications = [];
     let notifUnread = 0;
 
@@ -2462,6 +3360,7 @@
       if (isOpen) {
         notifUnread = 0;
         renderNotifications();
+        document.getElementById('settingsPanel').classList.remove('open');
       }
     }
 
@@ -2471,7 +3370,6 @@
       renderNotifications();
     }
 
-    // Close notification drawer on outside click
     document.addEventListener('click', (e) => {
       const drawer = document.getElementById('notifDrawer');
       const toggle = document.querySelector('.notif-toggle');
@@ -2480,9 +3378,8 @@
       }
     });
 
-    // ============ Toast notifications (now also feeds notification center) ============
+    // ============ Toast ============
     function showToast(message, type = 'info') {
-      // Feed notification center (#14)
       addNotification(message, type);
 
       const container = document.getElementById('toastContainer');
@@ -2509,6 +3406,7 @@
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
       updateThemeButton(newTheme);
+      document.getElementById('settingTheme').value = newTheme;
     }
 
     function updateThemeButton(theme) {
@@ -2521,7 +3419,6 @@
       document.getElementById('themeLabel').textContent = theme === 'dark' ? '다크 모드' : '라이트 모드';
     }
 
-    // Restore saved theme
     (function() {
       const saved = localStorage.getItem('theme') || 'dark';
       document.documentElement.setAttribute('data-theme', saved);
@@ -2533,8 +3430,9 @@
     let cachedOutputs = [];
     let outputSortMode = 'name';
     let outputViewMode = 'list';
+    let activeTagFilter = null;
 
-    // #7 Favorites stored in localStorage
+    // #7 Favorites
     function getFavorites() {
       try { return JSON.parse(localStorage.getItem('outputFavorites') || '[]'); } catch { return []; }
     }
@@ -2545,6 +3443,89 @@
       else { favs.push(key); }
       setFavorites(favs);
       renderOutputs();
+    }
+
+    // ============ #4 Tags (localStorage) ============
+    function getOutputTags() {
+      try { return JSON.parse(localStorage.getItem('outputTags') || '{}'); } catch { return {}; }
+    }
+    function setOutputTags(tags) { localStorage.setItem('outputTags', JSON.stringify(tags)); }
+
+    function addTag(key, tag) {
+      const tags = getOutputTags();
+      if (!tags[key]) tags[key] = [];
+      tag = tag.trim();
+      if (tag && !tags[key].includes(tag)) tags[key].push(tag);
+      setOutputTags(tags);
+      renderOutputs();
+    }
+
+    function removeTag(key, tag) {
+      const tags = getOutputTags();
+      if (tags[key]) {
+        tags[key] = tags[key].filter(t => t !== tag);
+        if (tags[key].length === 0) delete tags[key];
+      }
+      setOutputTags(tags);
+      renderOutputs();
+    }
+
+    function promptAddTag(key) {
+      const tag = prompt('태그 입력:');
+      if (tag) addTag(key, tag);
+    }
+
+    function getAllTags() {
+      const tags = getOutputTags();
+      const all = new Set();
+      Object.values(tags).forEach(arr => arr.forEach(t => all.add(t)));
+      return Array.from(all).sort();
+    }
+
+    function setTagFilter(tag) {
+      activeTagFilter = activeTagFilter === tag ? null : tag;
+      renderOutputs();
+    }
+
+    function renderTagFilterBar() {
+      const allTags = getAllTags();
+      const bar = document.getElementById('tagFilterBar');
+      if (allTags.length === 0) {
+        bar.style.display = 'none';
+        return;
+      }
+      bar.style.display = 'flex';
+      bar.innerHTML = '<span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;">태그:</span>' +
+        allTags.map(t =>
+          '<button class="tag-filter-btn ' + (activeTagFilter === t ? 'active' : '') + '" onclick="setTagFilter(\'' + escHtml(t) + '\')">' + escHtml(t) + '</button>'
+        ).join('');
+    }
+
+    // ============ #5 Recent opened outputs ============
+    function getRecentOpened() {
+      try { return JSON.parse(localStorage.getItem('recentOpened') || '[]'); } catch { return []; }
+    }
+    function addRecentOpened(type, name, path) {
+      let recent = getRecentOpened();
+      recent = recent.filter(r => !(r.type === type && r.name === name));
+      recent.unshift({ type, name, path });
+      if (recent.length > 5) recent.length = 5;
+      localStorage.setItem('recentOpened', JSON.stringify(recent));
+      renderRecentBar();
+    }
+    function renderRecentBar() {
+      const recent = getRecentOpened();
+      const bar = document.getElementById('recentBar');
+      if (recent.length === 0) { bar.innerHTML = ''; return; }
+      bar.innerHTML = '<span class="recent-bar-label">최근 열었던 결과물:</span>' +
+        recent.map(r => {
+          const href = escHtml(r.path);
+          const badge = r.type === 'web'
+            ? '<span class="rc-badge web">WEB</span>'
+            : '<span class="rc-badge pptx">PPT</span>';
+          return '<a class="recent-chip" href="' + href + '" target="_blank" onclick="addRecentOpened(\'' + escHtml(r.type) + '\',\'' + escHtml(r.name) + '\',\'' + href + '\')">' +
+            badge + escHtml(r.name) + '</a>';
+        }).join('');
     }
 
     // ============ View mode toggle ============
@@ -2566,6 +3547,60 @@
       }
     }
 
+    // ============ #1 Dashboard charts ============
+    async function loadCharts() {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        const section = document.getElementById('chartSection');
+
+        if (data.totalCount === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'flex';
+
+        // Donut chart
+        const pptPct = data.totalCount > 0 ? Math.round((data.pptxCount / data.totalCount) * 100) : 0;
+        const webPct = 100 - pptPct;
+        const donut = document.getElementById('donutChart');
+        donut.style.background = 'conic-gradient(#f97316 0% ' + pptPct + '%, #22c55e ' + pptPct + '% 100%)';
+        document.getElementById('donutCenter').textContent = data.totalCount;
+        document.getElementById('donutLegend').innerHTML =
+          '<div class="donut-legend-item"><span class="donut-legend-dot" style="background:#f97316;"></span>PPT ' + data.pptxCount + '개 (' + pptPct + '%)</div>' +
+          '<div class="donut-legend-item"><span class="donut-legend-dot" style="background:#22c55e;"></span>WEB ' + data.webCount + '개 (' + webPct + '%)</div>';
+
+        // Bar chart - recent 7 days
+        const barChart = document.getElementById('barChart');
+        const days = [];
+        const now = new Date();
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          days.push({ date: d, label: (d.getMonth()+1) + '/' + d.getDate(), count: 0 });
+        }
+
+        // Count outputs per day from cached data
+        cachedOutputs.forEach(o => {
+          if (o.mtime) {
+            const oDate = new Date(o.mtime);
+            days.forEach(day => {
+              if (oDate.toDateString() === day.date.toDateString()) day.count++;
+            });
+          }
+        });
+
+        const maxCount = Math.max(1, ...days.map(d => d.count));
+        barChart.innerHTML = days.map(d => {
+          const h = Math.max(2, (d.count / maxCount) * 50);
+          return '<div class="bar-col">' +
+            '<span class="bar-value">' + d.count + '</span>' +
+            '<div class="bar-fill" style="height:' + h + 'px;"></div>' +
+            '<span class="bar-label">' + d.label + '</span>' +
+          '</div>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('chartSection').style.display = 'none';
+      }
+    }
+
     // ============ Skeleton show/hide ============
     function showFileSkeleton() { document.getElementById('fileListSkeleton').style.display = 'block'; document.getElementById('fileList').style.display = 'none'; }
     function hideFileSkeleton() { document.getElementById('fileListSkeleton').style.display = 'none'; document.getElementById('fileList').style.display = 'block'; }
@@ -2580,16 +3615,15 @@
         const container = document.getElementById('sourceList');
         container.innerHTML = data.sources.map(s => {
           const escaped = escHtml(s);
-          return `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(59,130,246,0.08);margin-bottom:4px;font-size:0.8rem;">
-            <span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;" title="${escaped}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              ${escaped}
-            </span>
-            <button class="delete-btn" data-source="${escaped}" onclick="removeSource(this.dataset.source)" style="font-size:0.75rem;" aria-label="${escaped} 폴더 제거">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>`;
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(59,130,246,0.08);margin-bottom:4px;font-size:0.8rem;">' +
+            '<span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;" title="' + escaped + '">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' +
+              escaped +
+            '</span>' +
+            '<button class="delete-btn" data-source="' + escaped + '" onclick="removeSource(this.dataset.source)" style="font-size:0.75rem;" aria-label="' + escaped + ' 폴더 제거">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+            '</button>' +
+          '</div>';
         }).join('');
       } catch(e) {}
     }
@@ -2640,7 +3674,6 @@
       hideFileSkeleton();
     }
 
-    // #1 File sort function
     function sortFiles(files) {
       const mode = document.getElementById('fileSortDropdown').value;
       const sorted = [...files];
@@ -2673,36 +3706,29 @@
         const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(1)+'KB';
         const dirLabel = f.sourceDir ? f.sourceDir.split('\\').pop().split('/').pop() : '';
         const typeClass = ['pdf','docx','txt','md','pptx'].includes(ext) ? 'type-' + ext : 'type-other';
-        return `
-          <li class="file-item ${typeClass} anim-slide-in">
-            <input type="checkbox" class="file-checkbox" data-fname="${escHtml(f.name)}" data-fsource="${escHtml(f.sourceDir || '')}" onchange="updateFileBatchCount()" aria-label="${escHtml(f.name)} 선택">
-            <div class="file-info" onclick="previewFile('${escHtml(f.name)}','${escHtml(f.sourceDir || '')}')" role="button" tabindex="0" aria-label="${escHtml(f.name)} 미리보기">
-              ${getFileIconSvg(ext)}
-              <div>
-                <div class="file-name">${escHtml(f.name)}</div>
-                <div class="file-size">${size} · ${escHtml(dirLabel)}</div>
-              </div>
-            </div>
-          </li>`;
+        return '<li class="file-item ' + typeClass + ' anim-slide-in">' +
+            '<input type="checkbox" class="file-checkbox" data-fname="' + escHtml(f.name) + '" data-fsource="' + escHtml(f.sourceDir || '') + '" onchange="updateFileBatchCount()" aria-label="' + escHtml(f.name) + ' 선택">' +
+            '<div class="file-info" onclick="previewFile(\'' + escHtml(f.name) + '\',\'' + escHtml(f.sourceDir || '') + '\')" role="button" tabindex="0" aria-label="' + escHtml(f.name) + ' 미리보기">' +
+              getFileIconSvg(ext) +
+              '<div>' +
+                '<div class="file-name">' + escHtml(f.name) + '</div>' +
+                '<div class="file-size">' + size + ' &middot; ' + escHtml(dirLabel) + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</li>';
       }).join('');
 
       updateFileBatchCount();
     }
 
-    function filterFiles() {
-      renderFiles();
-    }
+    function filterFiles() { renderFiles(); }
 
-    // #2 File multi-select
     function updateFileBatchCount() {
       const checked = document.querySelectorAll('.file-checkbox:checked');
       const bar = document.getElementById('fileBatchBar');
       document.getElementById('fileBatchCount').textContent = checked.length;
-      if (checked.length > 0) {
-        bar.classList.add('active');
-      } else {
-        bar.classList.remove('active');
-      }
+      if (checked.length > 0) { bar.classList.add('active'); }
+      else { bar.classList.remove('active'); }
     }
 
     function selectAllFiles() {
@@ -2719,7 +3745,6 @@
       const checked = document.querySelectorAll('.file-checkbox:checked');
       if (checked.length === 0) { showToast('파일을 선택해주세요', 'info'); return; }
       const names = Array.from(checked).map(cb => cb.dataset.fname);
-      // Open create modal with selected file names as topics
       document.getElementById('newTitle').value = names[0].replace(/\.[^.]+$/, '') + ' 발표자료';
       document.getElementById('newTopics').value = names.join('\n');
       showCreateModal();
@@ -2753,6 +3778,45 @@
       document.getElementById('previewModal').classList.remove('show');
     }
 
+    // ============ #2 File compare ============
+    function showCompareModal() {
+      const selA = document.getElementById('compareFileA');
+      const selB = document.getElementById('compareFileB');
+      const opts = '<option value="">-- 파일 선택 --</option>' +
+        cachedFiles.map(f => '<option value="' + escHtml(f.name) + '|' + escHtml(f.sourceDir || '') + '">' + escHtml(f.name) + '</option>').join('');
+      selA.innerHTML = opts;
+      selB.innerHTML = opts;
+      document.getElementById('compareTextA').textContent = '파일을 선택하세요';
+      document.getElementById('compareTextB').textContent = '파일을 선택하세요';
+      document.getElementById('compareModal').classList.add('show');
+    }
+
+    function hideCompareModal() {
+      document.getElementById('compareModal').classList.remove('show');
+    }
+
+    async function loadCompareFile(side) {
+      const sel = document.getElementById('compareFile' + side);
+      const textEl = document.getElementById('compareText' + side);
+      const val = sel.value;
+      if (!val) { textEl.textContent = '파일을 선택하세요'; return; }
+      const [name, sourceDir] = val.split('|');
+      textEl.textContent = '로딩 중...';
+      try {
+        const res = await fetch('/api/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filePath: name, sourceDir: sourceDir || undefined })
+        });
+        const data = await res.json();
+        if (data.error) { textEl.textContent = '로드 실패: ' + data.error; }
+        else {
+          const text = data.text || data.content || JSON.stringify(data, null, 2);
+          textEl.textContent = text.substring(0, 15000);
+        }
+      } catch(e) { textEl.textContent = '로드 실패: ' + e.message; }
+    }
+
     // ============ Output list ============
     async function loadOutputs() {
       showOutputSkeleton();
@@ -2762,6 +3826,7 @@
         cachedOutputs = data.outputs;
         renderOutputs();
         updateStats();
+        loadCharts();
       } catch(e) {
         console.error(e);
       }
@@ -2773,19 +3838,29 @@
       const query = document.getElementById('outputSearch').value.toLowerCase();
       let filtered = cachedOutputs.filter(o => o.name.toLowerCase().includes(query));
 
+      // #4 Tag filter
+      const allTags = getOutputTags();
+      if (activeTagFilter) {
+        filtered = filtered.filter(o => {
+          const key = o.type + ':' + o.name;
+          return allTags[key] && allTags[key].includes(activeTagFilter);
+        });
+      }
+
       if (outputSortMode === 'name') {
         filtered.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
       } else {
         filtered.reverse();
       }
 
-      // #7 Favorites on top
       const favs = getFavorites();
       filtered.sort((a, b) => {
         const aFav = favs.includes(a.type + ':' + a.name) ? 1 : 0;
         const bFav = favs.includes(b.type + ':' + b.name) ? 1 : 0;
         return bFav - aFav;
       });
+
+      renderTagFilterBar();
 
       if (filtered.length === 0) {
         container.innerHTML = '<div class="empty-state">' +
@@ -2803,35 +3878,43 @@
       const items = filtered.map(o => {
         const favKey = o.type + ':' + o.name;
         const isFav = favs.includes(favKey);
-        // #5 Estimate details
         const sizeStr = o.size ? (o.size > 1024*1024 ? (o.size/1024/1024).toFixed(1)+'MB' : (o.size/1024).toFixed(1)+'KB') : '알 수 없음';
         const dateStr = o.mtime ? new Date(o.mtime).toLocaleString('ko-KR') : '알 수 없음';
         const slideEst = o.type === 'web' ? '웹 슬라이드' : (o.size ? Math.max(1, Math.round(o.size / 50000)) + '장 (추정)' : '-');
 
-        return `
-        <div class="output-item anim-slide-in" data-name="${escHtml(o.name)}" data-type="${escHtml(o.type)}" data-path="${escHtml(o.path)}" oncontextmenu="showCtxMenu(event, '${escHtml(o.type)}', '${escHtml(o.name)}', '${escHtml(o.path)}')">
-          <input type="checkbox" class="output-checkbox" data-oname="${escHtml(o.name)}" data-otype="${escHtml(o.type)}" onchange="updateBatchCount()" aria-label="${escHtml(o.name)} 선택">
-          <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${escHtml(favKey)}')" aria-label="즐겨찾기" data-tooltip="${isFav ? '즐겨찾기 해제' : '즐겨찾기'}">
-            ${isFav ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
-          </button>
-          <div class="output-thumb ${o.type === 'web' ? 'web-thumb' : 'pptx-thumb'}">${o.type === 'web' ? 'WEB' : 'PPT'}</div>
-          <div class="output-info" style="position:relative;">
-            <span class="output-badge ${escHtml(o.type)}">${escHtml(o.type)}</span>
-            <span class="output-name" style="font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(o.name)}</span>
-            <div class="rich-tooltip">
-              <div class="tt-row"><span class="tt-label">크기:</span><span class="tt-value">${sizeStr}</span></div>
-              <div class="tt-row"><span class="tt-label">생성:</span><span class="tt-value">${dateStr}</span></div>
-              <div class="tt-row"><span class="tt-label">슬라이드:</span><span class="tt-value">${slideEst}</span></div>
-            </div>
-          </div>
-          <div class="output-actions">
-            ${o.type === 'web'
-              ? `<button class="action-btn secondary" data-path="${escHtml(o.path)}" data-oname="${escHtml(o.name)}" onclick="showIframePreview(this.dataset.path,this.dataset.oname)" style="font-size:0.75rem;" aria-label="${escHtml(o.name)} 미리보기" data-tooltip="미리보기">미리보기</button><a href="${escHtml(o.path)}" target="_blank" class="action-btn primary" aria-label="${escHtml(o.name)} 발표 시작">발표 시작</a>`
-              : `<a href="${escHtml(o.path)}" download class="action-btn primary" aria-label="${escHtml(o.name)} 다운로드">다운로드</a>`}
-            <button class="action-btn secondary rename-btn" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="startRename(this.dataset.otype,this.dataset.oname)" aria-label="${escHtml(o.name)} 이름 변경" data-tooltip="이름 변경">이름변경</button>
-            <button class="action-btn secondary" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:var(--error);" aria-label="${escHtml(o.name)} 삭제" data-tooltip="삭제">삭제</button>
-          </div>
-        </div>`;
+        // #4 Tags
+        const itemTags = allTags[favKey] || [];
+        const tagsHtml = '<div class="tag-container">' +
+          itemTags.map(t => '<span class="tag">' + escHtml(t) + '<button class="tag-remove" onclick="event.stopPropagation();removeTag(\'' + escHtml(favKey) + '\',\'' + escHtml(t) + '\')">&times;</button></span>').join('') +
+          '<button class="tag-add-btn" onclick="event.stopPropagation();promptAddTag(\'' + escHtml(favKey) + '\')">+ 태그</button>' +
+        '</div>';
+
+        return '<div class="output-item anim-slide-in" data-name="' + escHtml(o.name) + '" data-type="' + escHtml(o.type) + '" data-path="' + escHtml(o.path) + '" oncontextmenu="showCtxMenu(event, \'' + escHtml(o.type) + '\', \'' + escHtml(o.name) + '\', \'' + escHtml(o.path) + '\')">' +
+          '<input type="checkbox" class="output-checkbox" data-oname="' + escHtml(o.name) + '" data-otype="' + escHtml(o.type) + '" onchange="updateBatchCount()" aria-label="' + escHtml(o.name) + ' 선택">' +
+          '<button class="fav-btn ' + (isFav ? 'active' : '') + '" onclick="toggleFavorite(\'' + escHtml(favKey) + '\')" aria-label="즐겨찾기" data-tooltip="' + (isFav ? '즐겨찾기 해제' : '즐겨찾기') + '">' +
+            (isFav ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>') +
+          '</button>' +
+          '<div class="output-thumb ' + (o.type === 'web' ? 'web-thumb' : 'pptx-thumb') + '">' + (o.type === 'web' ? 'WEB' : 'PPT') + '</div>' +
+          '<div class="output-info" style="position:relative;">' +
+            '<span class="output-badge ' + escHtml(o.type) + '">' + escHtml(o.type) + '</span>' +
+            '<div style="min-width:0;flex:1;">' +
+              '<span class="output-name" style="font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;">' + escHtml(o.name) + '</span>' +
+              tagsHtml +
+            '</div>' +
+            '<div class="rich-tooltip">' +
+              '<div class="tt-row"><span class="tt-label">크기:</span><span class="tt-value">' + sizeStr + '</span></div>' +
+              '<div class="tt-row"><span class="tt-label">생성:</span><span class="tt-value">' + dateStr + '</span></div>' +
+              '<div class="tt-row"><span class="tt-label">슬라이드:</span><span class="tt-value">' + slideEst + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="output-actions">' +
+            (o.type === 'web'
+              ? '<button class="action-btn secondary" data-path="' + escHtml(o.path) + '" data-oname="' + escHtml(o.name) + '" data-otype="' + escHtml(o.type) + '" onclick="addRecentOpened(this.dataset.otype,this.dataset.oname,this.dataset.path);showIframePreview(this.dataset.path,this.dataset.oname)" style="font-size:0.75rem;" aria-label="' + escHtml(o.name) + ' 미리보기" data-tooltip="미리보기">미리보기</button><a href="' + escHtml(o.path) + '" target="_blank" class="action-btn primary" onclick="addRecentOpened(\'' + escHtml(o.type) + '\',\'' + escHtml(o.name) + '\',\'' + escHtml(o.path) + '\')" aria-label="' + escHtml(o.name) + ' 발표 시작">발표 시작</a>'
+              : '<a href="' + escHtml(o.path) + '" download class="action-btn primary" onclick="addRecentOpened(\'' + escHtml(o.type) + '\',\'' + escHtml(o.name) + '\',\'' + escHtml(o.path) + '\')" aria-label="' + escHtml(o.name) + ' 다운로드">다운로드</a>') +
+            '<button class="action-btn secondary rename-btn" data-otype="' + escHtml(o.type) + '" data-oname="' + escHtml(o.name) + '" onclick="startRename(this.dataset.otype,this.dataset.oname)" aria-label="' + escHtml(o.name) + ' 이름 변경" data-tooltip="이름 변경">이름변경</button>' +
+            '<button class="action-btn secondary" data-otype="' + escHtml(o.type) + '" data-oname="' + escHtml(o.name) + '" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:var(--error);" aria-label="' + escHtml(o.name) + ' 삭제" data-tooltip="삭제">삭제</button>' +
+          '</div>' +
+        '</div>';
       }).join('');
 
       if (isGrid) {
@@ -2843,9 +3926,7 @@
       updateBatchCount();
     }
 
-    function filterOutputs() {
-      renderOutputs();
-    }
+    function filterOutputs() { renderOutputs(); }
 
     // ============ Sort toggle ============
     function toggleSort() {
@@ -2854,7 +3935,7 @@
       renderOutputs();
     }
 
-    // ============ #6 Custom context menu ============
+    // ============ Context menu ============
     let ctxTarget = { type: '', name: '', path: '' };
 
     function showCtxMenu(e, type, name, path) {
@@ -2865,7 +3946,6 @@
       menu.style.top = e.clientY + 'px';
       menu.classList.add('show');
 
-      // Update favorite label
       const favs = getFavorites();
       const favKey = type + ':' + name;
       document.getElementById('ctxFav').textContent = favs.includes(favKey) ? '즐겨찾기 해제' : '즐겨찾기';
@@ -2876,11 +3956,8 @@
     });
 
     document.getElementById('ctxOpen').addEventListener('click', () => {
-      if (ctxTarget.type === 'web') {
-        window.open(ctxTarget.path, '_blank');
-      } else {
-        window.open(ctxTarget.path, '_blank');
-      }
+      addRecentOpened(ctxTarget.type, ctxTarget.name, ctxTarget.path);
+      window.open(ctxTarget.path, '_blank');
     });
 
     document.getElementById('ctxDownload').addEventListener('click', () => {
@@ -2918,7 +3995,7 @@
 
     // ============ Rename ============
     function startRename(type, name) {
-      const item = document.querySelector(`.output-item[data-name="${CSS.escape(name)}"]`);
+      const item = document.querySelector('.output-item[data-name="' + CSS.escape(name) + '"]');
       if (!item) return;
       const nameSpan = item.querySelector('.output-name');
       const ext = name.includes('.') ? '.' + name.split('.').pop() : '';
@@ -2938,7 +4015,7 @@
         if (!newBase || newBase === baseName) {
           const span = document.createElement('span');
           span.className = 'output-name';
-          span.style.cssText = 'font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+          span.style.cssText = 'font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;';
           span.textContent = name;
           input.replaceWith(span);
           return;
@@ -3040,7 +4117,7 @@
       }
     });
 
-    // ============ #3 Drag and drop with folder support ============
+    // ============ Drag and drop ============
     let dragCounter = 0;
 
     document.addEventListener('dragenter', (e) => {
@@ -3058,11 +4135,8 @@
       }
     });
 
-    document.addEventListener('dragover', (e) => {
-      e.preventDefault();
-    });
+    document.addEventListener('dragover', (e) => { e.preventDefault(); });
 
-    // Recursively read directory entries for folder drag & drop
     async function readAllEntries(entry) {
       const files = [];
       if (entry.isFile) {
@@ -3099,13 +4173,10 @@
 
       const items = e.dataTransfer.items;
       if (!items || items.length === 0) {
-        if (e.dataTransfer.files.length > 0) {
-          uploadFiles(e.dataTransfer.files);
-        }
+        if (e.dataTransfer.files.length > 0) uploadFiles(e.dataTransfer.files);
         return;
       }
 
-      // Check if any items are directories
       const allFiles = [];
       const entries = [];
       for (let i = 0; i < items.length; i++) {
@@ -3119,30 +4190,32 @@
             const files = await readAllEntries(entry);
             allFiles.push(...files);
           }
-          if (allFiles.length > 0) {
-            uploadFiles(allFiles);
-          } else {
-            showToast('지원되는 파일이 없습니다 (PDF, DOCX, TXT, PPTX)', 'info');
-          }
+          if (allFiles.length > 0) { uploadFiles(allFiles); }
+          else { showToast('지원되는 파일이 없습니다 (PDF, DOCX, TXT, PPTX)', 'info'); }
         } catch(err) {
-          // Fallback
-          if (e.dataTransfer.files.length > 0) {
-            uploadFiles(e.dataTransfer.files);
-          }
+          if (e.dataTransfer.files.length > 0) uploadFiles(e.dataTransfer.files);
         }
       } else if (e.dataTransfer.files.length > 0) {
         uploadFiles(e.dataTransfer.files);
       }
     });
 
-    // ============ #13 Keyboard navigation ============
+    // ============ Keyboard navigation ============
     document.addEventListener('keydown', (e) => {
+      // Ignore if typing in input/textarea
+      const tag = e.target.tagName;
+      const isTyping = (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT');
+
       if (e.key === 'Escape') {
         hideCreateModal();
         hidePreview();
         hideIframePreview();
+        hideCompareModal();
+        hideExportModal();
         document.getElementById('notifDrawer').classList.remove('open');
+        document.getElementById('settingsPanel').classList.remove('open');
         document.getElementById('ctxMenu').classList.remove('show');
+        document.getElementById('kbdHelpOverlay').classList.remove('show');
       }
 
       if (e.ctrlKey && e.key === 'n') {
@@ -3155,7 +4228,31 @@
         document.getElementById('fileInput').click();
       }
 
-      // Tab to navigate panels (#13)
+      // #2 Ctrl+D for file compare
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        showCompareModal();
+      }
+
+      // #11 Ctrl+, for settings
+      if (e.ctrlKey && e.key === ',') {
+        e.preventDefault();
+        toggleSettingsPanel();
+      }
+
+      // #12 Ctrl+E for export
+      if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        showExportModal();
+      }
+
+      // #13 ? key for keyboard help
+      if (e.key === '?' && !isTyping) {
+        e.preventDefault();
+        document.getElementById('kbdHelpOverlay').classList.toggle('show');
+      }
+
+      // Tab to navigate panels
       if (e.key === 'Tab' && !e.ctrlKey && !e.altKey) {
         const panels = document.querySelectorAll('.panel[tabindex]');
         const active = document.activeElement;
@@ -3173,7 +4270,6 @@
         }
       }
 
-      // Enter on focused panel triggers primary action (#13)
       if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'panelFiles') {
         document.getElementById('fileInput').click();
       }
@@ -3182,7 +4278,177 @@
       }
     });
 
-    // ============ #4 Remember last theme in create modal ============
+    // ============ #11 Settings panel ============
+    function toggleSettingsPanel() {
+      const panel = document.getElementById('settingsPanel');
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) {
+        document.getElementById('notifDrawer').classList.remove('open');
+        loadServerSettingsUI();
+      }
+    }
+
+    function applySettingTheme(val) {
+      document.documentElement.setAttribute('data-theme', val);
+      localStorage.setItem('theme', val);
+      updateThemeButton(val);
+    }
+
+    function saveLocalSettings() {
+      const settings = {
+        defaultSlides: document.getElementById('settingSlides').value,
+        defaultFormat: document.getElementById('settingFormat').value,
+        refreshInterval: document.getElementById('settingRefresh').value
+      };
+      localStorage.setItem('localSettings', JSON.stringify(settings));
+    }
+
+    function loadLocalSettings() {
+      try {
+        const settings = JSON.parse(localStorage.getItem('localSettings') || '{}');
+        if (settings.defaultSlides) document.getElementById('settingSlides').value = settings.defaultSlides;
+        if (settings.defaultFormat) document.getElementById('settingFormat').value = settings.defaultFormat;
+        if (settings.refreshInterval !== undefined) document.getElementById('settingRefresh').value = settings.refreshInterval;
+        document.getElementById('settingTheme').value = localStorage.getItem('theme') || 'dark';
+      } catch(e) {}
+    }
+
+    async function loadServerSettingsUI() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+          if (data.settings.defaultTheme) document.getElementById('settingGenTheme').value = data.settings.defaultTheme;
+        }
+      } catch(e) {}
+    }
+
+    async function saveServerSettings() {
+      try {
+        const genTheme = document.getElementById('settingGenTheme').value;
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ defaultTheme: genTheme })
+        });
+        const data = await res.json();
+        if (data.success) showToast('서버 설정이 저장되었습니다', 'success');
+        else showToast('설정 저장 실패', 'error');
+      } catch(e) { showToast('설정 저장 실패: ' + e.message, 'error'); }
+    }
+
+    let refreshTimerId = null;
+    function applyRefreshInterval() {
+      saveLocalSettings();
+      if (refreshTimerId) clearInterval(refreshTimerId);
+      const sec = parseInt(document.getElementById('settingRefresh').value);
+      if (sec > 0) {
+        refreshTimerId = setInterval(() => { loadFiles(); loadOutputs(); }, sec * 1000);
+      }
+    }
+
+    // ============ #12 Export modal ============
+    function showExportModal() {
+      document.getElementById('exportModal').classList.add('show');
+      loadExportList('all');
+    }
+
+    function hideExportModal() {
+      document.getElementById('exportModal').classList.remove('show');
+    }
+
+    async function loadExportList(type) {
+      document.getElementById('exportAll').style.borderColor = type === 'all' ? 'var(--accent)' : '';
+      document.getElementById('exportAll').style.color = type === 'all' ? 'var(--accent)' : '';
+      document.getElementById('exportPptx').style.borderColor = type === 'pptx' ? 'var(--accent)' : '';
+      document.getElementById('exportPptx').style.color = type === 'pptx' ? 'var(--accent)' : '';
+      document.getElementById('exportWeb').style.borderColor = type === 'web' ? 'var(--accent)' : '';
+      document.getElementById('exportWeb').style.color = type === 'web' ? 'var(--accent)' : '';
+
+      try {
+        const res = await fetch('/api/export-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type })
+        });
+        const data = await res.json();
+        document.getElementById('exportSummary').textContent =
+          '총 ' + data.totalFiles + '개 파일 / ' + data.totalSizeFormatted;
+        document.getElementById('exportFileList').innerHTML = data.files.map(f =>
+          '<div class="export-file-item">' +
+            '<div class="efi-info">' +
+              '<span class="output-badge ' + escHtml(f.type) + '" style="font-size:0.6rem;">' + escHtml(f.type) + '</span>' +
+              '<span class="efi-name">' + escHtml(f.name) + '</span>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+              '<span class="efi-size">' + escHtml(f.sizeFormatted) + '</span>' +
+              '<a href="' + escHtml(f.path) + '" download class="action-btn primary" style="font-size:0.68rem;padding:3px 10px;">다운로드</a>' +
+            '</div>' +
+          '</div>'
+        ).join('');
+      } catch(e) {
+        document.getElementById('exportSummary').textContent = '로드 실패';
+        document.getElementById('exportFileList').innerHTML = '';
+      }
+    }
+
+    // ============ #3 Quick generate ============
+    async function quickGenerate() {
+      const text = document.getElementById('quickGenText').value.trim();
+      if (!text) { showToast('텍스트를 입력해주세요', 'error'); return; }
+
+      const overlay = document.getElementById('generatingOverlay');
+      overlay.classList.add('show');
+
+      try {
+        const res = await fetch('/api/generate/from-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, outputType: 'both', theme: 'modern' })
+        });
+        const data = await res.json();
+        overlay.classList.remove('show');
+        if (data.error) {
+          showToast('생성 실패: ' + data.error, 'error');
+        } else {
+          showToast('발표자료가 생성되었습니다!', 'success');
+          addActivity('generate', '빠른 생성 완료');
+          document.getElementById('quickGenText').value = '';
+          loadOutputs();
+          if (data.webPath) window.open(data.webPath, '_blank');
+        }
+      } catch(e) {
+        overlay.classList.remove('show');
+        showToast('생성 실패: ' + e.message, 'error');
+      }
+    }
+
+    // ============ #6 Server log viewer ============
+    async function loadServerLogs() {
+      try {
+        const res = await fetch('/api/recent');
+        const data = await res.json();
+        const body = document.getElementById('serverLogBody');
+        if (!data.activities || data.activities.length === 0) {
+          body.innerHTML = '<div class="activity-empty">서버 로그가 없습니다</div>';
+          return;
+        }
+        body.innerHTML = data.activities.map(a => {
+          const time = a.timestamp ? new Date(a.timestamp).toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '-';
+          const action = (a.action || 'default').toLowerCase();
+          const actionClass = ['upload','generate','delete','settings'].includes(action) ? action : 'default';
+          return '<div class="log-entry">' +
+            '<span class="log-time">' + escHtml(time) + '</span>' +
+            '<span class="log-action ' + actionClass + '">' + escHtml(a.action || '-') + '</span>' +
+            '<span>' + escHtml(a.detail || '-') + '</span>' +
+          '</div>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('serverLogBody').innerHTML = '<div class="activity-empty">로그 로드 실패</div>';
+      }
+    }
+
+    // ============ Remember last theme in create modal ============
     function restoreLastTheme() {
       const last = localStorage.getItem('lastSelectedTheme');
       if (last) {
@@ -3194,6 +4460,11 @@
           }
         }
       }
+      // Apply local settings defaults
+      try {
+        const ls = JSON.parse(localStorage.getItem('localSettings') || '{}');
+        if (ls.defaultSlides) document.getElementById('newSlidesPerTopic').value = ls.defaultSlides;
+      } catch(e) {}
     }
 
     // ============ Create presentation ============
@@ -3212,7 +4483,6 @@
       selectedFormat = format;
     }
 
-    // Slide template pool
     const SLIDE_POOL = [
       t => ({ type:'bullets', title:t, image:'illust', items:['핵심 포인트 1','핵심 포인트 2','핵심 포인트 3'] }),
       t => ({ type:'cards', title:t, cards:[{title:'핵심 1',body:'내용을 입력하세요'},{title:'핵심 2',body:'내용을 입력하세요'},{title:'핵심 3',body:'내용을 입력하세요'}] }),
@@ -3226,8 +4496,8 @@
       t => ({ type:'process-arrow', title:t, steps:[{title:'분석',desc:'현황 파악'},{title:'설계',desc:'방안 수립'},{title:'실행',desc:'적용'},{title:'평가',desc:'결과 확인'}] }),
       t => ({ type:'bar-chart', title:t, items:[{label:'항목A',value:65},{label:'항목B',value:82},{label:'항목C',value:45},{label:'항목D',value:93}] }),
       t => ({ type:'pyramid', title:t, image:'illust', levels:[{title:'비전',desc:'최상위 목표'},{title:'전략',desc:'실행 방안'},{title:'실행',desc:'구체적 행동'}] }),
-      t => ({ type:'highlight', title:t, body:'핵심 메시지를 입력하세요', sub:'부가 설명', icon:'💡' }),
-      t => ({ type:'matrix', title:t, cells:[{title:'높은 영향·긴급',body:'즉시 실행'},{title:'높은 영향·비긴급',body:'계획 수립'},{title:'낮은 영향·긴급',body:'위임'},{title:'낮은 영향·비긴급',body:'보류'}] }),
+      t => ({ type:'highlight', title:t, body:'핵심 메시지를 입력하세요', sub:'부가 설명', icon:'*' }),
+      t => ({ type:'matrix', title:t, cells:[{title:'높은 영향/긴급',body:'즉시 실행'},{title:'높은 영향/비긴급',body:'계획 수립'},{title:'낮은 영향/긴급',body:'위임'},{title:'낮은 영향/비긴급',body:'보류'}] }),
       t => ({ type:'quote', title:t, quote:'변화의 시작은 작은 한 걸음입니다.', author:'발표자' }),
       t => ({ type:'roadmap', title:t, phases:[{title:'Phase 1',desc:'기반 구축',label:'Q1'},{title:'Phase 2',desc:'확장',label:'Q2'},{title:'Phase 3',desc:'안정화',label:'Q3'}] }),
       t => ({ type:'cycle', title:t, nodes:[{title:'Plan',desc:'계획'},{title:'Do',desc:'실행'},{title:'Check',desc:'확인'},{title:'Act',desc:'개선'}] }),
@@ -3245,7 +4515,6 @@
       const slidesPerTopic = parseInt(document.getElementById('newSlidesPerTopic').value);
       const topics = topicsRaw ? topicsRaw.split('\n').map(t => t.trim()).filter(t => t) : [];
 
-      // #4 Save last theme
       localStorage.setItem('lastSelectedTheme', theme);
 
       const slides = {
@@ -3314,11 +4583,13 @@
 
         const webResult = results.find(r => r.type === 'web');
         if (webResult) {
+          addRecentOpened('web', safeTitle + '.html', webResult.path);
           window.open(webResult.path, '_blank');
         }
 
         const pptResult = results.find(r => r.type === 'pptx');
         if (pptResult) {
+          addRecentOpened('pptx', safeTitle + '.pptx', '/' + pptResult.path);
           const a = document.createElement('a');
           a.href = '/' + pptResult.path;
           a.download = safeTitle + '.pptx';
@@ -3331,22 +4602,24 @@
       }
     }
 
-    // Enter to generate
     document.getElementById('newTitle').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generatePresentation(); }
     });
 
+    // ============ Init ============
+    loadLocalSettings();
     loadSources();
     loadFiles();
     loadOutputs();
+    renderRecentBar();
+    loadServerLogs();
 
-    // Enter to add folder
     document.getElementById('sourcePath').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') addSource();
     });
 
-    // Auto refresh every 30s
-    setInterval(() => { loadFiles(); loadOutputs(); }, 30000);
+    // Auto refresh (default 30s, configurable via settings)
+    applyRefreshInterval();
 
     // ============ Batch operations ============
     function updateBatchCount() {
@@ -3493,7 +4766,7 @@
       }
     });
 
-    // ============ #12 Onboarding tour ============
+    // ============ Onboarding tour ============
     const TOUR_STEPS = [
       {
         selector: '.upload-zone',
@@ -3506,19 +4779,19 @@
         desc: '이 버튼을 클릭하면 제목, 주제, 테마 등을 설정하여 새 발표자료를 빠르게 생성할 수 있습니다.'
       },
       {
-        selector: '#panelOutputs',
-        title: '생성된 발표자료',
-        desc: '생성된 PPT/웹 발표자료가 여기에 표시됩니다. 미리보기, 다운로드, 이름변경, 삭제가 가능합니다. 우클릭으로 빠른 메뉴를 사용할 수 있습니다.'
+        selector: '.quick-gen-widget',
+        title: '빠른 생성',
+        desc: '텍스트를 입력하면 바로 발표자료가 생성됩니다. 빈 줄로 섹션을 나눌 수 있습니다.'
       },
       {
-        selector: '.notif-toggle',
-        title: '알림 센터',
-        desc: '모든 알림 기록이 여기에 저장됩니다. 업로드, 생성, 삭제 등의 이벤트를 확인할 수 있습니다.'
+        selector: '#panelOutputs',
+        title: '생성된 발표자료',
+        desc: '생성된 PPT/웹 발표자료가 여기에 표시됩니다. 미리보기, 다운로드, 이름변경, 삭제가 가능합니다.'
       },
       {
         selector: '.guide-box',
         title: '사용 가이드',
-        desc: '단축키 정보와 사용 방법을 확인하세요. Ctrl+N으로 새 발표자료, Ctrl+U로 파일 업로드가 가능합니다.'
+        desc: '단축키 정보와 사용 방법을 확인하세요. ?키로 전체 단축키를 볼 수 있습니다.'
       }
     ];
 
@@ -3549,7 +4822,6 @@
       document.getElementById('tourTitle').textContent = step.title;
       document.getElementById('tourDesc').textContent = step.desc;
 
-      // Position popover below the element
       let top = rect.bottom + 12;
       let left = rect.left;
       if (top + 200 > window.innerHeight) { top = rect.top - 200; }
@@ -3573,9 +4845,8 @@
       localStorage.setItem('tourCompleted', 'true');
     }
 
-    // Auto-start tour for first-time visitors
     if (!localStorage.getItem('tourCompleted')) {
-      setTimeout(startTour, 1000);
+      setTimeout(startTour, 1500);
     }
   </script>
 </body>
