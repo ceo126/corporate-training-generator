@@ -15,7 +15,7 @@ if not exist output\pptx mkdir output\pptx
 if not exist output\web mkdir output\web
 
 echo ========================================
-echo   기업교육 발표자료 생성기 v1.0
+echo   기업교육 발표자료 생성기 v3.0.0
 echo ========================================
 echo.
 echo [1] input 폴더에 교육자료 넣기

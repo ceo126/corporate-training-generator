@@ -22,6 +22,7 @@ const SCAN_CACHE_TTL = 10000; // 10초
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
 const MAX_RECENT_ACTIVITIES = 20;
 
+const SERVER_START_TIME = Date.now();
 const APP_VERSION = '3.0.0';
 const CHANGELOG = [
   { version: '3.0.0', date: '2026-03-20', changes: ['최근 활동 API 추가', '즐겨찾기 기능 추가', '결과물 상세 정보 API', '텍스트→슬라이드 자동 생성', '버전 정보 API', '보안 헤더 강화', '요청 크기 제한 세분화', '정적 파일 캐싱 강화'] },
@@ -93,6 +94,64 @@ function formatSize(bytes) {
 function getOutputDir(type) {
   return path.join(__dirname, type === 'pptx' ? 'output/pptx' : 'output/web');
 }
+
+// ============================================================
+//  SSE (Server-Sent Events) 실시간 통신
+// ============================================================
+
+const sseClients = new Set();
+
+function broadcast(event, data) {
+  const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(message);
+    } catch (e) {
+      sseClients.delete(client);
+    }
+  }
+}
+
+// SSE 연결 엔드포인트
+app.get('/api/events', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+  res.write('event: connected\ndata: {}\n\n');
+  sseClients.add(res);
+  req.on('close', () => { sseClients.delete(res); });
+});
+
+// 30초마다 서버 통계 브로드캐스트
+setInterval(() => {
+  if (sseClients.size === 0) return;
+  try {
+    const mem = process.memoryUsage();
+    let inputFileCount = 0, outputPptxCount = 0, outputWebCount = 0;
+    const inputDir = path.join(__dirname, 'input');
+    const pptxDir = path.join(__dirname, 'output/pptx');
+    const webDir = path.join(__dirname, 'output/web');
+    try { inputFileCount = fs.readdirSync(inputDir).filter(f => !f.startsWith('.')).length; } catch {}
+    try { outputPptxCount = fs.readdirSync(pptxDir).filter(f => f.endsWith('.pptx')).length; } catch {}
+    try { outputWebCount = fs.readdirSync(webDir).filter(f => f.endsWith('.html')).length; } catch {}
+
+    broadcast('server:stats', {
+      uptime: Math.floor((Date.now() - SERVER_START_TIME) / 1000),
+      memory: {
+        rss: Math.round(mem.rss / 1024 / 1024),
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024)
+      },
+      files: { input: inputFileCount, outputPptx: outputPptxCount, outputWeb: outputWebCount },
+      clients: sseClients.size
+    });
+  } catch (e) {
+    // ignore stats errors
+  }
+}, 30000);
 
 // ============================================================
 //  최근 활동 (메모리 저장, 최대 20건)
@@ -523,7 +582,7 @@ app.delete('/api/outputs/:type/:name', (req, res) => {
   if (typeErr) return errorResponse(res, 400, typeErr, 'INVALID_TYPE');
 
   const outputDir = getOutputDir(type);
-  const filePath = path.join(outputDir, name);
+  const filePath = path.join(outputDir, path.basename(name));
   // Path Traversal 방지
   if (!filePath.startsWith(outputDir + path.sep)) {
     return errorResponse(res, 400, '잘못된 경로입니다', 'INVALID_PATH');
@@ -779,8 +838,6 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
 // ============================================================
 //  API: 서버 상태 확인
 // ============================================================
-
-const SERVER_START_TIME = Date.now();
 
 app.get('/api/health', (req, res) => {
   try {
@@ -1191,7 +1248,12 @@ app.get('/api/settings', (req, res) => {
 app.post('/api/settings', (req, res) => {
   try {
     const current = loadSettings();
-    const updated = { ...current, ...req.body };
+    const BLOCKED_KEYS = ['__proto__', 'constructor', 'prototype'];
+    const safe = {};
+    for (const [k, v] of Object.entries(req.body)) {
+      if (!BLOCKED_KEYS.includes(k)) safe[k] = v;
+    }
+    const updated = { ...current, ...safe };
     saveSettings(updated);
     res.json({ success: true, settings: updated });
   } catch (err) {
@@ -1205,10 +1267,6 @@ app.post('/api/settings', (req, res) => {
 
 app.get('/presenter', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/presenter.html'));
-});
-
-app.get('/api-docs', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/api-docs.html'));
 });
 
 app.get('/api-docs', (req, res) => {
@@ -1412,6 +1470,12 @@ app.get('/api/docs', (req, res) => {
       description: '모든 결과물 다운로드 링크 목록 반환',
       requestBody: '{ type?: "all"|"pptx"|"web" }',
       response: '{ totalFiles, totalSize, files: [{ name, type, path, size }] }'
+    },
+    {
+      method: 'GET', path: '/api/events',
+      description: 'SSE (Server-Sent Events) 실시간 이벤트 스트림 (서버 통계, 생성 알림)',
+      requestBody: null,
+      response: 'text/event-stream - event: server:stats, connected'
     }
   ];
   res.json({ version: APP_VERSION, totalEndpoints: docs.length, endpoints: docs });
@@ -1537,24 +1601,12 @@ app.post('/api/export-all', (req, res) => {
 // ============================================================
 
 app.use((req, res) => {
-  // API 요청에는 JSON 반환
   if (req.path.startsWith('/api/') || req.headers.accept === 'application/json') {
-    return res.status(404).json({ success: false, error: '요청한 리소스를 찾을 수 없습니다', code: 'NOT_FOUND', path: req.originalUrl });
-  }
-  // HTML 요청에는 404.html 반환
-  res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
-});
-
-// ============================================================
-//  404 Catch-All (등록되지 않은 라우트)
-// ============================================================
-
-app.use((req, res) => {
-  if (req.path.startsWith('/api/')) {
     return res.status(404).json({
       success: false,
       error: '존재하지 않는 API 엔드포인트입니다: ' + req.method + ' ' + req.path,
-      code: 'NOT_FOUND'
+      code: 'NOT_FOUND',
+      path: req.originalUrl
     });
   }
   res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
