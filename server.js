@@ -239,6 +239,38 @@ app.post('/api/outputs/:type/:name/rename', (req, res) => {
   }
 });
 
+// ============ 결과물 복제 ============
+
+app.post('/api/outputs/:type/:name/duplicate', (req, res) => {
+  const { type, name } = req.params;
+  if (type !== 'pptx' && type !== 'web') {
+    return res.status(400).json({ error: '잘못된 타입입니다' });
+  }
+  const dir = type === 'pptx' ? 'output/pptx' : 'output/web';
+  const outputDir = path.join(__dirname, dir);
+  const srcPath = path.join(outputDir, path.basename(name));
+  if (!srcPath.startsWith(outputDir + path.sep) && srcPath !== outputDir + path.sep + path.basename(name)) {
+    return res.status(400).json({ error: '잘못된 경로입니다' });
+  }
+  if (!fs.existsSync(srcPath)) {
+    return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+  }
+  try {
+    const ext = path.extname(name);
+    const base = path.basename(name, ext);
+    let copyName = base + '-복사본' + ext;
+    let counter = 1;
+    while (fs.existsSync(path.join(outputDir, copyName))) {
+      counter++;
+      copyName = base + '-복사본' + counter + ext;
+    }
+    fs.copyFileSync(srcPath, path.join(outputDir, copyName));
+    res.json({ success: true, newName: copyName });
+  } catch(e) {
+    res.status(500).json({ error: '복제 실패: ' + e.message });
+  }
+});
+
 // ============ 파일 파싱 ============
 
 app.post('/api/parse', async (req, res) => {

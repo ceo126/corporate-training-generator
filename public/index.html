@@ -1103,6 +1103,20 @@
     .format-select {
       flex-direction: column;
     }
+
+    .header-nav {
+      display: none;
+    }
+
+    .server-footer {
+      padding: 10px 16px;
+      gap: 12px;
+    }
+
+    .iframe-modal {
+      width: 98vw;
+      height: 90vh;
+    }
   }
 
   @media (max-width: 480px) {
@@ -1355,6 +1369,53 @@
         키보드 단축키: <kbd>Ctrl+N</kbd> 새 발표자료 &nbsp; <kbd>Ctrl+U</kbd> 파일 업로드
       </div>
     </div>
+
+    <!-- 최근 활동 로그 -->
+    <div class="panel activity-panel">
+      <div class="panel-header">
+        <h2>최근 활동</h2>
+        <button class="action-btn secondary" onclick="clearActivityLog()" style="font-size:0.72rem;">로그 지우기</button>
+      </div>
+      <div class="panel-body">
+        <ul class="activity-timeline" id="activityLog">
+          <li class="activity-empty">아직 활동 기록이 없습니다</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 결과물 미리보기 iframe 모달 -->
+  <div class="iframe-modal-overlay" id="iframeModal" onclick="if(event.target===this)hideIframePreview()">
+    <div class="iframe-modal">
+      <div class="iframe-header">
+        <h3 id="iframeTitle">미리보기</h3>
+        <div style="display:flex;gap:8px;">
+          <a id="iframeOpenNew" href="#" target="_blank" class="action-btn secondary" style="font-size:0.75rem;">새 탭에서 열기</a>
+          <button class="preview-close" onclick="hideIframePreview()">✕</button>
+        </div>
+      </div>
+      <iframe id="iframeContent" src="about:blank"></iframe>
+    </div>
+  </div>
+
+  <!-- 서버 상태 푸터 -->
+  <div class="server-footer" id="serverFooter">
+    <div class="footer-item">
+      <span class="status-dot" id="serverDot"></span>
+      <span class="footer-value" id="serverStatus">확인 중...</span>
+    </div>
+    <div class="footer-item">
+      <span class="footer-label">가동 시간:</span>
+      <span class="footer-value" id="serverUptime">-</span>
+    </div>
+    <div class="footer-item">
+      <span class="footer-label">메모리:</span>
+      <span class="footer-value" id="serverMemory">-</span>
+    </div>
+    <div class="footer-item">
+      <span class="footer-label">Node.js:</span>
+      <span class="footer-value" id="serverNode">-</span>
+    </div>
   </div>
 
   <script>
@@ -1567,23 +1628,30 @@
       if (filtered.length === 0) {
         container.innerHTML = '<div class="empty-state"><div class="icon">✨</div><p>' +
           (cachedOutputs.length === 0 ? '아직 생성된 발표자료가 없습니다' : '검색 결과가 없습니다') + '</p></div>';
+        document.getElementById('batchBar').style.display = 'none';
         return;
       }
 
+      // 일괄 작업 바 표시
+      document.getElementById('batchBar').style.display = 'flex';
+
       container.innerHTML = filtered.map(o => `
-        <div class="output-item" data-name="${escHtml(o.name)}">
+        <div class="output-item" data-name="${escHtml(o.name)}" data-type="${escHtml(o.type)}" data-path="${escHtml(o.path)}">
+          <input type="checkbox" class="output-checkbox" data-oname="${escHtml(o.name)}" data-otype="${escHtml(o.type)}" onchange="updateBatchCount()">
           <div class="output-info">
             <span class="output-badge ${escHtml(o.type)}">${escHtml(o.type)}</span>
             <span class="output-name" style="font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(o.name)}</span>
           </div>
           <div class="output-actions">
             ${o.type === 'web'
-              ? `<a href="${escHtml(o.path)}" target="_blank" class="action-btn primary">발표 시작</a>`
+              ? `<button class="action-btn secondary" data-path="${escHtml(o.path)}" data-oname="${escHtml(o.name)}" onclick="showIframePreview(this.dataset.path,this.dataset.oname)" style="font-size:0.75rem;">미리보기</button><a href="${escHtml(o.path)}" target="_blank" class="action-btn primary">발표 시작</a>`
               : `<a href="${escHtml(o.path)}" download class="action-btn primary">다운로드</a>`}
             <button class="action-btn secondary rename-btn" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="startRename(this.dataset.otype,this.dataset.oname)">이름변경</button>
             <button class="action-btn secondary" data-otype="${escHtml(o.type)}" data-oname="${escHtml(o.name)}" onclick="deleteOutput(this.dataset.otype,this.dataset.oname)" style="font-size:0.75rem;color:#ef4444;">삭제</button>
           </div>
         </div>`).join('');
+
+      updateBatchCount();
     }
 
     function filterOutputs() {
@@ -1658,6 +1726,7 @@
       if (!confirm(name + ' 파일을 삭제하시겠습니까?')) return;
       await fetch('/api/files/' + encodeURIComponent(name), { method: 'DELETE' });
       showToast(name + ' 파일이 삭제되었습니다', 'info');
+      addActivity('delete', name + ' 파일 삭제됨');
       loadFiles();
     }
 
@@ -1665,6 +1734,7 @@
       if (!confirm(name + ' 결과물을 삭제하시겠습니까?')) return;
       await fetch('/api/outputs/' + encodeURIComponent(type) + '/' + encodeURIComponent(name), { method: 'DELETE' });
       showToast(name + ' 결과물이 삭제되었습니다', 'info');
+      addActivity('delete', name + ' 결과물 삭제됨');
       loadOutputs();
     }
 
@@ -1678,6 +1748,7 @@
       await fetch('/api/upload', { method: 'POST', body: formData });
       e.target.value = '';
       showToast(count + '개 파일이 업로드되었습니다', 'success');
+      addActivity('upload', count + '개 파일 업로드됨');
       loadFiles();
     });
 
@@ -1717,6 +1788,7 @@
       }
       await fetch('/api/upload', { method: 'POST', body: formData });
       showToast(count + '개 파일이 업로드되었습니다', 'success');
+      addActivity('upload', count + '개 파일 드래그 업로드됨');
       loadFiles();
     });
 
@@ -1850,6 +1922,7 @@
 
         overlay.classList.remove('show');
         showToast('발표자료가 생성되었습니다!', 'success');
+        addActivity('generate', '"' + title + '" 발표자료 생성됨');
         loadOutputs();
 
         // 웹 발표자료 자동 열기
@@ -1889,6 +1962,138 @@
 
     // 30초마다 자동 새로고침
     setInterval(() => { loadFiles(); loadOutputs(); }, 30000);
+
+    // ============ 일괄 작업 ============
+    function updateBatchCount() {
+      const checked = document.querySelectorAll('.output-checkbox:checked');
+      document.getElementById('batchCount').textContent = checked.length;
+    }
+
+    function selectAllOutputs() {
+      document.querySelectorAll('.output-checkbox').forEach(cb => cb.checked = true);
+      updateBatchCount();
+    }
+
+    function deselectAllOutputs() {
+      document.querySelectorAll('.output-checkbox').forEach(cb => cb.checked = false);
+      updateBatchCount();
+    }
+
+    async function deleteSelectedOutputs() {
+      const checked = document.querySelectorAll('.output-checkbox:checked');
+      if (checked.length === 0) { showToast('선택된 항목이 없습니다', 'info'); return; }
+      if (!confirm(checked.length + '개 항목을 삭제하시겠습니까?')) return;
+      for (const cb of checked) {
+        const type = cb.dataset.otype;
+        const name = cb.dataset.oname;
+        await fetch('/api/outputs/' + encodeURIComponent(type) + '/' + encodeURIComponent(name), { method: 'DELETE' });
+        addActivity('delete', name + ' 삭제됨');
+      }
+      showToast(checked.length + '개 항목이 삭제되었습니다', 'info');
+      loadOutputs();
+    }
+
+    async function duplicateSelectedOutputs() {
+      const checked = document.querySelectorAll('.output-checkbox:checked');
+      if (checked.length === 0) { showToast('선택된 항목이 없습니다', 'info'); return; }
+      let count = 0;
+      for (const cb of checked) {
+        const type = cb.dataset.otype;
+        const name = cb.dataset.oname;
+        try {
+          const res = await fetch('/api/outputs/' + encodeURIComponent(type) + '/' + encodeURIComponent(name) + '/duplicate', { method: 'POST' });
+          const data = await res.json();
+          if (!data.error) {
+            count++;
+            addActivity('generate', name + ' 복제됨');
+          }
+        } catch(e) {}
+      }
+      if (count > 0) {
+        showToast(count + '개 항목이 복제되었습니다', 'success');
+        loadOutputs();
+      } else {
+        showToast('복제 실패 (서버에서 복제 API를 지원하지 않을 수 있습니다)', 'error');
+      }
+    }
+
+    // ============ 결과물 미리보기 (iframe) ============
+    function showIframePreview(path, name) {
+      document.getElementById('iframeTitle').textContent = name || '미리보기';
+      document.getElementById('iframeContent').src = path;
+      document.getElementById('iframeOpenNew').href = path;
+      document.getElementById('iframeModal').classList.add('show');
+    }
+
+    function hideIframePreview() {
+      document.getElementById('iframeModal').classList.remove('show');
+      document.getElementById('iframeContent').src = 'about:blank';
+    }
+
+    // ============ 서버 상태 ============
+    async function fetchServerHealth() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        if (data.status === 'ok') {
+          document.getElementById('serverDot').className = 'status-dot';
+          document.getElementById('serverStatus').textContent = '정상 운영';
+          document.getElementById('serverUptime').textContent = escHtml(data.uptimeFormatted || data.uptime + '초');
+          document.getElementById('serverMemory').textContent = escHtml(data.memory.heapUsed + ' / ' + data.memory.heapTotal);
+          document.getElementById('serverNode').textContent = escHtml(data.nodeVersion);
+        } else {
+          setServerOffline();
+        }
+      } catch(e) {
+        setServerOffline();
+      }
+    }
+
+    function setServerOffline() {
+      document.getElementById('serverDot').className = 'status-dot offline';
+      document.getElementById('serverStatus').textContent = '연결 실패';
+      document.getElementById('serverUptime').textContent = '-';
+      document.getElementById('serverMemory').textContent = '-';
+      document.getElementById('serverNode').textContent = '-';
+    }
+
+    fetchServerHealth();
+    setInterval(fetchServerHealth, 30000);
+
+    // ============ 활동 로그 ============
+    const activityLogs = [];
+
+    function addActivity(type, message) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      activityLogs.unshift({ type, message, time: timeStr });
+      if (activityLogs.length > 50) activityLogs.pop();
+      renderActivityLog();
+    }
+
+    function renderActivityLog() {
+      const container = document.getElementById('activityLog');
+      if (activityLogs.length === 0) {
+        container.innerHTML = '<li class="activity-empty">아직 활동 기록이 없습니다</li>';
+        return;
+      }
+      container.innerHTML = activityLogs.map(a =>
+        '<li class="activity-item ' + escHtml(a.type) + '">' +
+          '<span class="activity-time">' + escHtml(a.time) + '</span>' +
+          '<span>' + escHtml(a.message) + '</span>' +
+        '</li>'
+      ).join('');
+    }
+
+    function clearActivityLog() {
+      activityLogs.length = 0;
+      renderActivityLog();
+    }
+
+    // Escape키로 iframe 모달도 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { hideIframePreview(); }
+    });
   </script>
 </body>
 </html>
