@@ -899,17 +899,21 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     const sectionTitle = stripNumberPrefix(rawTitle);
     const bodyLines = lines.slice(1);
 
+    // 섹션별 악센트 컬러 (시각적 다양성)
+    const sectionColorIdx = i % 5;
+
     // 섹션 구분 슬라이드
     slides.content.push({
       isSection: true,
       sectionNumber: String(i + 1).padStart(2, '0'),
       title: sectionTitle,
-      description: bodyLines.length > 0 ? bodyLines[0] : ''
+      description: bodyLines.length > 0 ? bodyLines[0] : '',
+      colorIndex: sectionColorIdx
     });
 
     // 항목을 간결한 슬라이드들로 분할 (슬라이드당 최대 3개)
     const contentSlides = splitIntoSlides(sectionTitle, bodyLines);
-    contentSlides.forEach(s => slides.content.push(s));
+    contentSlides.forEach(s => { s.colorIndex = sectionColorIdx; slides.content.push(s); });
   }
 
   // 엔딩 슬라이드 (ending 구조 사용)
