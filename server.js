@@ -15,6 +15,25 @@ let sourceDirs = [
   'D:/0000.유벤치/기업교육 자료'
 ].map(d => path.resolve(d)).filter(d => fs.existsSync(d));
 
+// ============ CORS 헤더 ============
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// ============ 요청 로깅 미들웨어 ============
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`);
+  });
+  next();
+});
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
@@ -694,6 +713,283 @@ app.post('/api/generate/bulk', async (req, res) => {
   }
 });
 
+// ============ 페이지 라우트 ============
+
+app.get('/presenter', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/presenter.html'));
+});
+
+app.get('/templates', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/templates.html'));
+});
+
+// ============ API 문서 ============
+
+app.get('/api/docs', (req, res) => {
+  const docs = [
+    {
+      method: 'GET', path: '/api/health',
+      description: '서버 상태 확인 (업타임, 메모리, 파일 수)',
+      requestBody: null,
+      response: '{ status, uptime, uptimeFormatted, memory, files, sourceDirs, nodeVersion }'
+    },
+    {
+      method: 'GET', path: '/api/sources',
+      description: '등록된 소스 디렉토리 목록 조회',
+      requestBody: null,
+      response: '{ sources: string[] }'
+    },
+    {
+      method: 'POST', path: '/api/source',
+      description: '소스 디렉토리 추가',
+      requestBody: '{ dirPath: string }',
+      response: '{ success: true, sources: string[] }'
+    },
+    {
+      method: 'DELETE', path: '/api/source',
+      description: '소스 디렉토리 제거',
+      requestBody: '{ dirPath: string }',
+      response: '{ success: true, sources: string[] }'
+    },
+    {
+      method: 'GET', path: '/api/files',
+      description: '소스 디렉토리 내 지원 파일 목록 조회',
+      requestBody: null,
+      response: '{ files: [{ name, relativePath, sourceDir, size, type, modified }] }'
+    },
+    {
+      method: 'POST', path: '/api/upload',
+      description: '파일 업로드 (multipart/form-data, field: files)',
+      requestBody: 'multipart/form-data - files[]',
+      response: '{ success: true, count: number }'
+    },
+    {
+      method: 'DELETE', path: '/api/files/:name',
+      description: 'input 폴더 내 파일 삭제',
+      requestBody: null,
+      response: '{ success: true }'
+    },
+    {
+      method: 'GET', path: '/api/outputs',
+      description: '생성된 결과물 목록 조회 (pptx + web)',
+      requestBody: null,
+      response: '{ outputs: [{ name, type, path, modified }] }'
+    },
+    {
+      method: 'DELETE', path: '/api/outputs/:type/:name',
+      description: '결과물 삭제 (type: pptx | web)',
+      requestBody: null,
+      response: '{ success: true }'
+    },
+    {
+      method: 'POST', path: '/api/outputs/:type/:name/rename',
+      description: '결과물 이름 변경',
+      requestBody: '{ newName: string }',
+      response: '{ success: true, newName: string }'
+    },
+    {
+      method: 'POST', path: '/api/parse',
+      description: '파일 파싱 (텍스트 추출)',
+      requestBody: '{ filePath: string, sourceDir?: string }',
+      response: '{ name, type, text, pages? }'
+    },
+    {
+      method: 'POST', path: '/api/generate/web',
+      description: 'HTML 직접 저장으로 웹 발표자료 생성',
+      requestBody: '{ filename: string, html: string }',
+      response: '{ success: true, path: string }'
+    },
+    {
+      method: 'POST', path: '/api/generate/web-from-data',
+      description: '슬라이드 데이터로 웹 발표자료 생성',
+      requestBody: '{ filename: string, slides: object, theme?: string }',
+      response: '{ success: true, path: string }'
+    },
+    {
+      method: 'POST', path: '/api/generate/pptx',
+      description: 'PPTX 발표자료 생성',
+      requestBody: '{ filename: string, slides: object, theme?: string }',
+      response: '{ success: true, path: string }'
+    },
+    {
+      method: 'POST', path: '/api/generate/bulk',
+      description: '일괄 발표자료 생성 (최대 20개)',
+      requestBody: '{ files: [{ slides, filename, filePath?, sourceDir? }], outputType: "web"|"pptx", theme?: string }',
+      response: '{ success, total, successCount, errorCount, results }'
+    },
+    {
+      method: 'POST', path: '/api/preview',
+      description: '슬라이드 웹 미리보기 HTML 생성',
+      requestBody: '{ slides: object, theme?: string }',
+      response: '{ success: true, html: string }'
+    },
+    {
+      method: 'POST', path: '/api/duplicate-output/:type/:name',
+      description: '결과물 복제',
+      requestBody: null,
+      response: '{ success: true, newName: string, path: string }'
+    },
+    {
+      method: 'GET', path: '/api/files/:sourceDir/:filePath/preview',
+      description: '파일 내용 미리보기 (sourceDir, filePath는 base64 인코딩)',
+      requestBody: null,
+      response: '{ name, type, preview, truncated, fullLength, pages?, error? }'
+    },
+    {
+      method: 'GET', path: '/api/templates',
+      description: '슬라이드 템플릿 목록 조회',
+      requestBody: null,
+      response: '{ templates: [{ type, name, description, example }] }'
+    },
+    {
+      method: 'GET', path: '/api/themes',
+      description: '사용 가능한 테마 목록 조회',
+      requestBody: null,
+      response: '{ themes: [{ id, name, colors }] }'
+    },
+    {
+      method: 'GET', path: '/api/docs',
+      description: 'API 문서 (이 엔드포인트)',
+      requestBody: null,
+      response: '이 응답 자체'
+    },
+    {
+      method: 'GET', path: '/api/stats',
+      description: '상세 통계 조회',
+      requestBody: null,
+      response: '{ pptxCount, webCount, totalCount, lastGenerated, largestFile, totalInputSize, sourceBreakdown }'
+    },
+    {
+      method: 'POST', path: '/api/export-all',
+      description: '모든 결과물 다운로드 링크 목록 반환',
+      requestBody: '{ type?: "all"|"pptx"|"web" }',
+      response: '{ totalFiles, totalSize, files: [{ name, type, path, size }] }'
+    }
+  ];
+  res.json({ version: '2.0.0', totalEndpoints: docs.length, endpoints: docs });
+});
+
+// ============ 상세 통계 ============
+
+app.get('/api/stats', (req, res) => {
+  try {
+    const pptxDir = path.join(__dirname, 'output/pptx');
+    const webDir = path.join(__dirname, 'output/web');
+
+    const getFileInfos = (dir, ext, type) => {
+      if (!fs.existsSync(dir)) return [];
+      return fs.readdirSync(dir)
+        .filter(f => f.endsWith(ext))
+        .map(f => {
+          try {
+            const stat = fs.statSync(path.join(dir, f));
+            return { name: f, type, size: stat.size, modified: stat.mtime };
+          } catch { return null; }
+        })
+        .filter(Boolean);
+    };
+
+    const pptxFiles = getFileInfos(pptxDir, '.pptx', 'pptx');
+    const webFiles = getFileInfos(webDir, '.html', 'web');
+    const allOutputs = [...pptxFiles, ...webFiles];
+
+    // 가장 최근 생성 시간
+    let lastGenerated = null;
+    if (allOutputs.length > 0) {
+      const sorted = allOutputs.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+      lastGenerated = { name: sorted[0].name, type: sorted[0].type, modified: sorted[0].modified };
+    }
+
+    // 가장 큰 파일
+    let largestFile = null;
+    if (allOutputs.length > 0) {
+      const sorted = [...allOutputs].sort((a, b) => b.size - a.size);
+      largestFile = { name: sorted[0].name, type: sorted[0].type, size: sorted[0].size, sizeFormatted: formatSize(sorted[0].size) };
+    }
+
+    // 총 input 파일 크기
+    let totalInputSize = 0;
+    const sourceBreakdown = {};
+    for (const dir of sourceDirs) {
+      if (!fs.existsSync(dir)) continue;
+      const files = [];
+      scanDir(dir, dir, files);
+      sourceBreakdown[dir] = files.length;
+      totalInputSize += files.reduce((sum, f) => sum + f.size, 0);
+    }
+
+    res.json({
+      pptxCount: pptxFiles.length,
+      webCount: webFiles.length,
+      totalCount: allOutputs.length,
+      lastGenerated,
+      largestFile,
+      totalInputSize,
+      totalInputSizeFormatted: formatSize(totalInputSize),
+      sourceBreakdown
+    });
+  } catch (err) {
+    res.status(500).json({ error: '통계 조회 실패: ' + err.message });
+  }
+});
+
+function formatSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i];
+}
+
+// ============ 결과물 목록 + 다운로드 링크 ============
+
+app.post('/api/export-all', (req, res) => {
+  try {
+    const filterType = (req.body && req.body.type) || 'all';
+    const pptxDir = path.join(__dirname, 'output/pptx');
+    const webDir = path.join(__dirname, 'output/web');
+
+    const collectFiles = (dir, ext, type) => {
+      if (!fs.existsSync(dir)) return [];
+      return fs.readdirSync(dir)
+        .filter(f => f.endsWith(ext))
+        .map(f => {
+          try {
+            const stat = fs.statSync(path.join(dir, f));
+            return {
+              name: f,
+              type,
+              path: `/output/${type}/${encodeURIComponent(f)}`,
+              size: stat.size,
+              sizeFormatted: formatSize(stat.size),
+              modified: stat.mtime
+            };
+          } catch { return null; }
+        })
+        .filter(Boolean);
+    };
+
+    let files = [];
+    if (filterType === 'all' || filterType === 'pptx') {
+      files = files.concat(collectFiles(pptxDir, '.pptx', 'pptx'));
+    }
+    if (filterType === 'all' || filterType === 'web') {
+      files = files.concat(collectFiles(webDir, '.html', 'web'));
+    }
+
+    files.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+
+    res.json({
+      totalFiles: files.length,
+      totalSize,
+      totalSizeFormatted: formatSize(totalSize),
+      files
+    });
+  } catch (err) {
+    res.status(500).json({ error: '내보내기 목록 조회 실패: ' + err.message });
+  }
+});
+
 // ============ 글로벌 에러 핸들러 ============
 
 app.use((err, req, res, _next) => {
@@ -718,7 +1014,7 @@ process.on('unhandledRejection', (reason) => {
 
 app.listen(PORT, () => {
   console.log(`\n========================================`);
-  console.log(`  기업교육 발표자료 생성기 v1.0`);
+  console.log(`  기업교육 발표자료 생성기 v2.0`);
   console.log(`  http://localhost:${PORT}`);
   console.log(`========================================`);
   console.log(`\n[사용법]`);

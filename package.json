@@ -1,6 +1,6 @@
 {
   "name": "corporate-training-generator",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "교육자료 → PPT + 동적 웹 발표자료 자동 생성",
   "main": "server.js",
   "scripts": {
