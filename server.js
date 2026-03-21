@@ -754,29 +754,37 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
       .filter(s => s.length > 3);
   }
 
-  /** 긴 문장을 슬라이드용 핵심 구절로 압축 */
+  /** 긴 문장을 슬라이드용 핵심 구절로 압축 (목표: 35자 이내) */
   function condense(sentence) {
     let s = sentence
-      .replace(/\s*입니다\.?$/, '')
-      .replace(/\s*합니다\.?$/, '')
-      .replace(/\s*있습니다\.?$/, '')
-      .replace(/\s*되었습니다\.?$/, '')
-      .replace(/\s*됩니다\.?$/, '')
-      .replace(/했습니다\.?$/, '')
+      // 종결어미 제거
+      .replace(/\s*(?:입니다|합니다|있습니다|되었습니다|됩니다|했습니다|겠습니다|봅니다|습니다)\.?$/, '')
+      .replace(/\s*(?:가능해졌고|가능해졌습니다|가능합니다)\.?$/, ' 가능')
+      .replace(/\s*(?:것이 중요합니다|것이 필요합니다)\.?$/, '')
+      // 접속사/부사 제거
+      .replace(/^(?:특히|또한|이제는|그러나|따라서|이를 통해|이에 따라|한편|더불어|아울러)\s*/g, '')
       .replace(/있으며,?\s*/, ', ')
-      .replace(/뿐만 아니라\s*/, '+ ')
-      .replace(/특히\s*/, '')
-      .replace(/또한\s*/, '')
-      .replace(/이제는\s*/, '')
+      .replace(/뿐만 아니라\s*/, ' + ')
+      .replace(/\s+같은\s+/, ' ')
+      .replace(/\s*를?\s*통해\s*/, ' → ')
       .replace(/,\s*$/, '');
-    // 60자 이상이면 핵심 부분만 추출
-    if (s.length > 60) {
-      // 콜론이 있으면 뒤쪽만
+
+    // 40자 넘으면 핵심만 추출
+    if (s.length > 40) {
+      // "A 통해/기반으로/활용하여 B" → "A → B" 핵심 구조 추출
+      const viaMatch = s.match(/(.{5,20}?)(?:을|를)?\s*(?:통해|기반으로|활용하여|활용한|활용해)\s*(.{5,25})/);
+      if (viaMatch) return viaMatch[1].trim() + ' → ' + viaMatch[2].trim();
+      // 콜론 구조 유지
       const colonIdx = s.indexOf(':');
-      if (colonIdx > 0 && colonIdx < 20) return s;
-      // 쉼표로 분리된 첫 번째 절만
-      const parts = s.split(/[,，]/);
-      if (parts[0].length >= 15 && parts[0].length <= 55) return parts[0].trim();
+      if (colonIdx > 0 && colonIdx < 15) {
+        const afterColon = s.substring(colonIdx + 1).trim();
+        return s.substring(0, colonIdx).trim() + ': ' + (afterColon.length > 25 ? afterColon.substring(0, 25) : afterColon);
+      }
+      // 쉼표/조사로 분리하여 첫 절만
+      const parts = s.split(/[,，]\s*/);
+      if (parts[0].length >= 10 && parts[0].length <= 38) return parts[0].trim();
+      // 그래도 길면 35자 강제 절단
+      if (s.length > 45) return s.substring(0, 35).replace(/\s+\S*$/, '') + '...';
     }
     return s;
   }
@@ -815,24 +823,44 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
   // ========== 텍스트를 섹션으로 분리 ==========
 
   // 1차: 빈 줄로 분리
-  const rawSections = text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+  let rawSections = text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
 
-  // 2차: 각 섹션을 줄 단위로 분석 → 이미 구조화된 것과 원고 형태 구분
+  // 빈 줄이 없는 긴 원고(섹션 1개)인 경우 → 문장 기반으로 자동 분할
+  if (rawSections.length === 1) {
+    const allSentences = splitSentences(rawSections[0]);
+    if (allSentences.length >= 6) {
+      // 3~4문장씩 묶어서 섹션으로 분할
+      const chunkSize = Math.ceil(allSentences.length / Math.ceil(allSentences.length / 4));
+      rawSections = [];
+      for (let j = 0; j < allSentences.length; j += chunkSize) {
+        rawSections.push(allSentences.slice(j, j + chunkSize).join(' '));
+      }
+    }
+  }
+
+  // 2차: 각 섹션을 줄 단위로 분석 → 구조화 vs 원고 자동 감지
   const sections = [];
   for (const raw of rawSections) {
     const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
 
     if (lines.length >= 2) {
-      // 이미 줄바꿈으로 구조화된 텍스트 (기존 로직)
-      sections.push({ title: lines[0], bodyLines: lines.slice(1), isStructured: true });
+      // 줄바꿈 구조화 텍스트
+      // 첫 줄이 짧으면(20자 이하) 제목으로 인식, 길면 본문으로 분리
+      if (lines[0].length <= 25) {
+        sections.push({ title: lines[0], bodyLines: lines.slice(1).map(l => condense(l)), isStructured: true });
+      } else {
+        // 모든 줄을 문장으로 분리 후 처리
+        const allSents = lines.flatMap(l => splitSentences(l));
+        const points = allSents.map(s => condense(s)).filter(s => s.length >= 5);
+        const title = extractTitle(points, '핵심 포인트');
+        sections.push({ title, bodyLines: points, isStructured: false, originalText: raw });
+      }
     } else {
-      // 한 줄짜리 문단 (원고 형태) → 문장으로 분리
+      // 한 줄짜리 (원고 문단 또는 한 문장)
       const sentences = splitSentences(lines[0]);
       if (sentences.length <= 1) {
-        // 한 문장짜리 → highlight용
         sections.push({ title: condense(lines[0]), bodyLines: [], isStructured: false, singleSentence: true, originalText: lines[0] });
       } else {
-        // 여러 문장 → 핵심 포인트 추출
         const points = sentences.map(s => condense(s)).filter(s => s.length >= 5);
         const title = extractTitle(points, '핵심 포인트');
         sections.push({ title, bodyLines: points, isStructured: false, originalText: lines[0] });
