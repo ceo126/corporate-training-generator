@@ -732,7 +732,7 @@ app.post('/api/generate/pptx', asyncHandler(async (req, res) => {
 // ============================================================
 
 app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
-  const { text, title, outputType, theme, template, filename } = req.body;
+  const { text, title, outputType, theme, template, filename, maxSlides } = req.body;
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return errorResponse(res, 400, '텍스트가 필요합니다', 'MISSING_TEXT');
   }
@@ -929,9 +929,10 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     return t;
   }
 
-  /** 항목들을 간결한 슬라이드 여러 장으로 분할 (슬라이드당 최대 3항목) */
+  /** 항목들을 간결한 슬라이드 여러 장으로 분할 */
+  const itemsPerSlide = (maxSlides && maxSlides > 0) ? Math.max(2, Math.ceil(sections.reduce((s, sec) => s + sec.bodyLines.length, 0) / maxSlides)) : 3;
   function splitIntoSlides(sectionTitle, bodyLines) {
-    const MAX_PER_SLIDE = 3;
+    const MAX_PER_SLIDE = itemsPerSlide;
     const results = [];
 
     if (bodyLines.length <= MAX_PER_SLIDE) {
