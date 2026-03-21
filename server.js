@@ -737,6 +737,73 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     return errorResponse(res, 400, '텍스트가 필요합니다', 'MISSING_TEXT');
   }
 
+  // ========== 원고 분석 → 자동 테마/템플릿 선택 ==========
+
+  function autoSelectThemeAndTemplate(rawText) {
+    const t = rawText.toLowerCase();
+    const scores = {
+      tech:       0, // AI, 기술, 디지털, 소프트웨어
+      corporate:  0, // 기업, 경영, 전략, 비즈니스
+      nature:     0, // 환경, 지속가능, ESG, 친환경
+      warm:       0, // 교육, 학습, 성장, 역량
+      creative:   0, // 디자인, 브랜드, 마케팅, 콘텐츠
+      elegant:    0, // 리더십, 문화, 가치, 비전
+      dark:       0, // 보안, 사이버, 데이터 보호
+      modern:     0, // 혁신, 변화, 트렌드, 미래
+    };
+
+    // 키워드 매칭
+    const keywords = {
+      tech:      ['ai','인공지능','기술','디지털','소프트웨어','플랫폼','자동화','알고리즘','gpt','claude','llm','api','클라우드','서버','데이터','머신러닝','딥러닝','it','iot','블록체인','로봇','코딩'],
+      corporate: ['기업','경영','전략','비즈니스','매출','roi','kpi','성과','수익','투자','시장','경쟁','고객','영업','조직','부서'],
+      nature:    ['환경','지속가능','esg','친환경','탄소','에너지','재생','기후','녹색','생태'],
+      warm:      ['교육','학습','훈련','연수','역량','커리큘럼','강의','수업','학생','교사','멘토','코칭','피드백'],
+      creative:  ['디자인','브랜드','마케팅','콘텐츠','크리에이티브','sns','광고','캠페인','ux','ui'],
+      elegant:   ['리더십','문화','가치','비전','철학','윤리','인재','hr','복지','워라밸'],
+      dark:      ['보안','사이버','해킹','암호','인증','방화벽','취약점','위협','개인정보'],
+      modern:    ['혁신','변화','트렌드','미래','스타트업','애자일','dX','전환'],
+    };
+
+    for (const [category, words] of Object.entries(keywords)) {
+      for (const w of words) {
+        const regex = new RegExp(w, 'gi');
+        const matches = t.match(regex);
+        if (matches) scores[category] += matches.length;
+      }
+    }
+
+    // 최고 점수 테마 선택
+    let bestTheme = 'modern';
+    let maxScore = 0;
+    for (const [cat, score] of Object.entries(scores)) {
+      if (score > maxScore) { maxScore = score; bestTheme = cat; }
+    }
+
+    // 테마에 어울리는 템플릿 자동 매칭
+    const templateMap = {
+      tech: 'neon',
+      corporate: '',        // 기본 (클린)
+      nature: 'glass',
+      warm: '',              // 기본
+      creative: 'glass',
+      elegant: 'editorial',
+      dark: 'neon',
+      modern: 'glass',
+    };
+
+    return {
+      theme: bestTheme,
+      template: templateMap[bestTheme] || '',
+      topCategory: bestTheme,
+      score: maxScore
+    };
+  }
+
+  // 사용자가 지정하지 않은 경우 자동 선택
+  const auto = autoSelectThemeAndTemplate(text);
+  const selectedTheme = theme || auto.theme;
+  const selectedTemplate = template || auto.template;
+
   // ========== 원고 → 슬라이드 변환 엔진 ==========
 
   /** 제목에서 번호 접두사 제거 */
@@ -953,12 +1020,19 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     return results;
   }
 
-  /** 타입에 맞는 슬라이드 데이터 생성 */
+  /** 타입에 맞는 슬라이드 데이터 생성 (내용 분석 기반) */
   function buildSlide(slideTitle, items, slideType) {
+    const joined = items.join(' ');
     const hasNumbers = items.some(l => /\d+[%명건원개만억조달러배]/.test(l));
+    const hasComparison = /vs|비교|대비|전후|before|after|차이|반면/.test(joined);
+    const hasProcess = /단계|절차|프로세스|순서|먼저|다음|마지막|1단계|2단계|3단계/.test(joined);
+    const hasChecklist = /확인|점검|체크|필수|필요|해야|완료/.test(joined);
 
-    // 숫자가 있으면 stats 우선
+    // 내용 기반 최적 타입 자동 선택
     if (hasNumbers && items.length <= 3) slideType = 'stats';
+    else if (hasComparison && items.length >= 2) slideType = 'two-column';
+    else if (hasProcess && items.length >= 2) slideType = 'steps';
+    else if (hasChecklist && items.length >= 3) slideType = 'checklist';
 
     let slide;
     switch (slideType) {
@@ -1001,13 +1075,23 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
         break;
       case 'two-column': {
         const mid = Math.ceil(items.length / 2);
+        const hasBeforeAfter = /전후|before|after|이전|이후/.test(joined);
+        const hasProbSol = /문제|해결|과제|방안/.test(joined);
         slide = {
           title: slideTitle, type: 'two-column',
-          leftTitle: '핵심', leftItems: items.slice(0, mid),
-          rightTitle: '상세', rightItems: items.slice(mid).length > 0 ? items.slice(mid) : ['']
+          leftTitle: hasBeforeAfter ? 'Before' : hasProbSol ? '과제' : '현황',
+          leftItems: items.slice(0, mid),
+          rightTitle: hasBeforeAfter ? 'After' : hasProbSol ? '해결 방안' : '방향',
+          rightItems: items.slice(mid).length > 0 ? items.slice(mid) : ['']
         };
         break;
       }
+      case 'checklist':
+        slide = {
+          title: slideTitle, type: 'checklist',
+          items: items.map(it => ({ text: it, done: /완료|달성|구축|도입/.test(it) }))
+        };
+        break;
       default:
         slide = { title: slideTitle, type: 'bullets', items };
     }
@@ -1073,21 +1157,20 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
 
   const type = outputType || 'web';
   const safeName = path.basename(filename || (slideTitle + (type === 'pptx' ? '.pptx' : '.html')));
-  const selectedTheme = theme || 'modern';
 
   if (type === 'web') {
-    const html = webGenerator.generateHTML(slides, { theme: selectedTheme, title: slideTitle, template: template || '' });
+    const html = webGenerator.generateHTML(slides, { theme: selectedTheme, title: slideTitle, template: selectedTemplate });
     const outputDir = path.join(__dirname, 'output/web');
     fs.mkdirSync(outputDir, { recursive: true });
     const webName = safeName.endsWith('.html') ? safeName : safeName.replace(/\.[^.]+$/, '.html');
     fs.writeFileSync(path.join(outputDir, webName), html, 'utf8');
     addActivity('create', `텍스트→웹 발표자료: ${webName}`);
-    res.json({ success: true, path: `/output/web/${encodeURIComponent(webName)}`, slides, slideCount: slides.content.length });
+    res.json({ success: true, path: `/output/web/${encodeURIComponent(webName)}`, slides, slideCount: slides.content.length, appliedTheme: selectedTheme, appliedTemplate: selectedTemplate, autoDetected: !theme ? auto.topCategory : null });
   } else {
     const pptxName = safeName.endsWith('.pptx') ? safeName : safeName.replace(/\.[^.]+$/, '.pptx');
     const outputPath = await pptGenerator.generate(slides, selectedTheme, pptxName);
     addActivity('create', `텍스트→PPTX: ${pptxName}`);
-    res.json({ success: true, path: outputPath, slides, slideCount: slides.content.length });
+    res.json({ success: true, path: outputPath, slides, slideCount: slides.content.length, appliedTheme: selectedTheme, appliedTemplate: selectedTemplate, autoDetected: !theme ? auto.topCategory : null });
   }
 }));
 
