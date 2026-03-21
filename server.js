@@ -737,14 +737,107 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     return errorResponse(res, 400, '텍스트가 필요합니다', 'MISSING_TEXT');
   }
 
-  // 텍스트를 섹션으로 분리
-  const sections = text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+  // ========== 원고 → 슬라이드 변환 엔진 ==========
 
-  /** 제목에서 번호 접두사 제거: "1. 제목" → "제목", "제1장 제목" → "제목" */
+  /** 제목에서 번호 접두사 제거 */
   function stripNumberPrefix(str) {
     return str
       .replace(/^(?:\d+[.\)]\s*|제\d+[장절편]\s*|Chapter\s+\d+[:\s]*|[①-⑳]\s*|[❶-❿]\s*|[■▶●◆]\s*)/i, '')
       .trim() || str;
+  }
+
+  /** 문단을 문장 단위로 분리 */
+  function splitSentences(paragraph) {
+    return paragraph
+      .split(/(?<=[.!?다요음됨함])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 3);
+  }
+
+  /** 긴 문장을 슬라이드용 핵심 구절로 압축 */
+  function condense(sentence) {
+    let s = sentence
+      .replace(/\s*입니다\.?$/, '')
+      .replace(/\s*합니다\.?$/, '')
+      .replace(/\s*있습니다\.?$/, '')
+      .replace(/\s*되었습니다\.?$/, '')
+      .replace(/\s*됩니다\.?$/, '')
+      .replace(/했습니다\.?$/, '')
+      .replace(/있으며,?\s*/, ', ')
+      .replace(/뿐만 아니라\s*/, '+ ')
+      .replace(/특히\s*/, '')
+      .replace(/또한\s*/, '')
+      .replace(/이제는\s*/, '')
+      .replace(/,\s*$/, '');
+    // 60자 이상이면 핵심 부분만 추출
+    if (s.length > 60) {
+      // 콜론이 있으면 뒤쪽만
+      const colonIdx = s.indexOf(':');
+      if (colonIdx > 0 && colonIdx < 20) return s;
+      // 쉼표로 분리된 첫 번째 절만
+      const parts = s.split(/[,，]/);
+      if (parts[0].length >= 15 && parts[0].length <= 55) return parts[0].trim();
+    }
+    return s;
+  }
+
+  /** 문단에서 제목 자동 추출 (핵심 주제 명사구, 최대 15자) */
+  function extractTitle(sentences, fallback) {
+    if (!sentences.length) return fallback;
+    const first = sentences[0];
+    // "~에 대해", "~분야에서", "~위해서는" 앞의 주제어
+    const topicMatch = first.match(/^(.{2,18}?)(?:이|가|은|는|에서|에서도|분야|기술|시장|교육|을|를)\s/);
+    if (topicMatch) {
+      let t = topicMatch[1].trim().replace(/[은는이가을를에의도서]$/, '').trim();
+      if (t.length >= 3 && t.length <= 15) return t;
+    }
+    // "~하기 위해/위해서는" 패턴에서 주제 추출
+    const purposeMatch = first.match(/(.{3,15}?)(?:을|를)\s*(?:성공적으로|효과적으로|안전하게|체계적으로)?\s*(?:도입|활용|적용|추진|실행)/);
+    if (purposeMatch) return purposeMatch[1].trim().replace(/[은는이가을를]$/, '') + ' 도입 전략';
+    // "~위해서는" 앞의 명사 추출
+    const forMatch = first.match(/(.{3,15}?)(?:을|를|에)?\s*(?:위해|하려면|하기 위해)/);
+    if (forMatch) return forMatch[1].trim().replace(/[은는이가을를에서도]$/, '').trim();
+    // 첫 쉼표까지 또는 15자
+    const commaIdx = first.indexOf(',');
+    if (commaIdx > 4 && commaIdx < 18) return first.substring(0, commaIdx).trim();
+    // 첫 공백 구분 2~3단어
+    const words = first.split(/\s+/).slice(0, 3);
+    let title = words.join(' ');
+    if (title.length > 15) title = title.substring(0, 15);
+    return title.replace(/[.!?,]$/, '').trim();
+  }
+
+  /** 문장에서 숫자/통계 데이터 감지 */
+  function hasStatData(sentence) {
+    return /\d+[%명건원개만억조달러배위년]/.test(sentence);
+  }
+
+  // ========== 텍스트를 섹션으로 분리 ==========
+
+  // 1차: 빈 줄로 분리
+  const rawSections = text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+
+  // 2차: 각 섹션을 줄 단위로 분석 → 이미 구조화된 것과 원고 형태 구분
+  const sections = [];
+  for (const raw of rawSections) {
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+
+    if (lines.length >= 2) {
+      // 이미 줄바꿈으로 구조화된 텍스트 (기존 로직)
+      sections.push({ title: lines[0], bodyLines: lines.slice(1), isStructured: true });
+    } else {
+      // 한 줄짜리 문단 (원고 형태) → 문장으로 분리
+      const sentences = splitSentences(lines[0]);
+      if (sentences.length <= 1) {
+        // 한 문장짜리 → highlight용
+        sections.push({ title: condense(lines[0]), bodyLines: [], isStructured: false, singleSentence: true, originalText: lines[0] });
+      } else {
+        // 여러 문장 → 핵심 포인트 추출
+        const points = sentences.map(s => condense(s)).filter(s => s.length >= 5);
+        const title = extractTitle(points, '핵심 포인트');
+        sections.push({ title, bodyLines: points, isStructured: false, originalText: lines[0] });
+      }
+    }
   }
 
   /** 내용 기반 최적 슬라이드 타입 선택 */
@@ -780,10 +873,7 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
   };
 
   // 목차 생성 (섹션이 2개 이상일 때)
-  const sectionTitles = sections.map(s => {
-    const firstLine = s.split('\n')[0].trim();
-    return stripNumberPrefix(firstLine);
-  });
+  const sectionTitles = sections.map(s => stripNumberPrefix(s.title));
   if (sections.length >= 2) {
     slides.toc = sectionTitles;
   }
@@ -860,9 +950,13 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
         break;
       case 'stats': {
         const stats = items.map(line => {
-          const numMatch = line.match(/(\d[\d,.]*)\s*([%명건원개만억조달러배위]?)/);
+          // 가장 의미있는 숫자 추출 (단위가 있는 것 우선)
+          const numMatch = line.match(/(\d[\d,.]*)\s*([%명건원개만억조달러배위년분초시간])/) || line.match(/(\d[\d,.]*)\s*/);
           if (numMatch) {
-            const label = line.replace(numMatch[0], '').replace(/[:\-]/g, '').trim() || line;
+            let label = line.replace(numMatch[0], '').replace(/[:\-·]/g, ' ').replace(/\s+/g, ' ').trim();
+            // 불필요한 서술어 제거
+            label = label.replace(/(?:을|를|이|가|은|는|의|에|까지|으로|에서)\s*$/, '').trim();
+            if (!label) label = line.substring(0, 30);
             return { value: parseInt(numMatch[1].replace(/[,.]/g, '')), suffix: numMatch[2] || '', label };
           }
           return { value: 0, suffix: '', label: line };
@@ -893,23 +987,53 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
   }
 
   for (let i = 0; i < sections.length; i++) {
-    const section = sections[i];
-    const lines = section.split('\n').map(l => l.trim()).filter(Boolean);
-    const rawTitle = lines[0] || `섹션 ${i + 1}`;
-    const sectionTitle = stripNumberPrefix(rawTitle);
-    const bodyLines = lines.slice(1);
+    const sec = sections[i];
+    const sectionTitle = stripNumberPrefix(sec.title);
+    const bodyLines = sec.bodyLines;
+    const description = sec.originalText
+      ? sec.originalText.substring(0, 60).replace(/[.!?]$/, '') + '...'
+      : (bodyLines.length > 0 ? bodyLines[0] : '');
 
     // 섹션 구분 슬라이드
     slides.content.push({
       isSection: true,
       sectionNumber: String(i + 1).padStart(2, '0'),
       title: sectionTitle,
-      description: bodyLines.length > 0 ? bodyLines[0] : ''
+      description
     });
 
-    // 항목을 간결한 슬라이드들로 분할 (슬라이드당 최대 3개)
-    const contentSlides = splitIntoSlides(sectionTitle, bodyLines);
-    contentSlides.forEach(s => slides.content.push(s));
+    // 단일 문장 → highlight 슬라이드
+    if (sec.singleSentence) {
+      slides.content.push({
+        title: sectionTitle,
+        type: 'highlight',
+        body: condense(sec.originalText),
+        sub: '',
+        image: 'illust'
+      });
+      continue;
+    }
+
+    // 숫자가 포함된 문장들은 별도 stats 슬라이드로 분리
+    const statLines = bodyLines.filter(l => hasStatData(l));
+    const normalLines = bodyLines.filter(l => !hasStatData(l) || statLines.length === bodyLines.length);
+
+    // 일반 내용 슬라이드들
+    if (normalLines.length > 0) {
+      const contentSlides = splitIntoSlides(sectionTitle, normalLines);
+      contentSlides.forEach(s => {
+        // 원문 텍스트를 발표자 노트로 추가
+        if (sec.originalText) s.notes = sec.originalText;
+        slides.content.push(s);
+      });
+    }
+
+    // 통계 데이터가 있으면 별도 stats 슬라이드
+    if (statLines.length > 0 && statLines.length < bodyLines.length) {
+      const statsSlide = buildSlide(sectionTitle + ' 핵심 수치', statLines, 'stats');
+      if (sec.originalText) statsSlide.notes = sec.originalText;
+      slides.content.push(statsSlide);
+    }
   }
 
   // 엔딩 슬라이드 (ending 구조 사용)
