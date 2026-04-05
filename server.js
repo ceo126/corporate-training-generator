@@ -126,7 +126,7 @@ app.get('/api/events', (req, res) => {
 });
 
 // 30초마다 서버 통계 브로드캐스트
-setInterval(() => {
+const statsInterval = setInterval(() => {
   if (sseClients.size === 0) return;
   try {
     const mem = process.memoryUsage();
@@ -245,7 +245,9 @@ function loadSettings() {
 }
 
 function saveSettings(settings) {
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), 'utf8');
+  const tmpPath = SETTINGS_PATH + '.tmp';
+  fs.writeFileSync(tmpPath, JSON.stringify(settings, null, 2), 'utf8');
+  fs.renameSync(tmpPath, SETTINGS_PATH);
 }
 
 // ============================================================
@@ -267,7 +269,7 @@ const RATE_LIMIT_WINDOW = 60 * 1000; // 1분
 const RATE_LIMIT_MAX = 60;
 
 // 1분마다 만료된 항목 정리
-setInterval(() => {
+const rateLimitCleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [ip, data] of rateLimitMap) {
     if (now - data.windowStart > RATE_LIMIT_WINDOW) {
@@ -313,9 +315,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- CORS 헤더 ---
+// --- CORS 헤더 (localhost 전용) ---
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '';
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
@@ -333,15 +338,19 @@ app.use((req, res, next) => {
 });
 
 // --- 요청 크기 제한 세분화 ---
-// /api/generate/* 는 50MB, 나머지는 1MB
-app.use('/api/generate', express.json({ limit: '50mb' }));
-app.use('/api/generate', express.urlencoded({ extended: true, limit: '50mb' }));
+// /api/generate/* 는 50MB, 나머지는 1MB (미들웨어 인스턴스 재사용)
+const jsonLarge = express.json({ limit: '50mb' });
+const urlLarge = express.urlencoded({ extended: true, limit: '50mb' });
+const jsonSmall = express.json({ limit: '1mb' });
+const urlSmall = express.urlencoded({ extended: true, limit: '1mb' });
+
+app.use('/api/generate', jsonLarge);
+app.use('/api/generate', urlLarge);
 app.use((req, res, next) => {
-  // generate 경로가 아닌 경우에만 1MB 제한 적용
   if (req.path.startsWith('/api/generate')) return next();
-  express.json({ limit: '1mb' })(req, res, (err) => {
+  jsonSmall(req, res, (err) => {
     if (err) return errorResponse(res, 413, '요청 크기가 1MB를 초과합니다', 'PAYLOAD_TOO_LARGE');
-    express.urlencoded({ extended: true, limit: '1mb' })(req, res, next);
+    urlSmall(req, res, next);
   });
 });
 
@@ -652,7 +661,7 @@ app.post('/api/outputs/:type/:name/duplicate', (req, res) => {
       copyName = base + '-복사본' + counter + ext;
     }
     fs.copyFileSync(srcPath, path.join(outputDir, copyName));
-    res.json({ success: true, newName: copyName });
+    res.json({ success: true, newName: copyName, path: `/output/${type}/${encodeURIComponent(copyName)}` });
   } catch(e) {
     errorResponse(res, 500, '복제 실패: ' + e.message, 'DUPLICATE_ERROR');
   }
@@ -799,18 +808,18 @@ function stripNumberPrefix(str) {
   return str
     .replace(/^(?:\d+[.\)]\s*|제\d+[장절편]\s*|Chapter\s+\d+[:\s]*|[①-⑳]\s*|[❶-❿]\s*|[■▶●◆]\s*)/i, '')
     .trim() || str;
-  }
+}
 
-  /** 문단을 문장 단위로 분리 */
-  function splitSentences(paragraph) {
+/** 문단을 문장 단위로 분리 */
+function splitSentences(paragraph) {
   return paragraph
     .split(/(?<=[.!?다요음됨함])\s+/)
     .map(s => s.trim())
     .filter(s => s.length > 3);
-  }
+}
 
-  /** 긴 문장을 슬라이드용 핵심 구절로 압축 (목표: 35자 이내) */
-  function condense(sentence) {
+/** 긴 문장을 슬라이드용 핵심 구절로 압축 (목표: 35자 이내) */
+function condense(sentence) {
   let s = sentence
     // 종결어미 제거
     .replace(/\s*(?:입니다|합니다|있습니다|되었습니다|됩니다|했습니다|겠습니다|봅니다|습니다)\.?$/, '')
@@ -842,10 +851,10 @@ function stripNumberPrefix(str) {
     if (s.length > 45) return s.substring(0, 35).replace(/\s+\S*$/, '') + '...';
   }
   return s;
-  }
+}
 
-  /** 문단에서 제목 자동 추출 (핵심 주제 명사구, 최대 15자) */
-  function extractTitle(sentences, fallback) {
+/** 문단에서 제목 자동 추출 (핵심 주제 명사구, 최대 15자) */
+function extractTitle(sentences, fallback) {
   if (!sentences.length) return fallback;
   const first = sentences[0];
   // "~에 대해", "~분야에서", "~위해서는" 앞의 주제어
@@ -868,7 +877,7 @@ function stripNumberPrefix(str) {
   let title = words.join(' ');
   if (title.length > 15) title = title.substring(0, 15);
   return title.replace(/[.!?,]$/, '').trim();
-  }
+}
 
 /** 문장에서 숫자/통계 데이터 감지 */
 function hasStatData(sentence) {
@@ -2024,6 +2033,8 @@ const server = app.listen(PORT, () => {
 // --- Graceful Shutdown ---
 function gracefulShutdown(signal) {
   console.log(`\n[${signal}] 서버 종료 시작...`);
+  clearInterval(statsInterval);
+  clearInterval(rateLimitCleanupInterval);
   server.close(() => {
     console.log('[서버] 모든 연결 정리 완료. 서버를 종료합니다.');
     process.exit(0);
