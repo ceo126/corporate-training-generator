@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="80" fill="url(#g1)"/>
+  <!-- Slide frame -->
+  <rect x="96" y="120" width="320" height="224" rx="16" fill="white" opacity="0.95"/>
+  <!-- Title line -->
+  <rect x="136" y="164" width="172" height="20" rx="10" fill="url(#g2)"/>
+  <!-- Content lines -->
+  <rect x="136" y="212" width="240" height="12" rx="6" fill="#cbd5e1"/>
+  <rect x="136" y="240" width="196" height="12" rx="6" fill="#cbd5e1"/>
+  <rect x="136" y="268" width="218" height="12" rx="6" fill="#cbd5e1"/>
+  <rect x="136" y="296" width="160" height="12" rx="6" fill="#cbd5e1"/>
+  <!-- Slide indicator dots -->
+  <circle cx="224" cy="392" r="12" fill="white" opacity="0.9"/>
+  <circle cx="260" cy="392" r="12" fill="white" opacity="0.5"/>
+  <circle cx="296" cy="392" r="12" fill="white" opacity="0.5"/>
+</svg>
