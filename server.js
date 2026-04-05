@@ -491,6 +491,9 @@ app.post('/api/upload', (req, res, next) => {
     if (err) {
       return errorResponse(res, 400, err.message, 'UPLOAD_ERROR');
     }
+    if (!req.files || req.files.length === 0) {
+      return errorResponse(res, 400, '업로드할 파일이 없습니다', 'NO_FILES');
+    }
     invalidateScanCache();
     addActivity('upload', `${req.files.length}개 파일 업로드`);
     res.json({ success: true, count: req.files.length });
@@ -606,8 +609,8 @@ app.post('/api/outputs/:type/:name/rename', (req, res) => {
   if (nameErr) return errorResponse(res, 400, nameErr, 'INVALID_FILENAME');
 
   const outputDir = getOutputDir(type);
-  const oldPath = path.join(outputDir, name);
-  const newPath = path.join(outputDir, newName);
+  const oldPath = path.join(outputDir, path.basename(name));
+  const newPath = path.join(outputDir, path.basename(newName));
   // Path Traversal 방지
   if (!oldPath.startsWith(outputDir + path.sep) || !newPath.startsWith(outputDir + path.sep)) {
     return errorResponse(res, 400, '잘못된 경로입니다', 'INVALID_PATH');
@@ -633,7 +636,7 @@ app.post('/api/outputs/:type/:name/duplicate', (req, res) => {
 
   const outputDir = getOutputDir(type);
   const srcPath = path.join(outputDir, path.basename(name));
-  if (!srcPath.startsWith(outputDir + path.sep) && srcPath !== outputDir + path.sep + path.basename(name)) {
+  if (!srcPath.startsWith(outputDir + path.sep)) {
     return errorResponse(res, 400, '잘못된 경로입니다', 'INVALID_PATH');
   }
   if (!fs.existsSync(srcPath)) {
@@ -728,18 +731,10 @@ app.post('/api/generate/pptx', asyncHandler(async (req, res) => {
 }));
 
 // ============================================================
-//  API: 텍스트 → 슬라이드 자동 생성
+//  텍스트→슬라이드 변환 헬퍼 (라우트 외부 정의로 매 요청 재생성 방지)
 // ============================================================
 
-app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
-  const { text, title, outputType, theme, template, filename, maxSlides } = req.body;
-  if (!text || typeof text !== 'string' || text.trim().length === 0) {
-    return errorResponse(res, 400, '텍스트가 필요합니다', 'MISSING_TEXT');
-  }
-
-  // ========== 원고 분석 → 자동 테마/템플릿 선택 ==========
-
-  function autoSelectThemeAndTemplate(rawText) {
+function autoSelectThemeAndTemplate(rawText) {
     const t = rawText.toLowerCase();
     const scores = {
       tech:       0, // AI, 기술, 디지털, 소프트웨어
@@ -797,95 +792,206 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
       topCategory: bestTheme,
       score: maxScore
     };
+}
+
+/** 제목에서 번호 접두사 제거 */
+function stripNumberPrefix(str) {
+  return str
+    .replace(/^(?:\d+[.\)]\s*|제\d+[장절편]\s*|Chapter\s+\d+[:\s]*|[①-⑳]\s*|[❶-❿]\s*|[■▶●◆]\s*)/i, '')
+    .trim() || str;
+  }
+
+  /** 문단을 문장 단위로 분리 */
+  function splitSentences(paragraph) {
+  return paragraph
+    .split(/(?<=[.!?다요음됨함])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 3);
+  }
+
+  /** 긴 문장을 슬라이드용 핵심 구절로 압축 (목표: 35자 이내) */
+  function condense(sentence) {
+  let s = sentence
+    // 종결어미 제거
+    .replace(/\s*(?:입니다|합니다|있습니다|되었습니다|됩니다|했습니다|겠습니다|봅니다|습니다)\.?$/, '')
+    .replace(/\s*(?:가능해졌고|가능해졌습니다|가능합니다)\.?$/, ' 가능')
+    .replace(/\s*(?:것이 중요합니다|것이 필요합니다)\.?$/, '')
+    // 접속사/부사 제거
+    .replace(/^(?:특히|또한|이제는|그러나|따라서|이를 통해|이에 따라|한편|더불어|아울러)\s*/g, '')
+    .replace(/있으며,?\s*/, ', ')
+    .replace(/뿐만 아니라\s*/, ' + ')
+    .replace(/\s+같은\s+/, ' ')
+    .replace(/\s*를?\s*통해\s*/, ' → ')
+    .replace(/,\s*$/, '');
+
+  // 40자 넘으면 핵심만 추출
+  if (s.length > 40) {
+    // "A 통해/기반으로/활용하여 B" → "A → B" 핵심 구조 추출
+    const viaMatch = s.match(/(.{5,20}?)(?:을|를)?\s*(?:통해|기반으로|활용하여|활용한|활용해)\s*(.{5,25})/);
+    if (viaMatch) return viaMatch[1].trim() + ' → ' + viaMatch[2].trim();
+    // 콜론 구조 유지
+    const colonIdx = s.indexOf(':');
+    if (colonIdx > 0 && colonIdx < 15) {
+      const afterColon = s.substring(colonIdx + 1).trim();
+      return s.substring(0, colonIdx).trim() + ': ' + (afterColon.length > 25 ? afterColon.substring(0, 25) : afterColon);
+    }
+    // 쉼표/조사로 분리하여 첫 절만
+    const parts = s.split(/[,，]\s*/);
+    if (parts[0].length >= 10 && parts[0].length <= 38) return parts[0].trim();
+    // 그래도 길면 35자 강제 절단
+    if (s.length > 45) return s.substring(0, 35).replace(/\s+\S*$/, '') + '...';
+  }
+  return s;
+  }
+
+  /** 문단에서 제목 자동 추출 (핵심 주제 명사구, 최대 15자) */
+  function extractTitle(sentences, fallback) {
+  if (!sentences.length) return fallback;
+  const first = sentences[0];
+  // "~에 대해", "~분야에서", "~위해서는" 앞의 주제어
+  const topicMatch = first.match(/^(.{2,18}?)(?:이|가|은|는|에서|에서도|분야|기술|시장|교육|을|를)\s/);
+  if (topicMatch) {
+    let t = topicMatch[1].trim().replace(/[은는이가을를에의도서]$/, '').trim();
+    if (t.length >= 3 && t.length <= 15) return t;
+  }
+  // "~하기 위해/위해서는" 패턴에서 주제 추출
+  const purposeMatch = first.match(/(.{3,15}?)(?:을|를)\s*(?:성공적으로|효과적으로|안전하게|체계적으로)?\s*(?:도입|활용|적용|추진|실행)/);
+  if (purposeMatch) return purposeMatch[1].trim().replace(/[은는이가을를]$/, '') + ' 도입 전략';
+  // "~위해서는" 앞의 명사 추출
+  const forMatch = first.match(/(.{3,15}?)(?:을|를|에)?\s*(?:위해|하려면|하기 위해)/);
+  if (forMatch) return forMatch[1].trim().replace(/[은는이가을를에서도]$/, '').trim();
+  // 첫 쉼표까지 또는 15자
+  const commaIdx = first.indexOf(',');
+  if (commaIdx > 4 && commaIdx < 18) return first.substring(0, commaIdx).trim();
+  // 첫 공백 구분 2~3단어
+  const words = first.split(/\s+/).slice(0, 3);
+  let title = words.join(' ');
+  if (title.length > 15) title = title.substring(0, 15);
+  return title.replace(/[.!?,]$/, '').trim();
+  }
+
+/** 문장에서 숫자/통계 데이터 감지 */
+function hasStatData(sentence) {
+  return /\d+[%명건원개만억조달러배위년]/.test(sentence);
+}
+
+/** 내용 기반 최적 슬라이드 타입 선택 */
+function chooseBestType(bodyLines) {
+  const lineCount = bodyLines.length;
+  const avgLen = bodyLines.reduce((s, l) => s + l.length, 0) / (lineCount || 1);
+  const hasNumbers = bodyLines.some(l => /\d+[%명건원개]/.test(l));
+  const isSequential = bodyLines.every(l => /^[\d]+[.\)단계]|→|->/.test(l.trim()));
+  if (hasNumbers && lineCount <= 4) return 'stats';
+  if (isSequential || lineCount === 3) return 'steps';
+  if (lineCount === 2 && avgLen > 15) return 'two-column';
+  if (lineCount === 4) return 'cards';
+  if (lineCount === 1 && avgLen > 20) return 'highlight';
+  if (lineCount >= 5) return 'bullets';
+  return lineCount <= 3 ? 'bullets' : 'cards';
+}
+
+/** 카드 파싱: "키워드: 설명" 또는 앞 단어 분리 */
+function parseCardLine(line) {
+  const colonIdx = line.indexOf(':');
+  const dashIdx = line.indexOf(' - ');
+  if (colonIdx > 0 && colonIdx < 20) {
+    return { title: line.substring(0, colonIdx).trim(), body: line.substring(colonIdx + 1).trim() };
+  } else if (dashIdx > 0 && dashIdx < 25) {
+    return { title: line.substring(0, dashIdx).trim(), body: line.substring(dashIdx + 3).trim() };
+  }
+  const words = line.split(/\s+/);
+  const titleWords = words.slice(0, Math.min(3, Math.ceil(words.length / 2)));
+  return { title: titleWords.join(' '), body: words.slice(titleWords.length).join(' ') || line };
+}
+
+/** 타입에 맞는 슬라이드 데이터 생성 (내용 분석 기반) */
+function buildSlide(slideTitle, items, slideType) {
+  const joined = items.join(' ');
+  const hasNumbers = items.some(l => /\d+[%명건원개만억조달러배]/.test(l));
+  const hasComparison = /vs|비교|대비|전후|before|after|차이|반면/.test(joined);
+  const hasProcess = /단계|절차|프로세스|순서|먼저|다음|마지막|1단계|2단계|3단계/.test(joined);
+  const hasChecklist = /확인|점검|체크|필수|필요|해야|완료/.test(joined);
+  if (hasNumbers && items.length <= 3) slideType = 'stats';
+  else if (hasComparison && items.length >= 2) slideType = 'two-column';
+  else if (hasProcess && items.length >= 2) slideType = 'steps';
+  else if (hasChecklist && items.length >= 3) slideType = 'checklist';
+  let slide;
+  switch (slideType) {
+    case 'bullets':
+      slide = { title: slideTitle, type: 'bullets', items };
+      break;
+    case 'cards':
+      slide = {
+        title: slideTitle, type: 'cards',
+        cards: items.map(l => parseCardLine(l))
+      };
+      break;
+    case 'steps':
+      slide = {
+        title: slideTitle, type: 'steps',
+        steps: items.map((l, j) => ({ title: `STEP ${j + 1}`, desc: stripNumberPrefix(l) }))
+      };
+      break;
+    case 'stats': {
+      const stats = items.map(line => {
+        const numMatch = line.match(/(\d[\d,.]*)\s*([%명건원개만억조달러배위년분초시간])/) || line.match(/(\d[\d,.]*)\s*/);
+        if (numMatch) {
+          let label = line.replace(numMatch[0], '').replace(/[:\-·]/g, ' ').replace(/\s+/g, ' ').trim();
+          label = label.replace(/(?:을|를|이|가|은|는|의|에|까지|으로|에서)\s*$/, '').trim();
+          if (!label) label = line.substring(0, 30);
+          return { value: parseInt(numMatch[1].replace(/[,.]/g, '')), suffix: numMatch[2] || '', label };
+        }
+        return { value: 0, suffix: '', label: line };
+      });
+      slide = { title: slideTitle, type: 'stats', stats };
+      break;
+    }
+    case 'highlight':
+      slide = {
+        title: slideTitle, type: 'highlight',
+        body: items[0] || '', sub: items.slice(1).join(' · ') || ''
+      };
+      break;
+    case 'two-column': {
+      const mid = Math.ceil(items.length / 2);
+      const hasBeforeAfter = /전후|before|after|이전|이후/.test(joined);
+      const hasProbSol = /문제|해결|과제|방안/.test(joined);
+      slide = {
+        title: slideTitle, type: 'two-column',
+        leftTitle: hasBeforeAfter ? 'Before' : hasProbSol ? '과제' : '현황',
+        leftItems: items.slice(0, mid),
+        rightTitle: hasBeforeAfter ? 'After' : hasProbSol ? '해결 방안' : '방향',
+        rightItems: items.slice(mid).length > 0 ? items.slice(mid) : ['']
+      };
+      break;
+    }
+    case 'checklist':
+      slide = {
+        title: slideTitle, type: 'checklist',
+        items: items.map(it => ({ text: it, done: /완료|달성|구축|도입/.test(it) }))
+      };
+      break;
+    default:
+      slide = { title: slideTitle, type: 'bullets', items };
+  }
+  slide.image = 'illust';
+  return slide;
+}
+
+// ============================================================
+//  API: 텍스트 → 슬라이드 자동 생성
+// ============================================================
+
+app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
+  const { text, title, outputType, theme, template, filename, maxSlides } = req.body;
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return errorResponse(res, 400, '텍스트가 필요합니다', 'MISSING_TEXT');
   }
 
   // 사용자가 지정하지 않은 경우 자동 선택
   const auto = autoSelectThemeAndTemplate(text);
   const selectedTheme = theme || auto.theme;
   const selectedTemplate = template || auto.template;
-
-  // ========== 원고 → 슬라이드 변환 엔진 ==========
-
-  /** 제목에서 번호 접두사 제거 */
-  function stripNumberPrefix(str) {
-    return str
-      .replace(/^(?:\d+[.\)]\s*|제\d+[장절편]\s*|Chapter\s+\d+[:\s]*|[①-⑳]\s*|[❶-❿]\s*|[■▶●◆]\s*)/i, '')
-      .trim() || str;
-  }
-
-  /** 문단을 문장 단위로 분리 */
-  function splitSentences(paragraph) {
-    return paragraph
-      .split(/(?<=[.!?다요음됨함])\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 3);
-  }
-
-  /** 긴 문장을 슬라이드용 핵심 구절로 압축 (목표: 35자 이내) */
-  function condense(sentence) {
-    let s = sentence
-      // 종결어미 제거
-      .replace(/\s*(?:입니다|합니다|있습니다|되었습니다|됩니다|했습니다|겠습니다|봅니다|습니다)\.?$/, '')
-      .replace(/\s*(?:가능해졌고|가능해졌습니다|가능합니다)\.?$/, ' 가능')
-      .replace(/\s*(?:것이 중요합니다|것이 필요합니다)\.?$/, '')
-      // 접속사/부사 제거
-      .replace(/^(?:특히|또한|이제는|그러나|따라서|이를 통해|이에 따라|한편|더불어|아울러)\s*/g, '')
-      .replace(/있으며,?\s*/, ', ')
-      .replace(/뿐만 아니라\s*/, ' + ')
-      .replace(/\s+같은\s+/, ' ')
-      .replace(/\s*를?\s*통해\s*/, ' → ')
-      .replace(/,\s*$/, '');
-
-    // 40자 넘으면 핵심만 추출
-    if (s.length > 40) {
-      // "A 통해/기반으로/활용하여 B" → "A → B" 핵심 구조 추출
-      const viaMatch = s.match(/(.{5,20}?)(?:을|를)?\s*(?:통해|기반으로|활용하여|활용한|활용해)\s*(.{5,25})/);
-      if (viaMatch) return viaMatch[1].trim() + ' → ' + viaMatch[2].trim();
-      // 콜론 구조 유지
-      const colonIdx = s.indexOf(':');
-      if (colonIdx > 0 && colonIdx < 15) {
-        const afterColon = s.substring(colonIdx + 1).trim();
-        return s.substring(0, colonIdx).trim() + ': ' + (afterColon.length > 25 ? afterColon.substring(0, 25) : afterColon);
-      }
-      // 쉼표/조사로 분리하여 첫 절만
-      const parts = s.split(/[,，]\s*/);
-      if (parts[0].length >= 10 && parts[0].length <= 38) return parts[0].trim();
-      // 그래도 길면 35자 강제 절단
-      if (s.length > 45) return s.substring(0, 35).replace(/\s+\S*$/, '') + '...';
-    }
-    return s;
-  }
-
-  /** 문단에서 제목 자동 추출 (핵심 주제 명사구, 최대 15자) */
-  function extractTitle(sentences, fallback) {
-    if (!sentences.length) return fallback;
-    const first = sentences[0];
-    // "~에 대해", "~분야에서", "~위해서는" 앞의 주제어
-    const topicMatch = first.match(/^(.{2,18}?)(?:이|가|은|는|에서|에서도|분야|기술|시장|교육|을|를)\s/);
-    if (topicMatch) {
-      let t = topicMatch[1].trim().replace(/[은는이가을를에의도서]$/, '').trim();
-      if (t.length >= 3 && t.length <= 15) return t;
-    }
-    // "~하기 위해/위해서는" 패턴에서 주제 추출
-    const purposeMatch = first.match(/(.{3,15}?)(?:을|를)\s*(?:성공적으로|효과적으로|안전하게|체계적으로)?\s*(?:도입|활용|적용|추진|실행)/);
-    if (purposeMatch) return purposeMatch[1].trim().replace(/[은는이가을를]$/, '') + ' 도입 전략';
-    // "~위해서는" 앞의 명사 추출
-    const forMatch = first.match(/(.{3,15}?)(?:을|를|에)?\s*(?:위해|하려면|하기 위해)/);
-    if (forMatch) return forMatch[1].trim().replace(/[은는이가을를에서도]$/, '').trim();
-    // 첫 쉼표까지 또는 15자
-    const commaIdx = first.indexOf(',');
-    if (commaIdx > 4 && commaIdx < 18) return first.substring(0, commaIdx).trim();
-    // 첫 공백 구분 2~3단어
-    const words = first.split(/\s+/).slice(0, 3);
-    let title = words.join(' ');
-    if (title.length > 15) title = title.substring(0, 15);
-    return title.replace(/[.!?,]$/, '').trim();
-  }
-
-  /** 문장에서 숫자/통계 데이터 감지 */
-  function hasStatData(sentence) {
-    return /\d+[%명건원개만억조달러배위년]/.test(sentence);
-  }
 
   // ========== 텍스트를 섹션으로 분리 ==========
 
@@ -935,29 +1041,6 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     }
   }
 
-  /** 내용 기반 최적 슬라이드 타입 선택 */
-  function chooseBestType(bodyLines, sectionIdx, totalSections) {
-    const lineCount = bodyLines.length;
-    const avgLen = bodyLines.reduce((s, l) => s + l.length, 0) / (lineCount || 1);
-    const hasNumbers = bodyLines.some(l => /\d+[%명건원개]/.test(l));
-    const isSequential = bodyLines.every(l => /^[\d]+[.\)단계]|→|->/.test(l.trim()));
-
-    // 숫자/통계가 많으면 stats
-    if (hasNumbers && lineCount <= 4) return 'stats';
-    // 순차적 내용이면 steps
-    if (isSequential || lineCount === 3) return 'steps';
-    // 항목이 2개면 two-column 비교
-    if (lineCount === 2 && avgLen > 15) return 'two-column';
-    // 항목이 4개면 cards (2x2 그리드)
-    if (lineCount === 4) return 'cards';
-    // 긴 텍스트 1줄이면 highlight
-    if (lineCount === 1 && avgLen > 20) return 'highlight';
-    // 항목이 많으면 bullets
-    if (lineCount >= 5) return 'bullets';
-    // 짝수 인덱스는 cards, 홀수는 bullets (단조로움 방지)
-    return lineCount <= 3 ? 'bullets' : 'cards';
-  }
-
   // 슬라이드 구조 자동 생성
   const slideTitle = title || '발표자료';
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -973,21 +1056,7 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     slides.toc = sectionTitles;
   }
 
-  /** 카드 파싱: "키워드: 설명" 또는 앞 단어 분리 */
-  function parseCardLine(line) {
-    const colonIdx = line.indexOf(':');
-    const dashIdx = line.indexOf(' - ');
-    if (colonIdx > 0 && colonIdx < 20) {
-      return { title: line.substring(0, colonIdx).trim(), body: line.substring(colonIdx + 1).trim() };
-    } else if (dashIdx > 0 && dashIdx < 25) {
-      return { title: line.substring(0, dashIdx).trim(), body: line.substring(dashIdx + 3).trim() };
-    }
-    const words = line.split(/\s+/);
-    const titleWords = words.slice(0, Math.min(3, Math.ceil(words.length / 2)));
-    return { title: titleWords.join(' '), body: words.slice(titleWords.length).join(' ') || line };
-  }
-
-  /** 슬라이드 타입 풀 (반복 방지) */
+  /** 슬라이드 타입 풀 (반복 방���) */
   const contentTypePool = ['bullets', 'cards', 'highlight', 'steps', 'two-column', 'stats'];
   let typePoolIdx = 0;
   function nextType() {
@@ -1003,10 +1072,8 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
     const results = [];
 
     if (bodyLines.length <= MAX_PER_SLIDE) {
-      // 3개 이하면 분할 없이 하나의 슬라이드
       results.push(buildSlide(sectionTitle, bodyLines, nextType()));
     } else {
-      // 4개 이상이면 분할
       for (let j = 0; j < bodyLines.length; j += MAX_PER_SLIDE) {
         const chunk = bodyLines.slice(j, j + MAX_PER_SLIDE);
         const partNum = Math.floor(j / MAX_PER_SLIDE) + 1;
@@ -1018,85 +1085,6 @@ app.post('/api/generate/from-text', asyncHandler(async (req, res) => {
       }
     }
     return results;
-  }
-
-  /** 타입에 맞는 슬라이드 데이터 생성 (내용 분석 기반) */
-  function buildSlide(slideTitle, items, slideType) {
-    const joined = items.join(' ');
-    const hasNumbers = items.some(l => /\d+[%명건원개만억조달러배]/.test(l));
-    const hasComparison = /vs|비교|대비|전후|before|after|차이|반면/.test(joined);
-    const hasProcess = /단계|절차|프로세스|순서|먼저|다음|마지막|1단계|2단계|3단계/.test(joined);
-    const hasChecklist = /확인|점검|체크|필수|필요|해야|완료/.test(joined);
-
-    // 내용 기반 최적 타입 자동 선택
-    if (hasNumbers && items.length <= 3) slideType = 'stats';
-    else if (hasComparison && items.length >= 2) slideType = 'two-column';
-    else if (hasProcess && items.length >= 2) slideType = 'steps';
-    else if (hasChecklist && items.length >= 3) slideType = 'checklist';
-
-    let slide;
-    switch (slideType) {
-      case 'bullets':
-        slide = { title: slideTitle, type: 'bullets', items };
-        break;
-      case 'cards':
-        slide = {
-          title: slideTitle, type: 'cards',
-          cards: items.map(l => parseCardLine(l))
-        };
-        break;
-      case 'steps':
-        slide = {
-          title: slideTitle, type: 'steps',
-          steps: items.map((l, j) => ({ title: `STEP ${j + 1}`, desc: stripNumberPrefix(l) }))
-        };
-        break;
-      case 'stats': {
-        const stats = items.map(line => {
-          // 가장 의미있는 숫자 추출 (단위가 있는 것 우선)
-          const numMatch = line.match(/(\d[\d,.]*)\s*([%명건원개만억조달러배위년분초시간])/) || line.match(/(\d[\d,.]*)\s*/);
-          if (numMatch) {
-            let label = line.replace(numMatch[0], '').replace(/[:\-·]/g, ' ').replace(/\s+/g, ' ').trim();
-            // 불필요한 서술어 제거
-            label = label.replace(/(?:을|를|이|가|은|는|의|에|까지|으로|에서)\s*$/, '').trim();
-            if (!label) label = line.substring(0, 30);
-            return { value: parseInt(numMatch[1].replace(/[,.]/g, '')), suffix: numMatch[2] || '', label };
-          }
-          return { value: 0, suffix: '', label: line };
-        });
-        slide = { title: slideTitle, type: 'stats', stats };
-        break;
-      }
-      case 'highlight':
-        slide = {
-          title: slideTitle, type: 'highlight',
-          body: items[0] || '', sub: items.slice(1).join(' · ') || ''
-        };
-        break;
-      case 'two-column': {
-        const mid = Math.ceil(items.length / 2);
-        const hasBeforeAfter = /전후|before|after|이전|이후/.test(joined);
-        const hasProbSol = /문제|해결|과제|방안/.test(joined);
-        slide = {
-          title: slideTitle, type: 'two-column',
-          leftTitle: hasBeforeAfter ? 'Before' : hasProbSol ? '과제' : '현황',
-          leftItems: items.slice(0, mid),
-          rightTitle: hasBeforeAfter ? 'After' : hasProbSol ? '해결 방안' : '방향',
-          rightItems: items.slice(mid).length > 0 ? items.slice(mid) : ['']
-        };
-        break;
-      }
-      case 'checklist':
-        slide = {
-          title: slideTitle, type: 'checklist',
-          items: items.map(it => ({ text: it, done: /완료|달성|구축|도입/.test(it) }))
-        };
-        break;
-      default:
-        slide = { title: slideTitle, type: 'bullets', items };
-    }
-    slide.image = 'illust';
-    return slide;
   }
 
   for (let i = 0; i < sections.length; i++) {
